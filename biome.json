@@ -27,6 +27,7 @@
 				"noForEach": "off"
 			},
 			"style": {
+				"useNodejsImportProtocol": "off",
 				"noParameterAssign": "off"
 			}
 		}

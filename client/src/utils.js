@@ -20,7 +20,7 @@ export function createCoolText(gameObject, text, x, y, size, ...extraComps) {
 	return gameObject.add([
 		k.text(text, {
 			font: "Iosevka",
-			width: width() - 24 * 2,
+			width: k.width() - 24 * 2,
 			size: size,
 			align: "center",
 			lineSpacing: 8,

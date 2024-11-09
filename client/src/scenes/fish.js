@@ -9,14 +9,6 @@ loadSprites();
 
 export const startPos = k.vec2(k.width() / 2, k.height() / 2);
 const FISHSPEED = 50;
-const pad = 24;
-
-// TODO: Break down the createFishScene function into smaller functions for better readability.
-// Example:
-// function handlePlayerAddition(player, sessionId) { /*...*/ }
-// function handlePlayerRemoval(sessionId) { /*...*/ }
-// function setupInputHandlers() { /*...*/ }
-// export function createFishScene() { /* call smaller functions here */ }
 
 export function createFishScene() {
 	k.scene("fish", (room) => {
@@ -31,13 +23,6 @@ export function createFishScene() {
 					players[sessionId] = k.add([k.sprite("sukomi"), k.pos(startPos), k.opacity(1), k.anchor("center"), k.rotate(), k.timer(), overlay(rgb(174, 226, 255), 0.4)]);
 
 					createCoolText(players[sessionId], player.name, 0, -players[sessionId].height, 15);
-
-					// TODO: Extract the onUpdate logic into a separate function to simplify the code.
-					// Example:
-					// function updatePlayerPosition(player, entity) { /*...*/ }
-					// players[sessionId].onUpdate(() => {
-					//     updatePlayerPosition(player, players[sessionId]);
-					// });
 
 					players[sessionId].onUpdate(() => {
 						if (player.y - 5 > players[sessionId].pos.y) {
@@ -97,7 +82,6 @@ export function createFishScene() {
 			});
 		});
 
-		// TODO: Move player update logic to a separate function for clarity.
 		cPlayer.onUpdate(() => {
 			if (upPressed && cPlayer.pos.y > 50) {
 				cPlayer.pos.y += (cPlayer.pos.y - 50 - cPlayer.pos.y) * 12 * k.dt();
@@ -116,7 +100,6 @@ export function createFishScene() {
 			const targetCamX = cPlayer.pos.x + k.width() * 0.3;
 			const dampedCamX = k.lerp(k.camPos().x, targetCamX, 3 * k.dt());
 			k.camPos(k.vec2(dampedCamX, k.height() / 2));
-			// TODO: Consider using a separate function to handle camera movement.
 		});
 
 		let lastPos = k.width() * 2;
@@ -139,7 +122,7 @@ export function createFishScene() {
 		room.onMessage("end", () => {
 			isEnding = true;
 			const finishLine = createCoolText(k, "finish line", lastPos + k.width() * 2, k.height() / 2, 64, k.z(3), k.timer(), k.move(k.LEFT, 400), k.area({ scale: k.vec2(20, 1) }), k.rotate(90), "finish");
-			// tweenFunc(finishLine, "color", rgb(0, 0, 0), rgb(91, 166, 117), 0.5, 1000);
+			finishLine.letterSpacing = 25;
 		});
 
 		let isThereWinner = false;
