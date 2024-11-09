@@ -11,6 +11,7 @@ function loadStuff() {
 	k.loadSprite("bag", "sprites/bag.png");
 	k.loadSprite("goldfly", "sprites/goldfly.png");
 	k.loadSprite("sun", "sprites/sun.png");
+	k.loadSprite("grass", "sprites/grass.png");
 }
 loadStuff();
 const testPlayerName = `player${k.randi(0, 1000)}`;
@@ -49,10 +50,25 @@ export function createRatScene() {
 		k.setGravity(2000);
 
 		function addGround() {
-			let lastGroundPos = 0;
-			k.loop(1, () => {
-				const ground = k.add([k.rect(k.width(), 50), k.pos(lastGroundPos + k.width(), k.height() - 50), k.scale(2), k.anchor("center"), k.body({ isStatic: true }), k.area(), k.color(rgb(79, 165, 22)), k.z(1)]);
-				lastGroundPos = ground.pos.x;
+			// let lastGroundPos = 0;
+			// k.loop(1, () => {
+			// 	const ground = k.add([k.rect(k.width(), 50), k.pos(lastGroundPos + k.width(), k.height() - 50), k.scale(2), k.anchor("center"), k.body({ isStatic: true }), k.area(), k.color(rgb(79, 165, 22)), k.z(1)]);
+			// 	lastGroundPos = ground.pos.x;
+			// });
+			let lastGroundPos = k.width() * -5;
+			const tiles = [];
+			for (let i = 0; i < 150; i++) {
+				tiles.push(k.add([k.sprite("grass"), k.pos(lastGroundPos, k.height()), k.area(), k.body({ isStatic: true }), k.anchor("bot"), k.z(1), k.offscreen()]));
+				lastGroundPos += 55;
+			}
+
+			k.loop(0.1, () => {
+				if (tiles[0].isOffScreen()) {
+					const tile = tiles.shift();
+					tile.pos.x = lastGroundPos;
+					lastGroundPos += 55;
+					tiles.push(tile);
+				}
 			});
 		}
 		addGround();
@@ -85,9 +101,9 @@ export function createRatScene() {
 				});
 
 				opponent.onStateEnter("move", () => {
-					oPTweenL = k.loop(1, async () => {
-						oPTween = await opponent.tween(-10, 10, 0.5, (value) => (opponent.angle = value));
-						oPTween2 = await opponent.tween(10, -10, 0.5, (value) => (opponent.angle = value));
+					oPTweenL = k.loop(0.5, async () => {
+						oPTween = await opponent.tween(10, -10, 0.25, (value) => (opponent.angle = value));
+						oPTween2 = await opponent.tween(-10, 10, 0.25, (value) => (opponent.angle = value));
 					});
 				});
 
@@ -103,11 +119,10 @@ export function createRatScene() {
 			}
 		});
 
-		const cPlayer = k.add([k.sprite("karat"), k.pos(startPos), k.body(), k.anchor("center"), k.rotate(), k.z(2), k.area(), k.timer(), k.opacity(1), k.state("start", ["start", "stun", "move"]), "player"]);
-
+		const cPlayer = k.add([k.sprite("karat"), k.pos(startPos), k.body(), k.anchor("center"), k.rotate(), k.z(3), k.area(), k.timer(), k.opacity(1), k.state("start", ["start", "stun", "move"]), "player"]);
 		createCoolText(cPlayer, room.state.players.get(room.sessionId).name, 0, -cPlayer.height, 15);
 
-		k.onKeyPress(["up", "w"], () => cPlayer.jump());
+		k.onKeyPress(["up", "w"], () => !cPlayer.isJumping() && !cPlayer.isFalling() && cPlayer.jump());
 
 		// k.onKeyPress(["down", "s"], () => ());
 
@@ -128,9 +143,9 @@ export function createRatScene() {
 		});
 
 		cPlayer.onStateEnter("move", () => {
-			cPTweenL = k.loop(1, async () => {
-				cPTween = await cPlayer.tween(-10, 10, 0.5, (value) => (cPlayer.angle = value));
-				cPTween2 = await cPlayer.tween(10, -10, 0.5, (value) => (cPlayer.angle = value));
+			cPTweenL = k.loop(0.5, async () => {
+				cPTween = await cPlayer.tween(-10, 10, 0.25, (value) => (cPlayer.angle = value));
+				cPTween2 = await cPlayer.tween(10, -10, 0.25, (value) => (cPlayer.angle = value));
 			});
 		});
 
