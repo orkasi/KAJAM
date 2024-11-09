@@ -4,7 +4,7 @@ import { createCoolText, overlay, tweenFunc } from "../utils";
 import * as Colyseus from "colyseus.js";
 
 function loadStuff() {
-	k.loadRoot("/"); // Set the root folder for assets
+	k.loadRoot("/");
 	k.loadFont("Iosevka", "fonts/IosevkaNerdFontPropo-Regular.ttf", { filter: "linear" });
 	k.loadFont("Iosevka-Heavy", "fonts/IosevkaNerdFontPropo-Heavy.ttf", { outline: 3, filter: "linear" });
 	k.loadSprite("karat", "sprites/karat.png");
@@ -15,7 +15,7 @@ function loadStuff() {
 }
 loadStuff();
 const testPlayerName = `player${k.randi(0, 1000)}`;
-export const startPos = k.vec2(k.width() / 2, k.height() * 0.8);
+export const startPos = k.vec2(k.width() / 2, k.height() - 77.5);
 
 const client = new Colyseus.Client("ws://localhost:2567");
 main(testPlayerName);
@@ -50,11 +50,6 @@ export function createRatScene() {
 		k.setGravity(2000);
 
 		function addGround() {
-			// let lastGroundPos = 0;
-			// k.loop(1, () => {
-			// 	const ground = k.add([k.rect(k.width(), 50), k.pos(lastGroundPos + k.width(), k.height() - 50), k.scale(2), k.anchor("center"), k.body({ isStatic: true }), k.area(), k.color(rgb(79, 165, 22)), k.z(1)]);
-			// 	lastGroundPos = ground.pos.x;
-			// });
 			let lastGroundPos = k.width() * -5;
 			const tiles = [];
 			for (let i = 0; i < 150; i++) {
@@ -119,12 +114,10 @@ export function createRatScene() {
 			}
 		});
 
-		const cPlayer = k.add([k.sprite("karat"), k.pos(startPos), k.body(), k.anchor("center"), k.rotate(), k.z(3), k.area(), k.timer(), k.opacity(1), k.state("start", ["start", "stun", "move"]), "player"]);
+		const cPlayer = k.add([k.sprite("karat"), k.pos(startPos), k.body(), k.anchor("center"), k.rotate(), k.z(3), k.area({ offset: k.vec2(0, -3) }), k.timer(), k.opacity(1), k.state("start", ["start", "stun", "move"]), "player"]);
 		createCoolText(cPlayer, room.state.players.get(room.sessionId).name, 0, -cPlayer.height, 15);
 
-		k.onKeyPress(["up", "w"], () => !cPlayer.isJumping() && !cPlayer.isFalling() && cPlayer.jump());
-
-		// k.onKeyPress(["down", "s"], () => ());
+		k.onKeyPress(["up", "w"], () => cPlayer.isGrounded() && cPlayer.jump());
 
 		let cPTween = null;
 		let cPTween2 = null;
@@ -186,11 +179,11 @@ export function createRatScene() {
 
 		room.onMessage("spawnObstacle", (data) => {
 			k.randSeed(data);
-			const obstacle = k.add([k.sprite("bag", { flipX: true }), k.pos(k.rand(lastPos + 300, lastPos + k.width()), k.height() - 105), k.area(), k.anchor("bot"), k.rotate(), k.animate(), "obstacle"]);
+			const obstacle = k.add([k.sprite("bag", { flipX: true }), k.pos(k.rand(lastPos + 300, lastPos + k.width()), k.height() - 55), k.area(), k.anchor("bot"), k.rotate(), k.animate(), "obstacle"]);
 			lastPos = obstacle.pos.x;
 			obstacle.use(move(k.LEFT, 20));
-			obstacle.animate("angle", [k.rand(-25, -15), k.rand(-10, 0)], {
-				duration: k.rand(0.3, 0.6),
+			obstacle.animate("angle", [k.rand(-15, -5), k.rand(5, 15)], {
+				duration: k.rand(0.1, 0.4),
 				direction: "ping-pong",
 			});
 		});
