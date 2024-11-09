@@ -1,12 +1,6 @@
 import { k } from "../init";
 import { tweenFunc, overlay, createCoolText } from "../utils";
 
-function loadSprites() {
-	k.loadSprite("sukomi", "sprites/sukomi.png");
-	k.loadSprite("bobo", "sprites/bobo.png");
-}
-loadSprites();
-
 export const startPos = k.vec2(k.width() / 2, k.height() / 2);
 const FISHSPEED = 50;
 
@@ -121,13 +115,25 @@ export function createFishScene() {
 
 		room.onMessage("end", () => {
 			isEnding = true;
-			const finishLine = createCoolText(k, "finish line", lastPos + k.width() * 2, k.height() / 2, 64, k.z(3), k.timer(), k.move(k.LEFT, 400), k.area({ scale: k.vec2(20, 1) }), k.rotate(90), "finish");
+			const finishLine = createCoolText(k, "finish line", lastPos + k.width() * 0.75, k.height() / 2, 64, k.z(3), k.timer(), k.move(k.LEFT, 400), k.area({ scale: k.vec2(20, 1) }), k.rotate(90), "finish");
 			finishLine.letterSpacing = 25;
+		});
+
+		const loseMusic = k.play("loseSound", {
+			loop: false,
+			paused: true,
+			volume: 0.8,
+		});
+
+		const wonMusic = k.play("wonSound", {
+			loop: false,
+			paused: true,
 		});
 
 		let isThereWinner = false;
 		room.onMessage("won", (message) => {
 			if (!isDraw) {
+				loseMusic.paused = false;
 				if (message.winner.sessionId !== room.sessionId) {
 					k.scene("lost", () => {
 						k.setBackground(rgb(166, 85, 95));
@@ -138,6 +144,7 @@ export function createFishScene() {
 					k.go("lost");
 				} else {
 					k.scene("won", () => {
+						wonMusic.paused = false;
 						k.setBackground(rgb(166, 85, 95));
 						createCoolText(k, "You have won!", k.width() / 2, k.height() / 2, 64);
 						createCoolText(k, `${message.winner.name} : ${message.winner.score}		-		${message.loser.name} : ${message.loser.score}`, k.width() / 2, k.height() / 4, 32);
@@ -147,6 +154,11 @@ export function createFishScene() {
 			}
 		});
 
+		const drawSound = k.play("drawSound", {
+			loop: false,
+			paused: true,
+		});
+
 		let isDraw = false;
 
 		k.onCollide("finish", "player", () => {
@@ -154,6 +166,7 @@ export function createFishScene() {
 				isDraw = true;
 				isThereWinner = true;
 				k.scene("DRAW", () => {
+					drawSound.paused = false;
 					k.setBackground(rgb(166, 85, 95));
 					createCoolText(k, "DRAW", k.width() / 2, k.height() / 2, 64);
 				});
@@ -169,15 +182,24 @@ export function createFishScene() {
 		let stunTimerP = false;
 		let stunTimerO = false;
 
+		const hurtSound = k.play("hitHurt", {
+			loop: false,
+			paused: true,
+			volume: 0.8,
+		});
+
 		room.onMessage("opponentCollided", (message) => {
 			if (message.sessionId !== room.sessionId) {
 				if (!stunTimerO) {
+					hurtSound.play();
+					hurtSound.volume = 0.5;
 					opponentStunTime += 1;
 					startO = false;
 					stunTimerO = true;
 					k.wait(1, () => {
 						stunTimerO = false;
 						startO = true;
+						hurtSound.stop();
 					});
 					k.destroy(get("*", { recursive: true }).filter((obj) => obj.id === message.collideID)[0]);
 					tweenFunc(players[message.sessionId], "angle", 360, 0, 0.25, 1);
@@ -188,12 +210,14 @@ export function createFishScene() {
 
 		k.onCollide("obstacle", "player", (collidedObstacle) => {
 			if (!stunTimerP) {
+				hurtSound.play();
 				stunTime += 1;
 				startP = false;
 				stunTimerP = true;
 				k.wait(1, () => {
 					stunTimerP = false;
 					startP = true;
+					hurtSound.stop();
 				});
 				room.send("collide", collidedObstacle.id);
 				k.destroy(collidedObstacle);
