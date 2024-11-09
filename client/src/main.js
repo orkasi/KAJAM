@@ -10,7 +10,6 @@ window.addEventListener("keydown", (e) => {
 });
 
 const client = new Colyseus.Client("ws://localhost:2567");
-const pad = 24;
 
 k.loadFont("Iosevka", "fonts/IosevkaNerdFontPropo-Regular.ttf", { filter: "linear" });
 k.loadFont("Iosevka-Heavy", "fonts/IosevkaNerdFontPropo-Heavy.ttf", { outline: 3, filter: "linear" });

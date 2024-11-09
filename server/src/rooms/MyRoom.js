@@ -8,7 +8,7 @@ export class MyRoom extends Room {
 		this.setState(new MyRoomState());
 		this.winner = null;
 		this.clock.start();
-		// TODO: implement move message on every game
+		this.autoDispose = false;
 		this.onMessage("move", (client, message) => {
 			const player = this.state.players.get(client.sessionId);
 			player.x = message.x;
@@ -28,6 +28,21 @@ export class MyRoom extends Room {
 				});
 			}
 		});
+
+		this.onMessage("readyRat", (client, message) => {
+			const player = this.state.players.get(client.sessionId);
+			player.ready = true;
+			if (this.areAllPlayersReady()) {
+				this.broadcast("start");
+				this.clock.setTimeout(() => {
+					this.gameLoopRat();
+				}, 1000);
+				this.state.players.forEach((player) => {
+					player.ready = false;
+				});
+			}
+		});
+
 		this.onMessage("collide", (client, message) => {
 			this.broadcast("opponentCollided", { sessionId: client.sessionId, collideID: message });
 		});
@@ -46,6 +61,16 @@ export class MyRoom extends Room {
 				this.broadcast("won", { winner: victor, loser: loser });
 			}
 		});
+	}
+
+	gameLoopRat() {
+		const delayedInterval = this.clock.setInterval(() => {
+			this.broadcast("spawnObstacle", Math.random() * 9999);
+		}, 1000);
+		this.clock.setTimeout(() => {
+			delayedInterval.clear();
+			this.broadcast("end");
+		}, 100000);
 	}
 
 	gameLoop() {
