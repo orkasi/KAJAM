@@ -19,8 +19,8 @@ async function loadStuff() {
 	await k.loadSound("wonSound", "sounds/won.wav");
 	await k.loadSound("drawSound", "sounds/draw.wav");
 	await k.loadSound("wrongName", "sounds/wrongName.wav");
-	await k.loadFont("Iosevka", "fonts/IosevkaNerdFontPropo-Regular.ttf", { filter: "linear" });
-	await k.loadFont("Iosevka-Heavy", "fonts/IosevkaNerdFontPropo-Heavy.ttf", { outline: 3, filter: "linear" });
+	await k.loadFont("Iosevka", "fonts/IosevkaNerdFontPropo-Regular.woff2", { filter: "linear" });
+	await k.loadFont("Iosevka-Heavy", "fonts/IosevkaNerdFontPropo-Heavy.woff2", { outline: 3, filter: "linear" });
 }
 
 k.setBackground(rgb(166, 85, 95));

@@ -5,12 +5,12 @@ import * as Colyseus from "colyseus.js";
 
 function loadStuff() {
 	k.loadRoot("/");
-	k.loadFont("Iosevka", "fonts/IosevkaNerdFontPropo-Regular.ttf", { filter: "linear" });
-	k.loadFont("Iosevka-Heavy", "fonts/IosevkaNerdFontPropo-Heavy.ttf", { outline: 3, filter: "linear" });
+	k.loadFont("Iosevka", "fonts/IosevkaNerdFontPropo-Regular.woff2", { filter: "linear" });
+	k.loadFont("Iosevka-Heavy", "fonts/IosevkaNerdFontPropo-Heavy.woff2", { outline: 3, filter: "linear" });
 	k.loadSprite("karat", "sprites/karat.png");
 	k.loadSprite("bag", "sprites/bag.png");
-	k.loadSprite("goldfly", "sprites/goldfly.png");
-	k.loadSprite("sun", "sprites/sun.png");
+	k.loadSprite("goldfly", "sprites/goldfly.png"); //Not used
+	k.loadSprite("sun", "sprites/sun.png"); // Not used
 	k.loadSprite("grass", "sprites/grass.png");
 }
 loadStuff();
