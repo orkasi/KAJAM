@@ -11,19 +11,40 @@ window.addEventListener("keydown", (e) => {
 
 const client = new Colyseus.Client("ws://localhost:2567");
 
-k.loadFont("Iosevka", "fonts/IosevkaNerdFontPropo-Regular.ttf", { filter: "linear" });
-k.loadFont("Iosevka-Heavy", "fonts/IosevkaNerdFontPropo-Heavy.ttf", { outline: 3, filter: "linear" });
+async function loadStuff() {
+	await k.loadSprite("sukomi", "sprites/sukomi.png");
+	await k.loadSprite("bobo", "sprites/bobo.png");
+	await k.loadSound("loseSound", "sounds/synth.wav");
+	await k.loadSound("hitHurt", "sounds/hitHurt.wav");
+	await k.loadSound("wonSound", "sounds/won.wav");
+	await k.loadSound("drawSound", "sounds/draw.wav");
+	await k.loadSound("wrongName", "sounds/wrongName.wav");
+	await k.loadFont("Iosevka", "fonts/IosevkaNerdFontPropo-Regular.ttf", { filter: "linear" });
+	await k.loadFont("Iosevka-Heavy", "fonts/IosevkaNerdFontPropo-Heavy.ttf", { outline: 3, filter: "linear" });
+}
+
 k.setBackground(rgb(166, 85, 95));
 
 createFishScene();
 
-function name() {
-	const askName = createCoolText(k, "Please enter your name", k.width() / 2, k.height() * 0.2, 48, "destroyN");
+async function name() {
+	await loadStuff();
+	const askName = createCoolText(k, "Please enter your name", k.width() / 2, k.height() * 0.2, 48, "destroyN", k.timer(), k.rotate());
 	const name = createCoolText(k, " ", k.width() / 2, k.height() / 2, 48, k.textInput(true, 10), "destroyN");
-	const keyPress = k.onKeyPress("enter", () => {
-		k.destroyAll("destroyN");
-		main(name.text);
-		keyPress.cancel();
+	const keyPress = k.onKeyPress("enter", async () => {
+		name.text = name.text.trim();
+		if (name.text.length > 1) {
+			k.destroyAll("destroyN");
+			main(name.text);
+			keyPress.cancel();
+			k.onClick("lobbySound", (sound) => sound.play());
+		} else {
+			await k.play("wrongName", {
+				loop: false,
+			});
+			await askName.tween(-10, 10, 0.1, (value) => (askName.angle = value));
+			await askName.tween(10, 0, 0.1, (value) => (askName.angle = value));
+		}
 	});
 }
 
