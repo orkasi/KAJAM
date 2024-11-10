@@ -18,8 +18,6 @@ async function loadStuff() {
 	await k.loadSound("hitHurt", "sounds/hitHurt.wav");
 	await k.loadSound("wonSound", "sounds/won.wav");
 	await k.loadSound("drawSound", "sounds/draw.wav");
-	await k.loadSound("mainMusic", "sounds/mainMusic.wav");
-	await k.loadSound("lobbySound", "sounds/lobbyMusic.wav");
 	await k.loadSound("wrongName", "sounds/wrongName.wav");
 	await k.loadFont("Iosevka", "fonts/IosevkaNerdFontPropo-Regular.ttf", { filter: "linear" });
 	await k.loadFont("Iosevka-Heavy", "fonts/IosevkaNerdFontPropo-Heavy.ttf", { outline: 3, filter: "linear" });
@@ -58,10 +56,6 @@ async function main(name) {
 			lobbyText.text = "Connected!";
 			k.wait(1, async () => {
 				k.go("fish", room);
-				k.play("mainMusic", {
-					loop: true,
-					paused: false,
-				});
 			});
 		})
 		.catch((e) => {
