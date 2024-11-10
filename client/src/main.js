@@ -37,7 +37,6 @@ async function name() {
 			k.destroyAll("destroyN");
 			main(name.text);
 			keyPress.cancel();
-			k.onClick("lobbySound", (sound) => sound.play());
 		} else {
 			await k.play("wrongName", {
 				loop: false,
