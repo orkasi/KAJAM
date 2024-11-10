@@ -159,9 +159,11 @@ export function createRatScene() {
 		});
 
 		k.onCollide("obstacle", "player", (collidedObstacle) => {
-			cPlayer.enterState("stun");
-			room.send("collide", collidedObstacle.id);
-			k.destroy(collidedObstacle);
+			if (cPlayer.state !== "stun") {
+				cPlayer.enterState("stun");
+				room.send("collide", collidedObstacle.id);
+				k.destroy(collidedObstacle);
+			}
 		});
 	});
 }
