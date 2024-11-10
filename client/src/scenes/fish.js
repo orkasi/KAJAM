@@ -1,4 +1,5 @@
 import { k } from "../init";
+import { createRatScene } from "./rat";
 import { tweenFunc, overlay, createCoolText } from "../utils";
 
 export const startPos = k.vec2(k.width() / 2, k.height() / 2);
@@ -130,15 +131,31 @@ export function createFishScene() {
 			paused: true,
 		});
 
-		let isThereWinner = false;
 		room.onMessage("won", (message) => {
-			if (!isDraw) {
+			createRatScene();
+			if (opponentStunTime === stunTime) {
+				createRatScene();
+				k.scene("DRAW", () => {
+					drawSound.paused = false;
+					k.setBackground(rgb(166, 85, 95));
+					createCoolText(k, "DRAW", k.width() / 2, k.height() / 2, 64);
+					k.wait(5, () => {
+						k.go("rat", room);
+						createCoolText(k, `${message.loser.name} : ${message.loser.score}		-		${message.winner.name} : ${message.winner.score}`, k.width() / 2, k.height() / 4, 32);
+					});
+				});
+				room.send("lost");
+				k.go("DRAW");
+			} else {
 				loseMusic.paused = false;
 				if (message.winner.sessionId !== room.sessionId) {
 					k.scene("lost", () => {
 						k.setBackground(rgb(166, 85, 95));
 						createCoolText(k, "You have lost!", k.width() / 2, k.height() / 2, 64);
 						createCoolText(k, `${message.loser.name} : ${message.loser.score}		-		${message.winner.name} : ${message.winner.score}`, k.width() / 2, k.height() / 4, 32);
+						k.wait(5, () => {
+							k.go("rat", room);
+						});
 					});
 					room.send("lost");
 					k.go("lost");
@@ -148,6 +165,9 @@ export function createFishScene() {
 						k.setBackground(rgb(166, 85, 95));
 						createCoolText(k, "You have won!", k.width() / 2, k.height() / 2, 64);
 						createCoolText(k, `${message.winner.name} : ${message.winner.score}		-		${message.loser.name} : ${message.loser.score}`, k.width() / 2, k.height() / 4, 32);
+						k.wait(5, () => {
+							k.go("rat", room);
+						});
 					});
 					k.go("won");
 				}
@@ -159,23 +179,7 @@ export function createFishScene() {
 			paused: true,
 		});
 
-		let isDraw = false;
-
-		k.onCollide("finish", "player", () => {
-			if (opponentStunTime === stunTime) {
-				isDraw = true;
-				isThereWinner = true;
-				k.scene("DRAW", () => {
-					drawSound.paused = false;
-					k.setBackground(rgb(166, 85, 95));
-					createCoolText(k, "DRAW", k.width() / 2, k.height() / 2, 64);
-				});
-				k.go("DRAW");
-			} else if (!isThereWinner) {
-				isThereWinner = true;
-				room.send("won");
-			}
-		});
+		k.onCollide("finish", "player", () => room.send("won"));
 
 		let opponentStunTime = 0;
 		let stunTime = 0;

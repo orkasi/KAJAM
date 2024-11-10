@@ -12,6 +12,10 @@ window.addEventListener("keydown", (e) => {
 const client = new Colyseus.Client("ws://localhost:2567");
 
 async function loadStuff() {
+	await k.loadRoot("/");
+	await k.loadSprite("karat", "sprites/karat.png");
+	await k.loadSprite("bag", "sprites/bag.png");
+	await k.loadSprite("grass", "sprites/grass.png");
 	await k.loadSprite("sukomi", "sprites/sukomi.png");
 	await k.loadSprite("bobo", "sprites/bobo.png");
 	await k.loadSound("loseSound", "sounds/synth.wav");

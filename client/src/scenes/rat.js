@@ -1,44 +1,7 @@
 import { k } from "../init";
 import { createCoolText, overlay, tweenFunc } from "../utils";
 
-import * as Colyseus from "colyseus.js";
-
-function loadStuff() {
-	k.loadRoot("/");
-	k.loadFont("Iosevka", "fonts/IosevkaNerdFontPropo-Regular.woff2", { filter: "linear" });
-	k.loadFont("Iosevka-Heavy", "fonts/IosevkaNerdFontPropo-Heavy.woff2", { outline: 3, filter: "linear" });
-	k.loadSprite("karat", "sprites/karat.png");
-	k.loadSprite("bag", "sprites/bag.png");
-	k.loadSprite("goldfly", "sprites/goldfly.png"); //Not used
-	k.loadSprite("sun", "sprites/sun.png"); // Not used
-	k.loadSprite("grass", "sprites/grass.png");
-}
-loadStuff();
-const testPlayerName = `player${k.randi(0, 1000)}`;
 export const startPos = k.vec2(k.width() / 2, k.height() - 77.5);
-
-const client = new Colyseus.Client("ws://localhost:2567");
-main(testPlayerName);
-async function main(name) {
-	createRatScene();
-	const lobbyText = createCoolText(k, "Connecting...", k.width() / 2, k.height() / 2, 48);
-	await client
-		.joinOrCreate("my_room", { playerName: name, playerPos: startPos })
-		.then((room) => {
-			lobbyText.text = "Connected!";
-			k.wait(1, async () => {
-				k.go("rat", room);
-			});
-		})
-		.catch((e) => {
-			lobbyText.text = `Connection failed!\n${e.message || "No Error Code"}`;
-			console.log(e);
-			k.wait(5, async () => {
-				await k.destroy(lobbyText);
-				main();
-			});
-		});
-}
 
 const RATSPEED = 50;
 
