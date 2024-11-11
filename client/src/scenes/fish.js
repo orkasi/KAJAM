@@ -17,22 +17,22 @@ export function createFishScene() {
 			room.state.players.onAdd((player, sessionId) => {
 				if (!startO) {
 					if (sessionId !== room.sessionId) {
-						players[sessionId] = k.add([k.sprite("sukomi"), k.pos(startPos), k.opacity(1), k.anchor("center"), k.rotate(), k.timer(), overlay(rgb(174, 226, 255), 0.4)]);
+						players[0] = k.add([k.sprite("sukomi"), k.pos(startPos), k.opacity(1), k.anchor("center"), k.rotate(), k.timer(), overlay(rgb(174, 226, 255), 0.4)]);
+						players[1] = player;
+						createCoolText(players[0], player.name, 0, -players[0].height, 15);
 
-						createCoolText(players[sessionId], player.name, 0, -players[sessionId].height, 15);
-
-						players[sessionId].onUpdate(() => {
-							if (player.y - 5 > players[sessionId].pos.y) {
-								players[sessionId].pos.y += (player.y - players[sessionId].pos.y) * 12 * k.dt();
-								players[sessionId].angle += (30 - players[sessionId].angle) * 12 * k.dt();
-							} else if (player.y + 5 < players[sessionId].pos.y) {
-								players[sessionId].pos.y += (player.y - players[sessionId].pos.y) * 12 * k.dt();
-								players[sessionId].angle += (-30 - players[sessionId].angle) * 12 * k.dt();
+						players[0].onUpdate(() => {
+							if (player.y - 5 > players[0].pos.y) {
+								players[0].pos.y += (player.y - players[0].pos.y) * 12 * k.dt();
+								players[0].angle += (30 - players[0].angle) * 12 * k.dt();
+							} else if (player.y + 5 < players[0].pos.y) {
+								players[0].pos.y += (player.y - players[0].pos.y) * 12 * k.dt();
+								players[0].angle += (-30 - players[0].angle) * 12 * k.dt();
 							} else {
-								players[sessionId].angle += (0 - players[sessionId].angle) * 12 * k.dt();
+								players[0].angle += (0 - players[0].angle) * 12 * k.dt();
 							}
 							if (startO) {
-								players[sessionId].pos.x += (players[sessionId].pos.x + FISHSPEED - players[sessionId].pos.x) * 12 * k.dt();
+								players[0].pos.x += (players[0].pos.x + FISHSPEED - players[0].pos.x) * 12 * k.dt();
 							}
 						});
 					}
@@ -42,8 +42,8 @@ export function createFishScene() {
 
 		killRoom.push(
 			room.state.players.onRemove((player, sessionId) => {
-				if (players[sessionId]) {
-					k.destroy(players[sessionId]);
+				if (players[0]) {
+					k.destroy(players[0]);
 				}
 			}),
 		);
@@ -63,33 +63,39 @@ export function createFishScene() {
 		const readyText = createCoolText(k, "Press space to get ready", k.width() * 0.85, k.height() / 2, 50);
 
 		const readyKey = k.onKeyPress("space", () => {
+			readyKey.cancel();
+
 			readyText.text = "Ready";
 			room.send("ready");
-			room.onMessage("start", () => {
-				k.wait(1, () => {
-					readyText.text = "Go";
-					readyText.textSize = 128;
-					readyText.font = "Iosevka-Heavy";
-					readyText.pos = k.vec2(k.width() * 1.2, k.height() / 2, 50);
-					readyText.use(move(k.LEFT, 400));
-					startP = true;
-					startO = true;
-					readyKey.cancel();
-					k.wait(5, () => {
-						k.destroy(readyText);
-					});
+			room.onMessage("start", async () => {
+				readyText.font = "Iosevka-Heavy";
+
+				for (let i = 3; i > 0; i--) {
+					readyText.text = i;
+					k.play("count");
+					await k.wait(1);
+				}
+				k.play("go");
+				readyText.text = "Go";
+				readyText.textSize = 128;
+				readyText.pos = k.vec2(k.width() * 1.2, k.height() / 2, 50);
+				readyText.use(move(k.LEFT, 400));
+				startP = true;
+				startO = true;
+				k.wait(5, () => {
+					k.destroy(readyText);
 				});
 			});
 		});
 
 		cPlayer.onUpdate(() => {
-			if (upPressed && cPlayer.pos.y > 50) {
+			if (upPressed && cPlayer.pos.y > 50 && !downPressed) {
 				cPlayer.pos.y += (cPlayer.pos.y - 50 - cPlayer.pos.y) * 12 * k.dt();
 				cPlayer.angle += (-30 - cPlayer.angle) * 12 * k.dt();
-			} else if (downPressed && cPlayer.pos.y < k.height() - 50) {
+			} else if (downPressed && cPlayer.pos.y < k.height() - 50 && !upPressed) {
 				cPlayer.pos.y += (cPlayer.pos.y + 50 - cPlayer.pos.y) * 12 * k.dt();
 				cPlayer.angle += (30 - cPlayer.angle) * 12 * k.dt();
-			} else if (!downPressed && !upPressed) {
+			} else if ((!downPressed && !upPressed) || (downPressed && upPressed)) {
 				cPlayer.angle += (0 - cPlayer.angle) * 12 * k.dt();
 			}
 			room.send("move", cPlayer.pos);
@@ -106,17 +112,19 @@ export function createFishScene() {
 
 		let isEnding = false;
 
+		const obstacles = [];
 		killRoom.push(
 			room.onMessage("spawnObstacle", (data) => {
 				if (!isEnding) {
 					k.randSeed(data);
-					const obstacle = k.add([k.sprite("bobo", { flipX: true }), k.pos(k.rand(lastPos, lastPos + k.width() / 8), k.rand(20, k.height() - 20)), k.area(), k.rotate(), k.animate(), k.scale(k.rand(0.5, 1.5)), "obstacle"]);
+					const obstacle = k.add([k.sprite("bobo", { flipX: true }), k.pos(k.rand(lastPos, lastPos + k.width() / 8), k.rand(20, k.height() - 20)), k.area(), k.rotate(), k.timer(), k.opacity(), k.animate(), k.scale(k.rand(0.5, 1.5)), "obstacle"]);
 					lastPos = obstacle.pos.x;
 					obstacle.use(move(k.LEFT, 400));
 					obstacle.animate("angle", [k.rand(-25, -15), k.rand(-10, 0)], {
 						duration: k.rand(0.3, 0.6),
 						direction: "ping-pong",
 					});
+					obstacles.push(obstacle);
 				}
 			}),
 		);
@@ -124,7 +132,7 @@ export function createFishScene() {
 		killRoom.push(
 			room.onMessage("end", () => {
 				isEnding = true;
-				const finishLine = createCoolText(k, "finish line", lastPos + k.width() * 0.75, k.height() / 2, 64, k.z(3), k.timer(), k.move(k.LEFT, 400), k.area({ scale: k.vec2(20, 1) }), k.rotate(90), "finish");
+				const finishLine = createCoolText(k, "finish line", lastPos + k.width() * 0.75, k.height() / 2, 64, k.timer(), k.z(3), k.move(k.LEFT, 400), k.area({ scale: k.vec2(3, 1) }), k.rotate(90), "finish");
 				finishLine.letterSpacing = 25;
 			}),
 		);
@@ -143,44 +151,56 @@ export function createFishScene() {
 		killRoom.push(
 			room.onMessage("won", (message) => {
 				createRatScene();
-				if (opponentStunTime === stunTime) {
-					createRatScene();
-					k.scene("DRAW", () => {
-						drawSound.paused = false;
+				if (message.winner.sessionId !== room.sessionId) {
+					loseMusic.paused = false;
+
+					k.scene("lost", async () => {
 						k.setBackground(rgb(166, 85, 95));
-						createCoolText(k, "DRAW", k.width() / 2, k.height() / 2, 64);
-						k.wait(5, () => {
+						const mText = createCoolText(k, "You have lost!", k.width() / 2, k.height() / 3, 64);
+						mText.font = "Iosevka-Heavy";
+						createCoolText(k, `${message.loser.name} : ${message.loser.score}		-		${message.winner.name} : ${message.winner.score}`, k.width() / 2, k.height() * 0.15, 32);
+						createCoolText(k, "Get ready to reborn as a rat!", k.width() / 2, k.height() * 0.6, 32);
+						const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.8, 48);
+						timer.font = "Iosevka-Heavy";
+						k.play("count");
+
+						for (let t = 4; t > 0; t--) {
+							await k.wait(1);
+							k.play("count");
+							timer.text = t;
+						}
+
+						k.wait(1, () => {
+							k.play("go");
 							k.go("rat", room);
-							createCoolText(k, `${message.loser.name} : ${message.loser.score}		-		${message.winner.name} : ${message.winner.score}`, k.width() / 2, k.height() / 4, 32);
 						});
 					});
-					room.send("lost");
-					k.go("DRAW");
+					room.send("ended");
+					k.go("lost");
 				} else {
-					loseMusic.paused = false;
-					if (message.winner.sessionId !== room.sessionId) {
-						k.scene("lost", () => {
-							k.setBackground(rgb(166, 85, 95));
-							createCoolText(k, "You have lost!", k.width() / 2, k.height() / 2, 64);
-							createCoolText(k, `${message.loser.name} : ${message.loser.score}		-		${message.winner.name} : ${message.winner.score}`, k.width() / 2, k.height() / 4, 32);
-							k.wait(5, () => {
-								k.go("rat", room);
-							});
+					k.scene("won", async () => {
+						wonMusic.paused = false;
+						k.setBackground(rgb(166, 85, 95));
+						const mText = createCoolText(k, "You have won!", k.width() / 2, k.height() / 3, 64);
+						mText.font = "Iosevka-Heavy";
+						createCoolText(k, `${message.winner.name} : ${message.winner.score}		-		${message.loser.name} : ${message.loser.score}`, k.width() / 2, k.height() * 0.15, 32);
+						createCoolText(k, "Get ready to reborn as a rat!", k.width() / 2, k.height() * 0.6, 32);
+						const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.8, 48);
+						timer.font = "Iosevka-Heavy";
+						k.play("count");
+
+						for (let t = 4; t > 0; t--) {
+							await k.wait(1);
+							k.play("count");
+							timer.text = t;
+						}
+
+						k.wait(1, () => {
+							k.play("go");
+							k.go("rat", room);
 						});
-						room.send("lost");
-						k.go("lost");
-					} else {
-						k.scene("won", () => {
-							wonMusic.paused = false;
-							k.setBackground(rgb(166, 85, 95));
-							createCoolText(k, "You have won!", k.width() / 2, k.height() / 2, 64);
-							createCoolText(k, `${message.winner.name} : ${message.winner.score}		-		${message.loser.name} : ${message.loser.score}`, k.width() / 2, k.height() / 4, 32);
-							k.wait(5, () => {
-								k.go("rat", room);
-							});
-						});
-						k.go("won");
-					}
+					});
+					k.go("won");
 				}
 			}),
 		);
@@ -190,7 +210,39 @@ export function createFishScene() {
 			paused: true,
 		});
 
-		k.onCollide("finish", "player", () => room.send("won"));
+		k.onCollide("finish", "player", () => {
+			if (opponentStunTime === stunTime) {
+				createRatScene();
+				const me = room.state.players.get(room.sessionId);
+				const opponent = players[1];
+				k.scene("DRAW", async () => {
+					drawSound.paused = false;
+					k.setBackground(rgb(166, 85, 95));
+
+					const mText = createCoolText(k, "DRAW", k.width() / 2, k.height() / 3, 64);
+					mText.font = "Iosevka-Heavy";
+					createCoolText(k, `${me.name} : ${me.score}		-		${opponent.name} : ${opponent.score}`, k.width() / 2, k.height() * 0.15, 32);
+					createCoolText(k, "Get ready to reborn as a rat!", k.width() / 2, k.height() * 0.6, 32);
+					const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.8, 48);
+					timer.font = "Iosevka-Heavy";
+					k.play("count");
+
+					for (let t = 4; t > 0; t--) {
+						await k.wait(1);
+						k.play("count");
+						timer.text = t;
+					}
+					k.wait(1, () => {
+						k.play("go");
+						k.go("rat", room);
+					});
+				});
+				room.send("ended");
+				k.go("DRAW");
+			} else {
+				room.send("won");
+			}
+		});
 
 		let opponentStunTime = 0;
 		let stunTime = 0;
@@ -207,9 +259,9 @@ export function createFishScene() {
 			room.onMessage("opponentCollided", (message) => {
 				if (message.sessionId !== room.sessionId) {
 					if (!stunTimerO) {
+						opponentStunTime += 1;
 						hurtSound.play();
 						hurtSound.volume = 0.5;
-						opponentStunTime += 1;
 						startO = false;
 						stunTimerO = true;
 						k.wait(1, () => {
@@ -217,9 +269,18 @@ export function createFishScene() {
 							startO = true;
 							hurtSound.stop();
 						});
-						k.destroy(get("*", { recursive: true }).filter((obj) => obj.id === message.collideID)[0]);
-						tweenFunc(players[message.sessionId], "angle", 360, 0, 0.25, 1);
-						tweenFunc(players[message.sessionId], "opacity", 0, 1, 0.25, 4);
+						tweenFunc(players[0], "angle", 360, 0, 0.25, 1);
+						tweenFunc(players[0], "opacity", 0, 1, 0.25, 4);
+						const target = obstacles.find((obj) => obj.id === message.collideID);
+
+						if (target) {
+							tweenFunc(target, "scale", target.scale, k.vec2(0, 0), 0.5, 1);
+							k.wait(0.5, () => {
+								if (target) {
+									k.destroy(target);
+								}
+							});
+						}
 					}
 				}
 			}),
@@ -227,8 +288,8 @@ export function createFishScene() {
 
 		k.onCollide("obstacle", "player", (collidedObstacle) => {
 			if (!stunTimerP) {
-				hurtSound.play();
 				stunTime += 1;
+				hurtSound.play();
 				startP = false;
 				stunTimerP = true;
 				k.wait(1, () => {
@@ -236,10 +297,17 @@ export function createFishScene() {
 					startP = true;
 					hurtSound.stop();
 				});
-				room.send("collide", collidedObstacle.id);
-				k.destroy(collidedObstacle);
 				tweenFunc(cPlayer, "angle", 360, 0, 0.25, 1);
 				tweenFunc(cPlayer, "opacity", 0, 1, 0.25, 4);
+				tweenFunc(collidedObstacle, "scale", collidedObstacle.scale, k.vec2(0, 0), 0.5, 1);
+
+				k.wait(0.5, () => {
+					if (collidedObstacle) {
+						k.destroy(collidedObstacle);
+					}
+				});
+
+				room.send("collide", collidedObstacle.id);
 			}
 		});
 		k.onSceneLeave(() => {

@@ -13,16 +13,26 @@ const client = new Colyseus.Client("ws://localhost:2567");
 
 async function loadStuff() {
 	await k.loadRoot("/");
+
+	//Rat Game Sprites
 	await k.loadSprite("karat", "sprites/karat.png");
 	await k.loadSprite("bag", "sprites/bag.png");
 	await k.loadSprite("grass", "sprites/grass.png");
+
+	//Fish Game Sprites
 	await k.loadSprite("sukomi", "sprites/sukomi.png");
 	await k.loadSprite("bobo", "sprites/bobo.png");
-	await k.loadSound("loseSound", "sounds/synth.wav");
-	await k.loadSound("hitHurt", "sounds/hitHurt.wav");
-	await k.loadSound("wonSound", "sounds/won.wav");
-	await k.loadSound("drawSound", "sounds/draw.wav");
-	await k.loadSound("wrongName", "sounds/wrongName.wav");
+
+	//Sounds
+	await k.loadSound("loseSound", "sounds/synth.ogg");
+	await k.loadSound("hitHurt", "sounds/hitHurt.ogg");
+	await k.loadSound("wonSound", "sounds/won.ogg");
+	await k.loadSound("drawSound", "sounds/draw.ogg");
+	await k.loadSound("wrongName", "sounds/wrongName.ogg");
+	await k.loadSound("count", "sounds/count.ogg");
+	await k.loadSound("go", "sounds/go.ogg");
+
+	//Fonts
 	await k.loadFont("Iosevka", "fonts/IosevkaNerdFontPropo-Regular.woff2", { filter: "linear" });
 	await k.loadFont("Iosevka-Heavy", "fonts/IosevkaNerdFontPropo-Heavy.woff2", { outline: 3, filter: "linear" });
 }

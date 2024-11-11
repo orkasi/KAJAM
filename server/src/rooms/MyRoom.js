@@ -47,7 +47,7 @@ export class MyRoom extends Room {
 			this.broadcast("opponentCollided", { sessionId: client.sessionId, collideID: message });
 		});
 
-		this.onMessage("lost", (client) => {
+		this.onMessage("ended", (client) => {
 			this.winner = null;
 		});
 
@@ -70,7 +70,7 @@ export class MyRoom extends Room {
 		this.clock.setTimeout(() => {
 			delayedInterval.clear();
 			this.broadcast("end");
-		}, 100000);
+		}, 10000);
 	}
 
 	gameLoop() {
