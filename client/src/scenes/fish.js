@@ -67,25 +67,27 @@ export function createFishScene() {
 
 			readyText.text = "Ready";
 			room.send("ready");
-			room.onMessage("start", async () => {
-				readyText.font = "Iosevka-Heavy";
+			killRoom.push(
+				room.onMessage("start", async () => {
+					readyText.font = "Iosevka-Heavy";
 
-				for (let i = 3; i > 0; i--) {
-					readyText.text = i;
-					k.play("count");
-					await k.wait(1);
-				}
-				k.play("go");
-				readyText.text = "Go";
-				readyText.textSize = 128;
-				readyText.pos = k.vec2(k.width() * 1.2, k.height() / 2, 50);
-				readyText.use(move(k.LEFT, 400));
-				startP = true;
-				startO = true;
-				k.wait(5, () => {
-					k.destroy(readyText);
-				});
-			});
+					for (let i = 3; i > 0; i--) {
+						readyText.text = i;
+						k.play("count");
+						await k.wait(1);
+					}
+					k.play("go");
+					readyText.text = "Go";
+					readyText.textSize = 128;
+					readyText.pos = k.vec2(k.width() * 1.2, k.height() / 2, 50);
+					readyText.use(move(k.LEFT, 400));
+					startP = true;
+					startO = true;
+					k.wait(5, () => {
+						k.destroy(readyText);
+					});
+				}),
+			);
 		});
 
 		cPlayer.onUpdate(() => {
@@ -123,6 +125,11 @@ export function createFishScene() {
 					obstacle.animate("angle", [k.rand(-25, -15), k.rand(-10, 0)], {
 						duration: k.rand(0.3, 0.6),
 						direction: "ping-pong",
+					});
+					obstacle.onUpdate(() => {
+						if (obstacle.pos.x < camPos().x - k.width()) {
+							k.destroy(obstacle);
+						}
 					});
 					obstacles.push(obstacle);
 				}
