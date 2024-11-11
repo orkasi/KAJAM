@@ -15,9 +15,14 @@ async function loadStuff() {
 	await k.loadRoot("/");
 
 	//Rat Game Sprites
+	await k.loadSprite("gigagantrum", "sprites/gigagantrum.png");
 	await k.loadSprite("karat", "sprites/karat.png");
 	await k.loadSprite("bag", "sprites/bag.png");
+	await k.loadSprite("money_bag", "sprites/money_bag.png");
 	await k.loadSprite("grass", "sprites/grass.png");
+	await k.loadSprite("portal", "sprites/portal.png");
+	await k.loadSprite("moon", "sprites/moon.png");
+	await k.loadSprite("cloud", "sprites/cloud.png");
 
 	//Fish Game Sprites
 	await k.loadSprite("sukomi", "sprites/sukomi.png");

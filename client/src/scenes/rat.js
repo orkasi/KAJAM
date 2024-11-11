@@ -8,10 +8,44 @@ const RATSPEED = 50;
 export function createRatScene() {
 	k.scene("rat", (room) => {
 		let opponent = null;
-		let opponentSID = null;
-		k.setBackground(rgb(255, 195, 242));
-		k.setGravity(2000);
+		let opponentP = null;
+		k.setBackground(rgb(57, 9, 71));
+		k.setGravity(1750);
+		const loseMusic = k.play("loseSound", {
+			loop: false,
+			paused: true,
+			volume: 0.8,
+		});
 
+		const wonMusic = k.play("wonSound", {
+			loop: false,
+			paused: true,
+		});
+
+		const drawSound = k.play("drawSound", {
+			loop: false,
+			paused: true,
+		});
+
+		const hurtSound = k.play("hitHurt", {
+			loop: false,
+			paused: true,
+			volume: 0.8,
+		});
+		const moon = k.add([k.sprite("moon"), k.pos(k.width() * 0.85, k.height() * 0.1), k.scale(1), k.fixed(), k.animate()]);
+		moon.animate("angle", [-15, 15], {
+			duration: 1,
+			direction: "ping-pong",
+		});
+		let lastCPos = k.width() + 100;
+		const cloudLoop = k.loop(0.1, () => {
+			const cloud = k.add([k.sprite("cloud"), k.pos(k.rand(lastCPos, lastCPos + k.width() / 2), k.rand(k.height() * 0.01, k.height() * 0.3)), k.scale(k.rand(0.5, 2)), k.animate()]);
+			cloud.animate("angle", [k.rand(-5, 0), k.rand(0, 5)], {
+				duration: k.rand(1, 2),
+				direction: "ping-pong",
+			});
+			lastCPos = cloud.pos.x;
+		});
 		function addGround() {
 			let lastGroundPos = k.width() * -5;
 			const tiles = [];
@@ -32,42 +66,44 @@ export function createRatScene() {
 		addGround();
 
 		room.state.players.onAdd((player, sessionId) => {
-			if (sessionId !== room.sessionId) {
-				opponentSID = sessionId;
-				opponent = k.add([k.sprite("karat"), k.pos(startPos), k.opacity(1), k.anchor("center"), k.rotate(), k.timer(), k.state("start", ["start", "stun", "move"]), overlay(rgb(255, 195, 242), 0.4), k.z(2), "player"]);
+			if (opponent === null) {
+				if (sessionId !== room.sessionId) {
+					opponentP = player;
+					opponent = k.add([k.sprite("karat"), k.pos(startPos), k.opacity(1), k.anchor("center"), k.rotate(), k.timer(), k.state("start", ["start", "stun", "move"]), overlay(rgb(57, 9, 71), 0.4), k.z(2), { stuntime: 0 }, "player"]);
 
-				createCoolText(opponent, player.name, 0, opponent.height, 15);
+					createCoolText(opponent, player.name, 0, opponent.height, 15);
 
-				opponent.onUpdate(() => {
-					opponent.pos.y += (player.y - opponent.pos.y) * 12 * k.dt();
-				});
-
-				let oPTween = null;
-				let oPTween2 = null;
-				let oPTweenL = null;
-
-				opponent.onStateEnter("stun", () => {
-					if (oPTween || oPTween2 || oPTweenL) {
-						if (oPTween) oPTween.finish();
-						if (oPTween2) oPTween2.finish();
-						if (oPTweenL) oPTweenL.cancel();
-					}
-					tweenFunc(opponent, "opacity", 0, 1, 0.25, 4);
-					k.wait(1, () => {
-						opponent.enterState("move");
+					opponent.onUpdate(() => {
+						opponent.pos.y += (player.y - opponent.pos.y) * 12 * k.dt();
 					});
-				});
 
-				opponent.onStateEnter("move", () => {
-					oPTweenL = k.loop(0.5, async () => {
-						oPTween = await opponent.tween(10, -10, 0.25, (value) => (opponent.angle = value));
-						oPTween2 = await opponent.tween(-10, 10, 0.25, (value) => (opponent.angle = value));
+					let oPTween = null;
+					let oPTween2 = null;
+					let oPTweenL = null;
+
+					opponent.onStateEnter("stun", () => {
+						if (oPTween || oPTween2 || oPTweenL) {
+							if (oPTween) oPTween.finish();
+							if (oPTween2) oPTween2.finish();
+							if (oPTweenL) oPTweenL.cancel();
+						}
+						tweenFunc(opponent, "opacity", 0, 1, 0.25, 4);
+						k.wait(1, () => {
+							opponent.enterState("move");
+						});
 					});
-				});
 
-				opponent.onStateUpdate("move", () => {
-					opponent.pos.x += (opponent.pos.x + RATSPEED - opponent.pos.x) * 12 * k.dt();
-				});
+					opponent.onStateEnter("move", () => {
+						oPTweenL = k.loop(0.5, async () => {
+							oPTween = await opponent.tween(10, -10, 0.25, (value) => (opponent.angle = value));
+							oPTween2 = await opponent.tween(-10, 10, 0.25, (value) => (opponent.angle = value));
+						});
+					});
+
+					opponent.onStateUpdate("move", () => {
+						opponent.pos.x += (opponent.pos.x + RATSPEED - opponent.pos.x) * 12 * k.dt();
+					});
+				}
 			}
 		});
 
@@ -77,10 +113,10 @@ export function createRatScene() {
 			}
 		});
 
-		const cPlayer = k.add([k.sprite("karat"), k.pos(startPos), k.body(), k.anchor("center"), k.rotate(), k.z(3), k.area({ offset: k.vec2(0, -3) }), k.timer(), k.opacity(1), k.state("start", ["start", "stun", "move"]), "player"]);
+		const cPlayer = k.add([k.sprite("karat"), k.pos(startPos), k.body(), k.anchor("center"), k.rotate(), k.z(3), k.area({ offset: k.vec2(0, -3) }), k.timer(), k.opacity(1), k.state("start", ["start", "stun", "move"]), { stunTime: 0 }, "player"]);
 		createCoolText(cPlayer, room.state.players.get(room.sessionId).name, 0, -cPlayer.height, 15);
 
-		k.onKeyPress(["up", "w"], () => cPlayer.isGrounded() && cPlayer.jump());
+		k.onKeyPress(["up", "w"], () => cPlayer.isGrounded() && cPlayer.jump(800));
 
 		let cPTween = null;
 		let cPTween2 = null;
@@ -119,42 +155,76 @@ export function createRatScene() {
 		const readyText = createCoolText(k, "Press space to get ready", k.width() * 0.85, k.height() / 2, 50);
 
 		const readyKey = k.onKeyPress("space", () => {
+			readyKey.cancel();
 			readyText.text = "Ready";
 			room.send("readyRat");
-			room.onMessage("start", () => {
-				k.wait(1, () => {
-					readyText.text = "Go";
-					readyText.textSize = 128;
-					readyText.font = "Iosevka-Heavy";
-					readyText.pos = k.vec2(k.width() * 1.2, k.height() / 2, 50);
-					readyText.use(move(k.LEFT, 400));
-					cPlayer.enterState("move");
-					opponent.enterState("move");
-					readyKey.cancel();
-					k.wait(5, () => {
-						k.destroy(readyText);
-					});
+			room.onMessage("start", async () => {
+				readyText.font = "Iosevka-Heavy";
+
+				for (let i = 3; i > 0; i--) {
+					readyText.text = i;
+					k.play("count");
+					await k.wait(1);
+				}
+				k.play("go");
+
+				readyText.text = "Go";
+				readyText.textSize = 128;
+				readyText.font = "Iosevka-Heavy";
+				readyText.pos = k.vec2(k.width() * 1.2, k.height() / 2, 50);
+				readyText.use(move(k.LEFT, 400));
+				cPlayer.enterState("move");
+				opponent.enterState("move");
+				readyKey.cancel();
+				k.wait(5, () => {
+					k.destroy(readyText);
 				});
 			});
 		});
 
 		let lastPos = k.width() * 2;
 
+		const obstacles = [];
 		room.onMessage("spawnObstacle", (data) => {
 			k.randSeed(data);
-			const obstacle = k.add([k.sprite("bag", { flipX: true }), k.pos(k.rand(lastPos + 300, lastPos + k.width()), k.height() - 55), k.area(), k.anchor("bot"), k.rotate(), k.animate(), "obstacle"]);
+			const sprites = [k.sprite("bag", { flipX: true }), k.sprite("gigagantrum"), k.sprite("money_bag", { flipX: true })];
+			const rand = k.randi(3);
+			const obstacle = k.add([sprites[rand], k.pos(k.rand(lastPos + k.width() / 2, lastPos + k.width() * 1.5), k.height() - 55), k.area(), k.anchor("bot"), k.rotate(), k.timer(), k.animate(), k.scale(), "obstacle"]);
+			if (rand === 2) {
+				obstacle.scale = k.vec2(2, 2);
+			}
 			lastPos = obstacle.pos.x;
 			obstacle.use(move(k.LEFT, 20));
 			obstacle.animate("angle", [k.rand(-15, -5), k.rand(5, 15)], {
 				duration: k.rand(0.1, 0.4),
 				direction: "ping-pong",
 			});
+			obstacle.onUpdate(() => {
+				if (obstacle.pos.x < camPos().x - k.width()) {
+					k.destroy(obstacle);
+				}
+			});
+			obstacles.push(obstacle);
 		});
 
 		room.onMessage("opponentCollided", (message) => {
 			if (message.sessionId !== room.sessionId) {
 				opponent.enterState("stun");
-				k.destroy(get("*", { recursive: true }).filter((obj) => obj.id === message.collideID)[0]);
+				hurtSound.play();
+				hurtSound.volume = 0.5;
+				k.wait(0.5, () => {
+					hurtSound.stop();
+				});
+				const target = obstacles.find((obj) => obj.id === message.collideID);
+
+				if (target) {
+					tweenFunc(target, "scale", target.scale, k.vec2(0, 0), 0.5, 1);
+					k.wait(0.5, () => {
+						if (target) {
+							k.destroy(target);
+						}
+					});
+				}
 			}
 		});
 
@@ -162,8 +232,111 @@ export function createRatScene() {
 			if (cPlayer.state !== "stun") {
 				cPlayer.enterState("stun");
 				room.send("collide", collidedObstacle.id);
-				k.destroy(collidedObstacle);
+				tweenFunc(collidedObstacle, "scale", collidedObstacle.scale, k.vec2(0, 0), 0.5, 1);
+				hurtSound.play();
+				k.wait(0.5, () => {
+					hurtSound.stop();
+				});
+				k.wait(0.5, () => {
+					if (collidedObstacle) {
+						k.destroy(collidedObstacle);
+					}
+				});
 			}
+		});
+
+		room.onMessage("won", (message) => {
+			if (message.winner.sessionId !== room.sessionId) {
+				loseMusic.paused = false;
+
+				k.scene("lost", async () => {
+					k.setBackground(rgb(166, 85, 95));
+					const mText = createCoolText(k, "You have lost!", k.width() / 2, k.height() / 3, 64);
+					mText.font = "Iosevka-Heavy";
+					createCoolText(k, `${message.loser.name} : ${message.loser.score}		-		${message.winner.name} : ${message.winner.score}`, k.width() / 2, k.height() * 0.15, 32);
+					createCoolText(k, "Get ready to reborn as a what!", k.width() / 2, k.height() * 0.6, 32);
+					const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.8, 48);
+					timer.font = "Iosevka-Heavy";
+					k.play("count");
+
+					for (let t = 4; t > 0; t--) {
+						await k.wait(1);
+						k.play("count");
+						timer.text = t;
+					}
+
+					k.wait(1, () => {
+						k.play("go");
+						//
+					});
+				});
+				room.send("ended");
+				k.go("lost");
+			} else {
+				k.scene("won", async () => {
+					wonMusic.paused = false;
+					k.setBackground(rgb(166, 85, 95));
+					const mText = createCoolText(k, "You have won!", k.width() / 2, k.height() / 3, 64);
+					mText.font = "Iosevka-Heavy";
+					createCoolText(k, `${message.winner.name} : ${message.winner.score}		-		${message.loser.name} : ${message.loser.score}`, k.width() / 2, k.height() * 0.15, 32);
+					createCoolText(k, "Get ready to reborn as a what!", k.width() / 2, k.height() * 0.6, 32);
+					const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.8, 48);
+					timer.font = "Iosevka-Heavy";
+					k.play("count");
+
+					for (let t = 4; t > 0; t--) {
+						await k.wait(1);
+						k.play("count");
+						timer.text = t;
+					}
+
+					k.wait(1, () => {
+						k.play("go");
+						//
+					});
+				});
+				k.go("won");
+			}
+		});
+
+		k.onCollide("finish", "player", () => {
+			if (cPlayer.stunTime === opponent.stunTime) {
+				const me = room.state.players.get(room.sessionId);
+				const opponent = opponentP;
+				k.scene("DRAW", async () => {
+					drawSound.paused = false;
+					k.setBackground(rgb(166, 85, 95));
+
+					const mText = createCoolText(k, "DRAW", k.width() / 2, k.height() / 3, 64);
+					mText.font = "Iosevka-Heavy";
+					createCoolText(k, `${me.name} : ${me.score}		-		${opponent.name} : ${opponent.score}`, k.width() / 2, k.height() * 0.15, 32);
+					createCoolText(k, "Get ready to reborn as a what!", k.width() / 2, k.height() * 0.6, 32);
+					const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.8, 48);
+					timer.font = "Iosevka-Heavy";
+					k.play("count");
+
+					for (let t = 4; t > 0; t--) {
+						await k.wait(1);
+						k.play("count");
+						timer.text = t;
+					}
+					k.wait(1, () => {
+						k.play("go");
+						//
+					});
+				});
+				room.send("ended");
+				k.go("DRAW");
+			} else {
+				room.send("won");
+			}
+		});
+
+		let isEnding = false;
+		room.onMessage("end", (message) => {
+			isEnding = true;
+			cloudLoop.cancel();
+			k.add([k.sprite("portal"), k.pos(lastPos + k.width(), k.height() - 55), k.area(), k.anchor("bot"), k.z(3), k.scale(k.vec2(3, 3)), "finish"]);
 		});
 	});
 }

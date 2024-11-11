@@ -66,11 +66,11 @@ export class MyRoom extends Room {
 	gameLoopRat() {
 		const delayedInterval = this.clock.setInterval(() => {
 			this.broadcast("spawnObstacle", Math.random() * 9999);
-		}, 1000);
+		}, 200);
 		this.clock.setTimeout(() => {
 			delayedInterval.clear();
 			this.broadcast("end");
-		}, 10000);
+		}, 1000);
 	}
 
 	gameLoop() {
@@ -80,7 +80,7 @@ export class MyRoom extends Room {
 		this.clock.setTimeout(() => {
 			delayedInterval.clear();
 			this.broadcast("end");
-		}, 10000);
+		}, 1000);
 	}
 
 	onJoin(client, options) {
