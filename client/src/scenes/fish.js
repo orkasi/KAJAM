@@ -13,6 +13,29 @@ export function createFishScene() {
 		let startP = false;
 		let startO = false;
 
+		// Assign tag them to all and use destroyAll to destroy them when player is ready (pressingspace).
+		function fishUIBackground() {
+			const backgroundRect = k.add([k.pos(k.width() * 0.625, k.height() * 0.58), k.rect(400, 180), k.outline(2), k.scale(), k.color("#aee2ff")]);
+			const dummyFish = backgroundRect.add([k.sprite("sukomi"), k.pos(backgroundRect.width * 0.4, backgroundRect.height * 0.5), k.scale(1.5), k.animate(), k.anchor("center")]);
+			dummyFish.animate("angle", [-20, 20], {
+				duration: 1,
+				direction: "ping-pong",
+			});
+			const keyUpUI = backgroundRect.add([k.sprite("bean"), k.pos(backgroundRect.width * 0.6, backgroundRect.height * 0.2), k.opacity()]);
+			const keyDownUI = backgroundRect.add([k.sprite("bean"), k.pos(backgroundRect.width * 0.6, backgroundRect.height * 0.4), k.opacity()]);
+
+			backgroundRect.onUpdate(() => {
+				if (dummyFish.angle > 0) {
+					keyUpUI.opacity = 0;
+					keyDownUI.opacity = 1;
+				} else if (dummyFish.angle < 0) {
+					keyUpUI.opacity = 1;
+					keyDownUI.opacity = 0;
+				}
+			});
+		}
+		fishUIBackground();
+
 		killRoom.push(
 			room.state.players.onAdd((player, sessionId) => {
 				if (!startO) {
@@ -64,7 +87,7 @@ export function createFishScene() {
 
 		const readyKey = k.onKeyPress("space", () => {
 			readyKey.cancel();
-
+			k.destroy(backgroundRect);
 			readyText.text = "Ready";
 			room.send("ready");
 			killRoom.push(

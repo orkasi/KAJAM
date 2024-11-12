@@ -36,6 +36,7 @@ async function loadStuff() {
 	//Fish Game Sprites
 	await k.loadSprite("sukomi", "sprites/sukomi.png");
 	await k.loadSprite("bobo", "sprites/bobo.png");
+	await k.loadSprite("bean", "sprites/bean.png");
 
 	//Sounds
 	await k.loadSound("loseSound", "sounds/synth.ogg");
