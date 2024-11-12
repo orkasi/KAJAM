@@ -4,4 +4,5 @@ export const k = kaplay({
 	width: 1280,
 	height: 720,
 	texFilter: "nearest",
+	maxFPS: 60,
 });
