@@ -1,7 +1,7 @@
 import { k } from "./init";
 import { createFishScene, startPos } from "./scenes/fish";
 import * as Colyseus from "colyseus.js";
-import { createCoolText } from "./utils";
+import { COLORS, createCoolText } from "./utils";
 
 window.addEventListener("keydown", (e) => {
 	if (e.key === "F1") {
@@ -38,11 +38,29 @@ async function loadStuff() {
 	await k.loadSound("go", "sounds/go.ogg");
 
 	//Fonts
-	await k.loadFont("Iosevka", "fonts/IosevkaNerdFontPropo-Regular.woff2", { filter: "linear" });
+	await k.loadFont("Iosevka", "fonts/IosevkaNerdFontPropo-Regular.woff2", { outline: 1, filter: "linear" });
 	await k.loadFont("Iosevka-Heavy", "fonts/IosevkaNerdFontPropo-Heavy.woff2", { outline: 3, filter: "linear" });
+
+	//Shaders
+	await k.loadShaderURL("tiledPattern", null, "shaders/tiledPattern.frag");
 }
 
 k.setBackground(rgb(166, 85, 95));
+const tiledBackground = k.add([
+	k.uvquad(k.width(), k.height()) /* surface for the shader */,
+	k.shader("tiledPattern", () => ({
+		u_time: k.time() / 20,
+		u_color1: k.Color.fromHex(COLORS.color1),
+		u_color2: k.Color.fromHex(COLORS.color2),
+		u_speed: k.vec2(1, -1),
+		u_aspect: k.width() / k.height(),
+		u_size: 5,
+	})),
+	k.pos(0),
+	k.fixed(),
+]);
+
+tiledBackground.onUpdate(() => {});
 
 createFishScene();
 
@@ -73,6 +91,7 @@ async function main(name) {
 		.then((room) => {
 			lobbyText.text = "Connected!";
 			k.wait(1, async () => {
+				k.destroy(tiledBackground);
 				k.go("fish", room);
 			});
 		})

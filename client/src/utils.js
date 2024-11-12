@@ -37,3 +37,8 @@ export function createCoolText(gameObject, text, x, y, size, ...extraComps) {
 		...extraComps,
 	]);
 }
+
+export const COLORS = {
+	color1: "#ffffff",
+	color2: "#d9bdc8",
+};
