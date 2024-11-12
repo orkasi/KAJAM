@@ -1,6 +1,6 @@
 import { k } from "../init";
 import { createRatScene } from "./rat";
-import { tweenFunc, overlay, createCoolText } from "../utils";
+import { tweenFunc, overlay, createCoolText, createTiledBackground } from "../utils";
 
 export const startPos = k.vec2(k.width() / 2, k.height() / 2);
 const FISHSPEED = 50;
@@ -162,7 +162,7 @@ export function createFishScene() {
 					loseMusic.paused = false;
 
 					k.scene("lost", async () => {
-						k.setBackground(rgb(166, 85, 95));
+						const tiledBackground = createTiledBackground("#d9bdc8", "#ffffff");
 						const mText = createCoolText(k, "You have lost!", k.width() / 2, k.height() / 3, 64);
 						mText.font = "Iosevka-Heavy";
 						createCoolText(k, `${message.loser.name} : ${message.loser.score}		-		${message.winner.name} : ${message.winner.score}`, k.width() / 2, k.height() * 0.15, 32);
@@ -179,6 +179,7 @@ export function createFishScene() {
 
 						k.wait(1, () => {
 							k.play("go");
+							k.destroy(tiledBackground);
 							k.go("rat", room);
 						});
 					});
@@ -186,8 +187,8 @@ export function createFishScene() {
 					k.go("lost");
 				} else {
 					k.scene("won", async () => {
+						const tiledBackground = createTiledBackground("#d9bdc8", "#ffffff");
 						wonMusic.paused = false;
-						k.setBackground(rgb(166, 85, 95));
 						const mText = createCoolText(k, "You have won!", k.width() / 2, k.height() / 3, 64);
 						mText.font = "Iosevka-Heavy";
 						createCoolText(k, `${message.winner.name} : ${message.winner.score}		-		${message.loser.name} : ${message.loser.score}`, k.width() / 2, k.height() * 0.15, 32);
@@ -204,6 +205,8 @@ export function createFishScene() {
 
 						k.wait(1, () => {
 							k.play("go");
+							k.destroy(tiledBackground);
+
 							k.go("rat", room);
 						});
 					});
@@ -223,8 +226,9 @@ export function createFishScene() {
 				const me = room.state.players.get(room.sessionId);
 				const opponent = players[1];
 				k.scene("DRAW", async () => {
+					const tiledBackground = createTiledBackground("#d9bdc8", "#ffffff");
+
 					drawSound.paused = false;
-					k.setBackground(rgb(166, 85, 95));
 
 					const mText = createCoolText(k, "DRAW", k.width() / 2, k.height() / 3, 64);
 					mText.font = "Iosevka-Heavy";
@@ -241,6 +245,8 @@ export function createFishScene() {
 					}
 					k.wait(1, () => {
 						k.play("go");
+						k.destroy(tiledBackground);
+
 						k.go("rat", room);
 					});
 				});

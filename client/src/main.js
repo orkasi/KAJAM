@@ -1,7 +1,7 @@
 import { k } from "./init";
 import { createFishScene, startPos } from "./scenes/fish";
 import * as Colyseus from "colyseus.js";
-import { COLORS, createCoolText } from "./utils";
+import { createTiledBackground, createCoolText } from "./utils";
 
 window.addEventListener("keydown", (e) => {
 	if (e.key === "F1") {
@@ -45,23 +45,7 @@ async function loadStuff() {
 	await k.loadShaderURL("tiledPattern", null, "shaders/tiledPattern.frag");
 }
 
-k.setBackground(rgb(166, 85, 95));
-const tiledBackground = k.add([
-	k.uvquad(k.width(), k.height()) /* surface for the shader */,
-	k.shader("tiledPattern", () => ({
-		u_time: k.time() / 20,
-		u_color1: k.Color.fromHex(COLORS.color1),
-		u_color2: k.Color.fromHex(COLORS.color2),
-		u_speed: k.vec2(1, -1),
-		u_aspect: k.width() / k.height(),
-		u_size: 5,
-	})),
-	k.pos(0),
-	k.fixed(),
-]);
-
-tiledBackground.onUpdate(() => {});
-
+const tiledBackground = createTiledBackground("#d9bdc8", "#ffffff");
 createFishScene();
 
 async function name() {

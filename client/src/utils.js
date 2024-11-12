@@ -38,7 +38,18 @@ export function createCoolText(gameObject, text, x, y, size, ...extraComps) {
 	]);
 }
 
-export const COLORS = {
-	color1: "#ffffff",
-	color2: "#d9bdc8",
-};
+export function createTiledBackground(color1, color2) {
+	return k.add([
+		k.uvquad(k.width(), k.height()) /* surface for the shader */,
+		k.shader("tiledPattern", () => ({
+			u_time: k.time() / 20,
+			u_color1: k.Color.fromHex(color1),
+			u_color2: k.Color.fromHex(color2),
+			u_speed: k.vec2(1, -1),
+			u_aspect: k.width() / k.height(),
+			u_size: 5,
+		})),
+		k.pos(0),
+		k.fixed(),
+	]);
+}
