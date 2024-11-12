@@ -260,7 +260,7 @@ export function createRatScene() {
 					loseMusic.paused = false;
 
 					k.scene("lost", async () => {
-						const tiledBackground = createTiledBackground("#d9bdc8", "#ffffff");
+						const tiledBackground = createTiledBackground("#7b5480", "#ffffff");
 
 						const mText = createCoolText(k, "You have lost!", k.width() / 2, k.height() / 3, 64);
 						mText.font = "Iosevka-Heavy";
@@ -287,7 +287,7 @@ export function createRatScene() {
 					k.go("lost");
 				} else {
 					k.scene("won", async () => {
-						const tiledBackground = createTiledBackground("#d9bdc8", "#ffffff");
+						const tiledBackground = createTiledBackground("#7b5480", "#ffffff");
 
 						wonMusic.paused = false;
 						const mText = createCoolText(k, "You have won!", k.width() / 2, k.height() / 3, 64);
@@ -321,7 +321,7 @@ export function createRatScene() {
 				const me = room.state.players.get(room.sessionId);
 				const opponent = opponentP;
 				k.scene("DRAW", async () => {
-					const tiledBackground = createTiledBackground("#d9bdc8", "#ffffff");
+					const tiledBackground = createTiledBackground("#7b5480", "#ffffff");
 
 					drawSound.paused = false;
 
