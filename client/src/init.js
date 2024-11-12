@@ -5,4 +5,5 @@ export const k = kaplay({
 	height: 720,
 	texFilter: "nearest",
 	maxFPS: 60,
+	pixelDensity: devicePixelRatio,
 });
