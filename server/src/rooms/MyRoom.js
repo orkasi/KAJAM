@@ -9,10 +9,18 @@ export class MyRoom extends Room {
 		this.winner = null;
 		this.clock.start();
 		this.autoDispose = false;
+
 		this.onMessage("move", (client, message) => {
 			const player = this.state.players.get(client.sessionId);
 			player.x = message.x;
 			player.y = message.y;
+		});
+
+		this.onMessage("moveB", (client, message) => {
+			const player = this.state.players.get(client.sessionId);
+			player.x = message.pos.x;
+			player.y = message.pos.y;
+			player.angle = message.angle;
 		});
 
 		this.onMessage("ready", (client, message) => {
@@ -43,6 +51,20 @@ export class MyRoom extends Room {
 			}
 		});
 
+		this.onMessage("readyButterfly", (client, message) => {
+			const player = this.state.players.get(client.sessionId);
+			player.ready = true;
+			if (this.areAllPlayersReady()) {
+				this.broadcast("start");
+				this.clock.setTimeout(() => {
+					this.gameLoopB();
+				}, 1000);
+				this.state.players.forEach((player) => {
+					player.ready = false;
+				});
+			}
+		});
+
 		this.onMessage("collide", (client, message) => {
 			this.broadcast("opponentCollided", { sessionId: client.sessionId, collideID: message });
 		});
@@ -66,11 +88,21 @@ export class MyRoom extends Room {
 	gameLoopRat() {
 		const delayedInterval = this.clock.setInterval(() => {
 			this.broadcast("spawnObstacle", Math.random() * 9999);
+		}, 100);
+		this.clock.setTimeout(() => {
+			delayedInterval.clear();
+			this.broadcast("end");
+		}, 3000);
+	}
+
+	gameLoopB() {
+		const delayedInterval = this.clock.setInterval(() => {
+			this.broadcast("spawnObstacle", Math.random() * 9999);
 		}, 200);
 		this.clock.setTimeout(() => {
 			delayedInterval.clear();
 			this.broadcast("end");
-		}, 1000);
+		}, 3000);
 	}
 
 	gameLoop() {
@@ -80,7 +112,7 @@ export class MyRoom extends Room {
 		this.clock.setTimeout(() => {
 			delayedInterval.clear();
 			this.broadcast("end");
-		}, 1000);
+		}, 3000);
 	}
 
 	onJoin(client, options) {
@@ -91,6 +123,7 @@ export class MyRoom extends Room {
 		player.x = options.playerPos.x;
 		player.y = options.playerPos.y;
 		player.score = 0;
+		player.angle = 0;
 		player.ready = false;
 		this.state.players.set(client.sessionId, player);
 	}

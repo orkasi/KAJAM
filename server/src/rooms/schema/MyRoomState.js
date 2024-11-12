@@ -7,6 +7,7 @@ export class Player extends schema.Schema {
 		this.name = "";
 		this.x;
 		this.y;
+		this.angle;
 		this.score = 0;
 		this.ready = false;
 	}
@@ -17,6 +18,7 @@ schema.defineTypes(Player, {
 	name: "string",
 	x: "number",
 	y: "number",
+	angle: "number",
 	score: "number",
 	ready: "boolean",
 });

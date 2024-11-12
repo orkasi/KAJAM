@@ -1,7 +1,8 @@
 import { k } from "./init";
-import { createFishScene, startPos } from "./scenes/fish";
 import * as Colyseus from "colyseus.js";
 import { createTiledBackground, createCoolText } from "./utils";
+
+import { createFishScene, startPos } from "./scenes/fish";
 
 window.addEventListener("keydown", (e) => {
 	if (e.key === "F1") {
@@ -13,6 +14,14 @@ const client = new Colyseus.Client("ws://localhost:2567");
 
 async function loadStuff() {
 	await k.loadRoot("/");
+
+	//Shaders
+	await k.loadShaderURL("tiledPattern", null, "shaders/tiledPattern.frag");
+
+	//Butterfly Game Sprites
+	await k.loadSprite("butterfly", "sprites/butterfly.png");
+	await k.loadSprite("goldfly", "sprites/goldfly.png");
+	await k.loadSprite("ghosty", "sprites/ghosty.png");
 
 	//Rat Game Sprites
 	await k.loadSprite("gigagantrum", "sprites/gigagantrum.png");
@@ -40,16 +49,13 @@ async function loadStuff() {
 	//Fonts
 	await k.loadFont("Iosevka", "fonts/IosevkaNerdFontPropo-Regular.woff2", { outline: 1, filter: "linear" });
 	await k.loadFont("Iosevka-Heavy", "fonts/IosevkaNerdFontPropo-Heavy.woff2", { outline: 3, filter: "linear" });
-
-	//Shaders
-	await k.loadShaderURL("tiledPattern", null, "shaders/tiledPattern.frag");
 }
-
-const tiledBackground = createTiledBackground("#d9bdc8", "#ffffff");
+await loadStuff();
 createFishScene();
 
+const tiledBackground = createTiledBackground("#d9bdc8", "#ffffff");
+
 async function name() {
-	await loadStuff();
 	const askName = createCoolText(k, "Please enter your name", k.width() / 2, k.height() * 0.2, 48, "destroyN", k.timer(), k.rotate());
 	const name = createCoolText(k, " ", k.width() / 2, k.height() / 2, 48, k.textInput(true, 10), "destroyN");
 	const keyPress = k.onKeyPress("enter", async () => {
@@ -74,6 +80,7 @@ async function main(name) {
 		.joinOrCreate("my_room", { playerName: name, playerPos: startPos })
 		.then((room) => {
 			lobbyText.text = "Connected!";
+
 			k.wait(1, async () => {
 				k.destroy(tiledBackground);
 				k.go("fish", room);

@@ -1,18 +1,17 @@
 import { k } from "../init";
 import { createCoolText, overlay, tweenFunc, createTiledBackground } from "../utils";
-import { createButterflyScene } from "./butterfly";
 
-export const startPos = k.vec2(k.width() / 2, k.height() - 77.5);
+export const startPos = k.vec2(k.width() / 2, k.height() - 120);
 
-const RATSPEED = 50;
+const BUTTERFLYSPEED = 50;
 
-export function createRatScene() {
-	k.scene("rat", (room) => {
+export function createButterflyScene() {
+	k.scene("butterfly", (room) => {
+		k.setGravity(0);
 		const killRoom = [];
 		let opponent = null;
 		let opponentP = null;
-		k.setBackground(rgb(57, 9, 71));
-		k.setGravity(1750);
+		k.setBackground(rgb(252, 239, 141));
 		const loseMusic = k.play("loseSound", {
 			loop: false,
 			paused: true,
@@ -34,25 +33,12 @@ export function createRatScene() {
 			paused: true,
 			volume: 0.8,
 		});
-		const moon = k.add([k.sprite("moon"), k.pos(k.width() * 0.85, k.height() * 0.1), k.scale(1), k.fixed(), k.animate()]);
-		moon.animate("angle", [-15, 15], {
-			duration: 1,
-			direction: "ping-pong",
-		});
-		let lastCPos = k.width() + 100;
-		const cloudLoop = k.loop(0.1, () => {
-			const cloud = k.add([k.sprite("cloud"), k.pos(k.rand(lastCPos, lastCPos + k.width() / 2), k.rand(k.height() * 0.01, k.height() * 0.3)), k.scale(k.rand(0.5, 2)), k.animate()]);
-			cloud.animate("angle", [k.rand(-5, 0), k.rand(0, 5)], {
-				duration: k.rand(1, 2),
-				direction: "ping-pong",
-			});
-			lastCPos = cloud.pos.x;
-		});
+
 		function addGround() {
 			let lastGroundPos = k.width() * -5;
 			const tiles = [];
 			for (let i = 0; i < 150; i++) {
-				tiles.push(k.add([k.sprite("grass"), k.pos(lastGroundPos, k.height()), k.area(), k.body({ isStatic: true }), k.anchor("bot"), k.z(1), k.offscreen()]));
+				tiles.push(k.add([k.sprite("grass"), k.pos(lastGroundPos, k.height()), k.anchor("bot"), k.z(1), k.offscreen()]));
 				lastGroundPos += 55;
 			}
 
@@ -65,46 +51,51 @@ export function createRatScene() {
 				}
 			});
 		}
+
+		function addCeiling() {
+			let lastGroundPos = k.width() * -5;
+			const tiles = [];
+			for (let i = 0; i < 150; i++) {
+				tiles.push(k.add([k.sprite("grass"), k.pos(lastGroundPos, 0), k.anchor("bot"), k.rotate(180), k.z(1), k.offscreen()]));
+				lastGroundPos += 55;
+			}
+
+			k.loop(0.1, () => {
+				if (tiles[0].isOffScreen()) {
+					const tile = tiles.shift();
+					tile.pos.x = lastGroundPos;
+					lastGroundPos += 55;
+					tiles.push(tile);
+				}
+			});
+		}
+
 		addGround();
+		addCeiling();
 
 		killRoom.push(
 			room.state.players.onAdd((player, sessionId) => {
 				if (opponent === null) {
 					if (sessionId !== room.sessionId) {
 						opponentP = player;
-						opponent = k.add([k.sprite("karat"), k.pos(startPos), k.opacity(1), k.anchor("center"), k.rotate(), k.timer(), k.state("start", ["start", "stun", "move"]), overlay(rgb(57, 9, 71), 0.4), k.z(2), { stuntime: 0 }, "player"]);
+						opponent = k.add([k.sprite("butterfly"), k.pos(startPos), k.opacity(1), k.anchor("center"), k.rotate(), k.timer(), k.animate(), k.state("start", ["start", "stun", "move"]), overlay(rgb(252, 239, 141), 0.4), k.z(2), { stuntime: 0 }, "player"]);
 
 						createCoolText(opponent, player.name, 0, opponent.height, 15);
 
 						opponent.onUpdate(() => {
 							opponent.pos.y += (player.y - opponent.pos.y) * 12 * k.dt();
+							opponent.angle += (player.angle - opponent.angle) * 12 * k.dt();
 						});
 
-						let oPTween = null;
-						let oPTween2 = null;
-						let oPTweenL = null;
-
 						opponent.onStateEnter("stun", () => {
-							if (oPTween || oPTween2 || oPTweenL) {
-								if (oPTween) oPTween.finish();
-								if (oPTween2) oPTween2.finish();
-								if (oPTweenL) oPTweenL.cancel();
-							}
 							tweenFunc(opponent, "opacity", 0, 1, 0.25, 4);
 							k.wait(1, () => {
 								opponent.enterState("move");
 							});
 						});
 
-						opponent.onStateEnter("move", () => {
-							oPTweenL = k.loop(0.5, async () => {
-								oPTween = await opponent.tween(10, -10, 0.25, (value) => (opponent.angle = value));
-								oPTween2 = await opponent.tween(-10, 10, 0.25, (value) => (opponent.angle = value));
-							});
-						});
-
 						opponent.onStateUpdate("move", () => {
-							opponent.pos.x += (opponent.pos.x + RATSPEED - opponent.pos.x) * 12 * k.dt();
+							opponent.pos.x += (opponent.pos.x + BUTTERFLYSPEED - opponent.pos.x) * 12 * k.dt();
 						});
 					}
 				}
@@ -119,37 +110,51 @@ export function createRatScene() {
 			}),
 		);
 
-		const cPlayer = k.add([k.sprite("karat"), k.pos(startPos), k.body(), k.anchor("center"), k.rotate(), k.z(3), k.area({ offset: k.vec2(0, -3) }), k.timer(), k.opacity(1), k.state("start", ["start", "stun", "move"]), { stunTime: 0 }, "player"]);
+		const cPlayer = k.add([k.sprite("butterfly"), k.pos(startPos), k.body(), k.anchor("center"), k.animate(), k.rotate(), k.z(3), k.area({ offset: k.vec2(0, -3) }), k.timer(), k.opacity(1), k.state("start", ["start", "stun", "move"]), { stunTime: 0, onTransition: false, onWhere: "ground" }, "player"]);
 		createCoolText(cPlayer, room.state.players.get(room.sessionId).name, 0, -cPlayer.height, 15);
 
-		k.onKeyPress(["up", "w"], () => cPlayer.isGrounded() && cPlayer.jump(800));
+		k.onKeyPress(["up", "w", "s", "down"], async () => {
+			if (!cPlayer.onTransition) {
+				cPlayer.onTransition = true;
+				cPlayer.unanimate("angle");
 
-		let cPTween = null;
-		let cPTween2 = null;
-		let cPTweenL = null;
+				if (cPlayer.onWhere === "ceiling") {
+					cPlayer.onWhere = "ground";
+
+					tweenFunc(cPlayer, "angle", cPlayer.angle, -5, 0.5, 1);
+					await cPlayer.tween(cPlayer.pos.y, k.height() - 120, 0.5, (value) => (cPlayer.pos.y = value));
+
+					cPlayer.onTransition = false;
+					cPlayer.animate("angle", [-5, 5], { duration: 0.5, direction: "ping-pong" });
+				} else {
+					cPlayer.onWhere = "ceiling";
+
+					tweenFunc(cPlayer, "angle", cPlayer.angle, 175, 0.5, 1);
+					await cPlayer.tween(cPlayer.pos.y, 120, 0.5, (value) => (cPlayer.pos.y = value));
+
+					cPlayer.onTransition = false;
+					cPlayer.animate("angle", [175, 185], { duration: 0.5, direction: "ping-pong" });
+				}
+			}
+		});
+
+		cPlayer.onStateEnter("start", () => {
+			cPlayer.animate("angle", [-5, 5], { duration: 0.5, direction: "ping-pong" });
+		});
 
 		cPlayer.onStateEnter("stun", () => {
-			if (cPTween || cPTween2 || cPTweenL) {
-				if (cPTween) cPTween.finish();
-				if (cPTween2) cPTween2.finish();
-				if (cPTweenL) cPTweenL.cancel();
-			}
 			tweenFunc(cPlayer, "opacity", 0, 1, 0.25, 4);
 			k.wait(1, () => {
 				cPlayer.enterState("move");
 			});
 		});
 
-		cPlayer.onStateEnter("move", () => {
-			cPTweenL = k.loop(0.5, async () => {
-				cPTween = await cPlayer.tween(-10, 10, 0.25, (value) => (cPlayer.angle = value));
-				cPTween2 = await cPlayer.tween(10, -10, 0.25, (value) => (cPlayer.angle = value));
-			});
+		cPlayer.onStateUpdate("move", () => {
+			cPlayer.pos.x += (cPlayer.pos.x + BUTTERFLYSPEED - cPlayer.pos.x) * 12 * k.dt();
 		});
 
-		cPlayer.onStateUpdate("move", () => {
-			cPlayer.pos.x += (cPlayer.pos.x + RATSPEED - cPlayer.pos.x) * 12 * k.dt();
-			room.send("move", cPlayer.pos);
+		cPlayer.onUpdate(() => {
+			room.send("moveB", { pos: cPlayer.pos, angle: cPlayer.angle });
 		});
 
 		cPlayer.onUpdate(async () => {
@@ -163,7 +168,7 @@ export function createRatScene() {
 		const readyKey = k.onKeyPress("space", () => {
 			readyKey.cancel();
 			readyText.text = "Ready";
-			room.send("readyRat");
+			room.send("readyButterfly");
 			room.onMessage("start", async () => {
 				readyText.font = "Iosevka-Heavy";
 
@@ -194,18 +199,27 @@ export function createRatScene() {
 		killRoom.push(
 			room.onMessage("spawnObstacle", (data) => {
 				k.randSeed(data);
-				const sprites = [k.sprite("bag", { flipX: true }), k.sprite("gigagantrum"), k.sprite("money_bag", { flipX: true })];
-				const rand = k.randi(3);
-				const obstacle = k.add([sprites[rand], k.pos(k.rand(lastPos + k.width() / 2, lastPos + k.width() * 1.5), k.height() - 55), k.area(), k.anchor("bot"), k.rotate(), k.timer(), k.animate(), k.scale(), "obstacle"]);
-				if (rand === 2) {
-					obstacle.scale = k.vec2(2, 2);
+				const orientation = [k.height() - 55, 55];
+				const sprites = [k.sprite("ghosty", { flipX: false }), k.sprite("goldfly", { flipX: true })];
+				const orand = k.randi(2);
+				const rand = k.randi(2);
+				const obstacle = k.add([sprites[rand], k.pos(k.rand(lastPos + k.width() / 4, lastPos + k.width() * 1.5), orientation[orand]), k.area(), k.anchor("bot"), k.rotate(), k.timer(), k.scale(k.rand(0.8, 1.5)), "obstacle"]);
+
+				if (rand === 1) {
+					if (orand === 1) {
+						obstacle.angle = 180;
+						obstacle.flipX = false;
+					}
+				} else {
+					obstacle.anchor = "center";
+					obstacle.pos.y = k.rand(200, k.height() - 200);
+					if (obstacle.pos.y < k.height() / 2) {
+						obstacle.angle = 180;
+						obstacle.flipX = true;
+					}
 				}
 				lastPos = obstacle.pos.x;
 				obstacle.use(move(k.LEFT, 20));
-				obstacle.animate("angle", [k.rand(-15, -5), k.rand(5, 15)], {
-					duration: k.rand(0.1, 0.4),
-					direction: "ping-pong",
-				});
 				obstacle.onUpdate(() => {
 					if (obstacle.pos.x < camPos().x - k.width()) {
 						k.destroy(obstacle);
@@ -218,6 +232,7 @@ export function createRatScene() {
 		killRoom.push(
 			room.onMessage("opponentCollided", (message) => {
 				if (message.sessionId !== room.sessionId) {
+					opponent.stunTime += 1;
 					opponent.enterState("stun");
 					hurtSound.play();
 					hurtSound.volume = 0.5;
@@ -240,6 +255,7 @@ export function createRatScene() {
 
 		k.onCollide("obstacle", "player", (collidedObstacle) => {
 			if (cPlayer.state !== "stun") {
+				cPlayer.stunTime += 1;
 				cPlayer.enterState("stun");
 				room.send("collide", collidedObstacle.id);
 				tweenFunc(collidedObstacle, "scale", collidedObstacle.scale, k.vec2(0, 0), 0.5, 1);
@@ -266,7 +282,7 @@ export function createRatScene() {
 						const mText = createCoolText(k, "You have lost!", k.width() / 2, k.height() / 3, 64);
 						mText.font = "Iosevka-Heavy";
 						createCoolText(k, `${message.loser.name} : ${message.loser.score}		-		${message.winner.name} : ${message.winner.score}`, k.width() / 2, k.height() * 0.15, 32);
-						createCoolText(k, "Get ready to reborn as a butterfly!", k.width() / 2, k.height() * 0.6, 32);
+						createCoolText(k, "Get ready to reborn as a what!", k.width() / 2, k.height() * 0.6, 32);
 						const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.8, 48);
 						timer.font = "Iosevka-Heavy";
 						k.play("count");
@@ -277,11 +293,11 @@ export function createRatScene() {
 							timer.text = t;
 						}
 
-						createButterflyScene();
 						k.wait(1, () => {
 							k.play("go");
 							k.destroy(tiledBackground);
-							k.go("butterfly", room);
+
+							//
 						});
 					});
 					room.send("ended");
@@ -294,7 +310,7 @@ export function createRatScene() {
 						const mText = createCoolText(k, "You have won!", k.width() / 2, k.height() / 3, 64);
 						mText.font = "Iosevka-Heavy";
 						createCoolText(k, `${message.winner.name} : ${message.winner.score}		-		${message.loser.name} : ${message.loser.score}`, k.width() / 2, k.height() * 0.15, 32);
-						createCoolText(k, "Get ready to reborn as a butterfly!", k.width() / 2, k.height() * 0.6, 32);
+						createCoolText(k, "Get ready to reborn as a what!", k.width() / 2, k.height() * 0.6, 32);
 						const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.8, 48);
 						timer.font = "Iosevka-Heavy";
 						k.play("count");
@@ -304,11 +320,12 @@ export function createRatScene() {
 							k.play("count");
 							timer.text = t;
 						}
-						createButterflyScene();
+
 						k.wait(1, () => {
 							k.play("go");
 							k.destroy(tiledBackground);
-							k.go("butterfly", room);
+
+							//
 						});
 					});
 					k.go("won");
@@ -328,7 +345,7 @@ export function createRatScene() {
 					const mText = createCoolText(k, "DRAW", k.width() / 2, k.height() / 3, 64);
 					mText.font = "Iosevka-Heavy";
 					createCoolText(k, `${me.name} : ${me.score}		-		${opponent.name} : ${opponent.score}`, k.width() / 2, k.height() * 0.15, 32);
-					createCoolText(k, "Get ready to reborn as a butterfly!", k.width() / 2, k.height() * 0.6, 32);
+					createCoolText(k, "Get ready to reborn as a what!", k.width() / 2, k.height() * 0.6, 32);
 					const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.8, 48);
 					timer.font = "Iosevka-Heavy";
 					k.play("count");
@@ -338,11 +355,11 @@ export function createRatScene() {
 						k.play("count");
 						timer.text = t;
 					}
-					createButterflyScene();
 					k.wait(1, () => {
 						k.play("go");
 						k.destroy(tiledBackground);
-						k.go("butterfly", room);
+
+						//
 					});
 				});
 				room.send("ended");
@@ -356,8 +373,7 @@ export function createRatScene() {
 		killRoom.push(
 			room.onMessage("end", (message) => {
 				isEnding = true;
-				cloudLoop.cancel();
-				k.add([k.sprite("portal"), k.pos(lastPos + k.width(), k.height() - 55), k.area(), k.anchor("bot"), k.z(3), k.scale(k.vec2(3, 3)), "finish"]);
+				k.add([k.sprite("portal"), k.pos(lastPos + k.width(), k.height() / 2), k.area(), k.anchor("center"), k.z(3), k.scale(k.vec2(10, 10)), "finish"]);
 			}),
 		);
 		k.onSceneLeave(() => {
