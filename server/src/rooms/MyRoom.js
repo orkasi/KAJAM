@@ -88,31 +88,31 @@ export class MyRoom extends Room {
 	gameLoopRat() {
 		const delayedInterval = this.clock.setInterval(() => {
 			this.broadcast("spawnObstacle", Math.random() * 9999);
-		}, 100);
+		}, 20);
 		this.clock.setTimeout(() => {
 			delayedInterval.clear();
 			this.broadcast("end");
-		}, 3000);
+		}, 5000);
 	}
 
 	gameLoopB() {
 		const delayedInterval = this.clock.setInterval(() => {
 			this.broadcast("spawnObstacle", Math.random() * 9999);
-		}, 200);
+		}, 20);
 		this.clock.setTimeout(() => {
 			delayedInterval.clear();
 			this.broadcast("end");
-		}, 3000);
+		}, 5000);
 	}
 
 	gameLoop() {
 		const delayedInterval = this.clock.setInterval(() => {
 			this.broadcast("spawnObstacle", Math.random() * 9999);
-		}, 25);
+		}, 20);
 		this.clock.setTimeout(() => {
 			delayedInterval.clear();
 			this.broadcast("end");
-		}, 3000);
+		}, 5000);
 	}
 
 	onJoin(client, options) {

@@ -54,7 +54,14 @@ export function createFishScene() {
 
 		let upPressed = false;
 		let downPressed = false;
-
+		k.onGamepadButtonPress("dpad-down", () => (downPressed = true));
+		k.onGamepadButtonRelease("dpad-down", () => (downPressed = false));
+		k.onGamepadButtonPress("dpad-up", () => (upPressed = true));
+		k.onGamepadButtonRelease("dpad-up", () => (upPressed = false));
+		k.onMousePress("left", () => (upPressed = true));
+		k.onMouseRelease("left", () => (upPressed = false));
+		k.onMousePress("right", () => (downPressed = true));
+		k.onMouseRelease("right", () => (downPressed = false));
 		k.onKeyPress(["up", "w"], () => (upPressed = true));
 		k.onKeyRelease(["up", "w"], () => (upPressed = false));
 		k.onKeyPress(["down", "s"], () => (downPressed = true));

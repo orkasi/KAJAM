@@ -113,7 +113,13 @@ export function createButterflyScene() {
 		const cPlayer = k.add([k.sprite("butterfly"), k.pos(startPos), k.body(), k.anchor("center"), k.animate(), k.rotate(), k.z(3), k.area({ offset: k.vec2(0, -3) }), k.timer(), k.opacity(1), k.state("start", ["start", "stun", "move"]), { stunTime: 0, onTransition: false, onWhere: "ground" }, "player"]);
 		createCoolText(cPlayer, room.state.players.get(room.sessionId).name, 0, -cPlayer.height, 15);
 
-		k.onKeyPress(["up", "w", "s", "down"], async () => {
+		k.onMousePress(["left", "right"], () => changeGravity());
+
+		k.onKeyPress(["up", "w", "s", "down"], () => changeGravity());
+
+		k.onGamepadButtonPress("south", () => changeGravity());
+
+		async function changeGravity() {
 			if (!cPlayer.onTransition) {
 				cPlayer.onTransition = true;
 				cPlayer.unanimate("angle");
@@ -136,7 +142,7 @@ export function createButterflyScene() {
 					cPlayer.animate("angle", [175, 185], { duration: 0.5, direction: "ping-pong" });
 				}
 			}
-		});
+		}
 
 		cPlayer.onStateEnter("start", () => {
 			cPlayer.animate("angle", [-5, 5], { duration: 0.5, direction: "ping-pong" });
@@ -203,7 +209,7 @@ export function createButterflyScene() {
 				const sprites = [k.sprite("ghosty", { flipX: false }), k.sprite("goldfly", { flipX: true })];
 				const orand = k.randi(2);
 				const rand = k.randi(2);
-				const obstacle = k.add([sprites[rand], k.pos(k.rand(lastPos + k.width() / 4, lastPos + k.width() * 1.5), orientation[orand]), k.area(), k.anchor("bot"), k.rotate(), k.timer(), k.scale(k.rand(0.8, 1.5)), "obstacle"]);
+				const obstacle = k.add([sprites[rand], k.pos(k.rand(lastPos, lastPos + k.width() / 2), orientation[orand]), k.area(), k.anchor("bot"), k.rotate(), k.timer(), k.scale(k.rand(0.8, 2)), "obstacle"]);
 
 				if (rand === 1) {
 					if (orand === 1) {
