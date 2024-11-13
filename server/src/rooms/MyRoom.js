@@ -5,6 +5,9 @@ export class MyRoom extends Room {
 	maxClients = 2;
 
 	onCreate(options) {
+		if (options.code !== "nocode") {
+			this.roomId = options.code;
+		}
 		this.setState(new MyRoomState());
 		this.winner = null;
 		this.clock.start();
