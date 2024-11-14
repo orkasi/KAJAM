@@ -13,7 +13,7 @@ window.addEventListener("keydown", (e) => {
 const client = new Colyseus.Client("ws://localhost:2567");
 
 async function loadStuff() {
-	await k.loadRoot("/");
+	k.loadRoot("/");
 
 	//Shaders
 	await k.loadShaderURL("tiledPattern", null, "shaders/tiledPattern.frag");
