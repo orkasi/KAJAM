@@ -50,6 +50,75 @@ async function loadStuff() {
 	//Fonts
 	await k.loadFont("Iosevka", "fonts/IosevkaNerdFontPropo-Regular.woff2", { outline: 1, filter: "linear" });
 	await k.loadFont("Iosevka-Heavy", "fonts/IosevkaNerdFontPropo-Heavy.woff2", { outline: 3, filter: "linear" });
+
+	//Key sprites
+	await k.loadSprite("mouseLeft", "sprites/icons/mouseLeft.png", {
+		sliceX: 2,
+		anims: {
+			"emptyLeftMouse": {
+				from: 0,
+				to: 0,
+				loop: true,
+			},
+
+			"mouseLeftPressed": {
+				from: 1,
+				to: 1,
+				loop: true,
+			}
+		},
+	});
+
+	await k.loadSprite("mouseRight", "sprites/icons/mouseRight.png", {
+		sliceX: 2,
+		anims: {
+			"emptyRightMouse": {
+				from: 0,
+				to: 0,
+				loop: true,
+			},
+
+			"mouseRightPressed": {
+				from: 1,
+				to: 1,
+				loop: true,
+			}
+		},
+	});
+
+	await k.loadSprite("upKey", "sprites/icons/upKey.png", {
+		sliceX: 2,
+		anims: {
+			"upKey": {
+				from: 0,
+				to: 0,
+				loop: true,
+			},
+
+			"upKeyPressed": {
+				from: 1,
+				to: 1,
+				loop: true,
+			}
+		},
+	});
+
+	await k.loadSprite("downKey", "sprites/icons/downKey.png", {
+		sliceX: 2,
+		anims: {
+			"downKey": {
+				from: 0,
+				to: 0,
+				loop: true,
+			},
+
+			"downKeyPressed": {
+				from: 1,
+				to: 1,
+				loop: true,
+			}
+		},
+	});
 }
 await loadStuff();
 createFishScene();

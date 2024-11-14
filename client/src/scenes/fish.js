@@ -1,6 +1,6 @@
 import { k } from "../init";
 import { createRatScene } from "./rat";
-import { tweenFunc, overlay, createCoolText, createTiledBackground } from "../utils";
+import { tweenFunc, overlay, createCoolText, createTiledBackground, createTutorialRect } from "../utils";
 
 export const startPos = k.vec2(k.width() / 2, k.height() / 2);
 const FISHSPEED = 50;
@@ -13,28 +13,67 @@ export function createFishScene() {
 		let startP = false;
 		let startO = false;
 
-		// Assign tag them to all and use destroyAll to destroy them when player is ready (pressingspace).
-		function fishUIBackground() {
-			const backgroundRect = k.add([k.pos(k.width() * 0.625, k.height() * 0.58), k.rect(400, 180), k.outline(2), k.scale(), k.color("#aee2ff")]);
-			const dummyFish = backgroundRect.add([k.sprite("sukomi"), k.pos(backgroundRect.width * 0.4, backgroundRect.height * 0.5), k.scale(1.5), k.animate(), k.anchor("center")]);
-			dummyFish.animate("angle", [-20, 20], {
+		function fishKeyBackground() {
+			const rect = createTutorialRect(0.625, 0.1, 350, 120, rgb(174, 226, 255), rgb(110, 144, 251), rgb(124, 169, 253), rgb(141, 197, 255));
+			const dummyFish = rect.add([k.sprite("sukomi"), k.pos(rect.width * 0.3, rect.height * 0.5), k.scale(1.5), k.animate(), k.anchor("center"), k.state("up", ["up", "down"]), "backgroundRect"]);
+			dummyFish.animate("angle", [-30, 30], {
 				duration: 1,
 				direction: "ping-pong",
 			});
-			const keyUpUI = backgroundRect.add([k.sprite("bean"), k.pos(backgroundRect.width * 0.6, backgroundRect.height * 0.2), k.opacity()]);
-			const keyDownUI = backgroundRect.add([k.sprite("bean"), k.pos(backgroundRect.width * 0.6, backgroundRect.height * 0.4), k.opacity()]);
+			const keyUpUI = rect.add([k.sprite("upKey"), k.pos(rect.width * 0.62, rect.height * 0.2), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
+			const keyDownUI = rect.add([k.sprite("downKey"), k.pos(rect.width * 0.523, rect.height * 0.5), k.opacity(), k.animate(), "backgroundRect"]);
+			const mouseLeftUI = rect.add([k.sprite("mouseLeft"), k.pos(rect.width * 0.85, rect.height * 0.2), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
+			const mouseRightUI = rect.add([k.sprite("mouseRight"), k.pos(rect.width * 0.85, rect.height * 0.75), k.opacity(), k.anchor("center"), k.rotate(), k.animate(), "backgroundRect"])
 
-			backgroundRect.onUpdate(() => {
-				if (dummyFish.angle > 0) {
-					keyUpUI.opacity = 0;
-					keyDownUI.opacity = 1;
-				} else if (dummyFish.angle < 0) {
-					keyUpUI.opacity = 1;
-					keyDownUI.opacity = 0;
+			dummyFish.onStateEnter("up", () => {
+				keyUpUI.play("upKeyPressed");
+				keyDownUI.play("downKey");
+				mouseLeftUI.play("mouseLeftPressed");
+				mouseRightUI.play("emptyRightMouse");
+			});
+
+			dummyFish.onStateEnter("down", () => {
+				keyDownUI.play("downKeyPressed");
+				keyUpUI.play("upKey");
+				mouseLeftUI.play("emptyLeftMouse");
+				mouseRightUI.play("mouseRightPressed");
+			});
+
+			dummyFish.enterState("up");
+
+			rect.onUpdate(() => {
+				if (dummyFish.angle > 0 && dummyFish.state !== "down") {
+					dummyFish.enterState("down");
+				} else if (dummyFish.angle < 0 && dummyFish.state !== "up") {
+					dummyFish.enterState("up");
 				}
 			});
 		}
-		fishUIBackground();
+		fishKeyBackground();
+
+		function fishTutorialBackground() {
+			const rectangle = createTutorialRect(0.625, 0.7, 350, 120, rgb(174, 226, 255), rgb(110, 144, 251), rgb(124, 169, 253), rgb(141, 197, 255));
+			const boboExample = rectangle.add([k.sprite("bobo", { flipX: true} ),k.animate(), k.pos(rectangle.width * 0.85, rectangle.height * 0.5), k.anchor("center"), k.rotate(), k.timer(), k.scale(1.5), "boboExample"]);
+			const fishExample = rectangle.add([k.sprite("sukomi"), k.pos(rectangle.width * 0.15, rectangle.height * 0.5), k.scale(1.5), k.animate(), k.anchor("center"), k.body(), k.area(), k.rotate(), k.timer(), "fishExample"])
+				boboExample.animate("angle", [340, 350], {
+					duration: 0.5,
+					direction: "ping-pong",
+				})
+
+				k.loop(2, async () => {
+					await tweenFunc(fishExample, "pos", k.vec2(rectangle.width * 0.15, rectangle.height * 0.5), k.vec2(rectangle.width * 0.65, rectangle.height * 0.5), 0.50, 1);
+					tweenFunc(boboExample, "scale", k.vec2(1.5, 1.5), k.vec2(0, 0), 0.5, 1);
+					tweenFunc(fishExample, "angle", 0, 360, 0.5, 1);
+					tweenFunc(fishExample, "pos", k.vec2(rectangle.width * 0.65, rectangle.height * 0.5), k.vec2(rectangle.width * 0.15, rectangle.height * 0.5), 0.5, 1);
+					await tweenFunc(fishExample, "opacity",1,0,0.25,2);
+					tweenFunc(fishExample, "opacity",0,1,0.25,2);
+					tweenFunc(boboExample, "scale", k.vec2(0, 0),k.vec2(1.5, 1.5),0.2,1);
+
+
+				})
+
+		}
+		fishTutorialBackground();
 
 		killRoom.push(
 			room.state.players.onAdd((player, sessionId) => {
@@ -87,9 +126,9 @@ export function createFishScene() {
 
 		const readyKey = k.onKeyPress("space", () => {
 			readyKey.cancel();
-			k.destroy(backgroundRect);
 			readyText.text = "Ready";
 			room.send("ready");
+			k.destroyAll("backgroundRect");
 			killRoom.push(
 				room.onMessage("start", async () => {
 					readyText.font = "Iosevka-Heavy";
@@ -170,12 +209,13 @@ export function createFishScene() {
 		const loseMusic = k.play("loseSound", {
 			loop: false,
 			paused: true,
-			volume: 0.8,
+			volume: 0.5,
 		});
 
 		const wonMusic = k.play("wonSound", {
 			loop: false,
 			paused: true,
+			volume: 0.5,
 		});
 
 		killRoom.push(
@@ -241,6 +281,7 @@ export function createFishScene() {
 		const drawSound = k.play("drawSound", {
 			loop: false,
 			paused: true,
+			volume: 0.5,
 		});
 
 		k.onCollide("finish", "player", () => {
@@ -288,7 +329,7 @@ export function createFishScene() {
 		const hurtSound = k.play("hitHurt", {
 			loop: false,
 			paused: true,
-			volume: 0.8,
+			volume: 0.5,
 		});
 
 		killRoom.push(

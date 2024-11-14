@@ -53,3 +53,35 @@ export function createTiledBackground(color1, color2) {
 		k.fixed(),
 	]);
 }
+
+// This function will create the main tutorial rectangle and the ones with the outlines beneath them.
+// Yes sir!
+// It will allow you to set their colors and size.
+// It will return the main background rect
+
+export function createTutorialRect(x, y, size_x, size_y, color, outlinecolor, outlinecolor1, outlinecolor2) {
+	const rect = k.add([k.pos(k.width() * x, k.height() * y), k.rect(size_x, size_y), k.scale(), k.opacity(1), k.outline(20, color, 1, "round"), k.color(color), "backgroundRect"]);
+
+	rect.outlineColors = [outlinecolor, outlinecolor1, outlinecolor2];
+	rect.onUpdate(() => {
+		k.drawRect({
+			width: rect.width,
+			height: rect.height,
+			pos: k.vec2(rect.pos.x, rect.pos.y),
+			outline: { color: outlinecolor, width: 80, join: "round" },
+		});
+		k.drawRect({
+			width: rect.width,
+			height: rect.height,
+			pos: k.vec2(rect.pos.x, rect.pos.y),
+			outline: { color: outlinecolor1, width: 60, join: "round" },
+		});
+		k.drawRect({
+			width: rect.width,
+			height: rect.height,
+			pos: k.vec2(rect.pos.x, rect.pos.y),
+			outline: { color: outlinecolor2, width: 40, join: "round" },
+		});
+	});
+	return rect;
+}
