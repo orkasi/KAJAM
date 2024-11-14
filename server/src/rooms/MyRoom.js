@@ -5,6 +5,9 @@ export class MyRoom extends Room {
 	maxClients = 2;
 
 	onCreate(options) {
+		if (options.code !== "nocode") {
+			this.roomId = options.code;
+		}
 		this.setState(new MyRoomState());
 		this.winner = null;
 		this.clock.start();
@@ -85,34 +88,40 @@ export class MyRoom extends Room {
 		});
 	}
 
-	gameLoopRat() {
+	gameLoopB() {
+		let id = 0;
 		const delayedInterval = this.clock.setInterval(() => {
-			this.broadcast("spawnObstacle", Math.random() * 9999);
-		}, 100);
+			id++;
+			this.broadcast("spawnObstacle", { data: Math.random() * 9999, obstacleID: id });
+		}, 20);
 		this.clock.setTimeout(() => {
 			delayedInterval.clear();
 			this.broadcast("end");
-		}, 3000);
+		}, 5000);
 	}
 
-	gameLoopB() {
+	gameLoopRat() {
+		let id = 0;
 		const delayedInterval = this.clock.setInterval(() => {
-			this.broadcast("spawnObstacle", Math.random() * 9999);
-		}, 200);
+			id++;
+			this.broadcast("spawnObstacle", { data: Math.random() * 9999, obstacleID: id });
+		}, 1000);
 		this.clock.setTimeout(() => {
 			delayedInterval.clear();
 			this.broadcast("end");
-		}, 3000);
+		}, 1000);
 	}
 
 	gameLoop() {
+		let id = 0;
 		const delayedInterval = this.clock.setInterval(() => {
-			this.broadcast("spawnObstacle", Math.random() * 9999);
-		}, 25);
+			id++;
+			this.broadcast("spawnObstacle", { data: Math.random() * 9999, obstacleID: id });
+		}, 20);
 		this.clock.setTimeout(() => {
 			delayedInterval.clear();
 			this.broadcast("end");
-		}, 3000);
+		}, 1000);
 	}
 
 	onJoin(client, options) {

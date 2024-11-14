@@ -11,7 +11,7 @@ export function createButterflyScene() {
 		const killRoom = [];
 		let opponent = null;
 		let opponentP = null;
-		k.setBackground(rgb(252, 239, 141));
+		k.setBackground(rgb(91, 166, 117));
 		const loseMusic = k.play("loseSound", {
 			loop: false,
 			paused: true,
@@ -78,7 +78,20 @@ export function createButterflyScene() {
 				if (opponent === null) {
 					if (sessionId !== room.sessionId) {
 						opponentP = player;
-						opponent = k.add([k.sprite("butterfly"), k.pos(startPos), k.opacity(1), k.anchor("center"), k.rotate(), k.timer(), k.animate(), k.state("start", ["start", "stun", "move"]), overlay(rgb(252, 239, 141), 0.4), k.z(2), { stuntime: 0 }, "player"]);
+						opponent = k.add([
+							k.sprite("butterfly"),
+							k.pos(startPos),
+							k.opacity(1),
+							k.anchor("center"),
+							k.rotate(),
+							k.timer(),
+							k.animate(),
+							k.state("start", ["start", "stun", "move"]),
+							overlay(rgb(252, 239, 141), 0.4),
+							k.z(2),
+							{ stuntime: 0 },
+							"player",
+						]);
 
 						createCoolText(opponent, player.name, 0, opponent.height, 15);
 
@@ -92,6 +105,20 @@ export function createButterflyScene() {
 							k.wait(1, () => {
 								opponent.enterState("move");
 							});
+						});
+
+						k.loop(0.05, () => {
+							if (opponent.state === "move") {
+								k.add([
+									k.sprite("white"),
+									k.pos(k.rand(opponent.pos.x - opponent.width / 2, opponent.pos.x + opponent.width * 0.4), k.rand(opponent.pos.y - opponent.height * 0.5, opponent.pos.y + opponent.height * 0.5)),
+									k.anchor("center"),
+									k.scale(k.rand(0.01, 0.1)),
+									k.lifespan(0.2, { fade: 0.1 }),
+									k.opacity(k.rand(0.3, 1)),
+									k.move(k.randi(140, 250), k.rand(200, 400)),
+								]);
+							}
 						});
 
 						opponent.onStateUpdate("move", () => {
@@ -110,15 +137,70 @@ export function createButterflyScene() {
 			}),
 		);
 
-		const cPlayer = k.add([k.sprite("butterfly"), k.pos(startPos), k.body(), k.anchor("center"), k.animate(), k.rotate(), k.z(3), k.area({ offset: k.vec2(0, -3) }), k.timer(), k.opacity(1), k.state("start", ["start", "stun", "move"]), { stunTime: 0, onTransition: false, onWhere: "ground" }, "player"]);
+		const cPlayer = k.add([
+			k.sprite("butterfly"),
+			k.pos(startPos),
+			k.body(),
+			k.anchor("center"),
+			k.animate(),
+			k.rotate(),
+			k.z(3),
+			k.area({ offset: k.vec2(0, -3) }),
+			k.timer(),
+			k.opacity(1),
+			k.state("start", ["start", "stun", "move"]),
+			{ stunTime: 0, onTransition: false, onWhere: "ground" },
+			"player",
+		]);
 		createCoolText(cPlayer, room.state.players.get(room.sessionId).name, 0, -cPlayer.height, 15);
 
-		k.onKeyPress(["up", "w", "s", "down"], async () => {
+		k.onMousePress(["left", "right"], () => changeGravity());
+
+		k.onKeyPress(["up", "w", "s", "down"], () => changeGravity());
+
+		k.onGamepadButtonPress("south", () => changeGravity());
+
+		k.loop(0.05, () => {
+			if (cPlayer.state === "move" && cPlayer.onTransition === false) {
+				k.add([
+					k.sprite("white"),
+					k.pos(k.rand(cPlayer.pos.x - cPlayer.width / 2, cPlayer.pos.x + cPlayer.width * 0.4), k.rand(cPlayer.pos.y - cPlayer.height * 0.5, cPlayer.pos.y + cPlayer.height * 0.5)),
+					k.anchor("center"),
+					k.scale(k.rand(0.01, 0.1)),
+					k.lifespan(0.2, { fade: 0.1 }),
+					k.opacity(k.rand(0.3, 1)),
+					k.move(k.randi(140, 250), k.rand(200, 400)),
+				]);
+			} else if (cPlayer.state === "move" && cPlayer.onTransition === "down") {
+				k.add([
+					k.sprite("heart"),
+					k.pos(k.rand(cPlayer.pos.x - cPlayer.width / 2, cPlayer.pos.x + cPlayer.width * 0.4), k.rand(cPlayer.pos.y - cPlayer.height * 0.5, cPlayer.pos.y + cPlayer.height * 0.5)),
+					k.anchor("center"),
+					k.scale(k.rand(0.1, 0.3)),
+					k.lifespan(0.4, { fade: 0.2 }),
+					k.opacity(k.rand(0.3, 1)),
+					k.move(k.randi(220, 260), k.rand(200, 400)),
+				]);
+			} else if (cPlayer.state === "move" && cPlayer.onTransition === "up") {
+				k.add([
+					k.sprite("heart"),
+					k.pos(k.rand(cPlayer.pos.x - cPlayer.width / 2, cPlayer.pos.x + cPlayer.width * 0.4), k.rand(cPlayer.pos.y - cPlayer.height * 0.5, cPlayer.pos.y + cPlayer.height * 0.5)),
+					k.anchor("center"),
+					k.scale(k.rand(0.1, 0.3)),
+					k.lifespan(0.4, { fade: 0.2 }),
+					k.opacity(k.rand(0.3, 1)),
+					k.move(k.randi(70, 110), k.rand(200, 400)),
+				]);
+			}
+		});
+
+		async function changeGravity() {
 			if (!cPlayer.onTransition) {
-				cPlayer.onTransition = true;
 				cPlayer.unanimate("angle");
 
 				if (cPlayer.onWhere === "ceiling") {
+					cPlayer.onTransition = "down";
+
 					cPlayer.onWhere = "ground";
 
 					tweenFunc(cPlayer, "angle", cPlayer.angle, -5, 0.5, 1);
@@ -127,6 +209,8 @@ export function createButterflyScene() {
 					cPlayer.onTransition = false;
 					cPlayer.animate("angle", [-5, 5], { duration: 0.5, direction: "ping-pong" });
 				} else {
+					cPlayer.onTransition = "up";
+
 					cPlayer.onWhere = "ceiling";
 
 					tweenFunc(cPlayer, "angle", cPlayer.angle, 175, 0.5, 1);
@@ -136,7 +220,7 @@ export function createButterflyScene() {
 					cPlayer.animate("angle", [175, 185], { duration: 0.5, direction: "ping-pong" });
 				}
 			}
-		});
+		}
 
 		cPlayer.onStateEnter("start", () => {
 			cPlayer.animate("angle", [-5, 5], { duration: 0.5, direction: "ping-pong" });
@@ -197,13 +281,13 @@ export function createButterflyScene() {
 
 		const obstacles = [];
 		killRoom.push(
-			room.onMessage("spawnObstacle", (data) => {
-				k.randSeed(data);
+			room.onMessage("spawnObstacle", (message) => {
+				k.randSeed(message.data);
 				const orientation = [k.height() - 55, 55];
 				const sprites = [k.sprite("ghosty", { flipX: false }), k.sprite("goldfly", { flipX: true })];
 				const orand = k.randi(2);
 				const rand = k.randi(2);
-				const obstacle = k.add([sprites[rand], k.pos(k.rand(lastPos + k.width() / 4, lastPos + k.width() * 1.5), orientation[orand]), k.area(), k.anchor("bot"), k.rotate(), k.timer(), k.scale(k.rand(0.8, 1.5)), "obstacle"]);
+				const obstacle = k.add([sprites[rand], k.pos(k.rand(lastPos, lastPos + k.width() / 2), orientation[orand]), k.area(), k.anchor("bot"), k.rotate(), k.timer(), k.scale(k.rand(0.8, 2)), { obstacleID: message.obstacleID }, "obstacle"]);
 
 				if (rand === 1) {
 					if (orand === 1) {
@@ -239,7 +323,7 @@ export function createButterflyScene() {
 					k.wait(0.5, () => {
 						hurtSound.stop();
 					});
-					const target = obstacles.find((obj) => obj.id === message.collideID);
+					const target = obstacles.find((obj) => obj.obstacleID === message.collideID);
 
 					if (target) {
 						tweenFunc(target, "scale", target.scale, k.vec2(0, 0), 0.5, 1);
@@ -257,7 +341,7 @@ export function createButterflyScene() {
 			if (cPlayer.state !== "stun") {
 				cPlayer.stunTime += 1;
 				cPlayer.enterState("stun");
-				room.send("collide", collidedObstacle.id);
+				room.send("collide", collidedObstacle.obstacleID);
 				tweenFunc(collidedObstacle, "scale", collidedObstacle.scale, k.vec2(0, 0), 0.5, 1);
 				hurtSound.play();
 				k.wait(0.5, () => {
@@ -278,7 +362,6 @@ export function createButterflyScene() {
 
 					k.scene("lost", async () => {
 						const tiledBackground = createTiledBackground("#d9bdc8", "#ffffff");
-
 						const mText = createCoolText(k, "You have lost!", k.width() / 2, k.height() / 3, 64);
 						mText.font = "Iosevka-Heavy";
 						createCoolText(k, `${message.loser.name} : ${message.loser.score}		-		${message.winner.name} : ${message.winner.score}`, k.width() / 2, k.height() * 0.15, 32);

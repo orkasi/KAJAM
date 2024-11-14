@@ -40,18 +40,29 @@ export function createRatScene() {
 			direction: "ping-pong",
 		});
 		let lastCPos = k.width() + 100;
-		const cloudLoop = k.loop(0.1, () => {
-			const cloud = k.add([k.sprite("cloud"), k.pos(k.rand(lastCPos, lastCPos + k.width() / 2), k.rand(k.height() * 0.01, k.height() * 0.3)), k.scale(k.rand(0.5, 2)), k.animate()]);
-			cloud.animate("angle", [k.rand(-5, 0), k.rand(0, 5)], {
-				duration: k.rand(1, 2),
-				direction: "ping-pong",
-			});
-			lastCPos = cloud.pos.x;
+		k.loop(0.05, () => {
+			if (lastCPos < camPos().x + k.width()) {
+				const cloud = k.add([k.sprite("cloud"), k.pos(k.rand(lastCPos, lastCPos + k.width() / 6), k.rand(k.height() * 0.01, k.height() * 0.4)), k.scale(k.rand(0.5, 2.5)), k.animate()]);
+				const mirror = k.randi();
+				if (mirror === 1) {
+					cloud.flipX = true;
+				}
+				cloud.animate("angle", [k.rand(-5, 0), k.rand(0, 5)], {
+					duration: k.rand(1, 2),
+					direction: "ping-pong",
+				});
+				lastCPos = cloud.pos.x;
+				cloud.onUpdate(() => {
+					if (cloud.pos.x < camPos().x - k.width()) {
+						k.destroy(cloud);
+					}
+				});
+			}
 		});
 		function addGround() {
-			let lastGroundPos = k.width() * -5;
+			let lastGroundPos = k.width() * -1;
 			const tiles = [];
-			for (let i = 0; i < 150; i++) {
+			for (let i = 0; i < 50; i++) {
 				tiles.push(k.add([k.sprite("grass"), k.pos(lastGroundPos, k.height()), k.area(), k.body({ isStatic: true }), k.anchor("bot"), k.z(1), k.offscreen()]));
 				lastGroundPos += 55;
 			}
@@ -119,9 +130,24 @@ export function createRatScene() {
 			}),
 		);
 
-		const cPlayer = k.add([k.sprite("karat"), k.pos(startPos), k.body(), k.anchor("center"), k.rotate(), k.z(3), k.area({ offset: k.vec2(0, -3) }), k.timer(), k.opacity(1), k.state("start", ["start", "stun", "move"]), { stunTime: 0 }, "player"]);
+		const cPlayer = k.add([
+			k.sprite("karat"),
+			k.pos(startPos),
+			k.body(),
+			k.anchor("center"),
+			k.rotate(),
+			k.z(3),
+			k.area({ offset: k.vec2(0, -3) }),
+			k.timer(),
+			k.opacity(1),
+			k.state("start", ["start", "stun", "move"]),
+			{ stunTime: 0 },
+			"player",
+		]);
 		createCoolText(cPlayer, room.state.players.get(room.sessionId).name, 0, -cPlayer.height, 15);
 
+		k.onGamepadButtonPress("south", () => cPlayer.isGrounded() && cPlayer.jump(800));
+		k.onMousePress(["left", "right"], () => cPlayer.isGrounded() && cPlayer.jump(800));
 		k.onKeyPress(["up", "w"], () => cPlayer.isGrounded() && cPlayer.jump(800));
 
 		let cPTween = null;
@@ -140,6 +166,33 @@ export function createRatScene() {
 			});
 		});
 
+		k.loop(0.1, () => {
+			if (opponent.state === "move" && opponent.pos.y > k.height() - (60 + opponent.height / 2)) {
+				k.add([
+					k.sprite("green"),
+					k.pos(k.rand(opponent.pos.x - opponent.width / 2, opponent.pos.x + opponent.width * 0.4), k.rand(opponent.pos.y + opponent.height * 0.5, opponent.pos.y + opponent.height * 0.6)),
+					k.anchor("center"),
+					k.scale(k.rand(0.05, 0.1)),
+					k.lifespan(0.3, { fade: 0.25 }),
+					k.opacity(k.rand(0.3, 1)),
+					k.move(k.randi(180, 260), k.rand(60, 100)),
+				]);
+			}
+		});
+
+		k.loop(0.1, () => {
+			if (cPlayer.state === "move" && cPlayer.isGrounded()) {
+				k.add([
+					k.sprite("green"),
+					k.pos(k.rand(cPlayer.pos.x - cPlayer.width / 2, cPlayer.pos.x + cPlayer.width * 0.4), k.rand(cPlayer.pos.y + cPlayer.height * 0.5, cPlayer.pos.y + cPlayer.height * 0.6)),
+					k.anchor("center"),
+					k.scale(k.rand(0.05, 0.1)),
+					k.lifespan(0.3, { fade: 0.25 }),
+					k.opacity(k.rand(0.3, 1)),
+					k.move(k.randi(180, 260), k.rand(60, 100)),
+				]);
+			}
+		});
 		cPlayer.onStateEnter("move", () => {
 			cPTweenL = k.loop(0.5, async () => {
 				cPTween = await cPlayer.tween(-10, 10, 0.25, (value) => (cPlayer.angle = value));
@@ -192,18 +245,29 @@ export function createRatScene() {
 
 		const obstacles = [];
 		killRoom.push(
-			room.onMessage("spawnObstacle", (data) => {
-				k.randSeed(data);
+			room.onMessage("spawnObstacle", (message) => {
+				k.randSeed(message.data);
 				const sprites = [k.sprite("bag", { flipX: true }), k.sprite("gigagantrum"), k.sprite("money_bag", { flipX: true })];
 				const rand = k.randi(3);
-				const obstacle = k.add([sprites[rand], k.pos(k.rand(lastPos + k.width() / 2, lastPos + k.width() * 1.5), k.height() - 55), k.area(), k.anchor("bot"), k.rotate(), k.timer(), k.animate(), k.scale(), "obstacle"]);
+				const obstacle = k.add([
+					sprites[rand],
+					k.pos(k.rand(lastPos + k.width() / 4, lastPos + k.width()), k.height() - 55),
+					k.area(),
+					k.anchor("bot"),
+					k.rotate(),
+					k.timer(),
+					k.animate(),
+					k.scale(),
+					{ obstacleID: message.obstacleID },
+					"obstacle",
+				]);
 				if (rand === 2) {
 					obstacle.scale = k.vec2(2, 2);
 				}
 				lastPos = obstacle.pos.x;
 				obstacle.use(move(k.LEFT, 20));
-				obstacle.animate("angle", [k.rand(-15, -5), k.rand(5, 15)], {
-					duration: k.rand(0.1, 0.4),
+				obstacle.animate("angle", [-5, 5], {
+					duration: 0.4,
 					direction: "ping-pong",
 				});
 				obstacle.onUpdate(() => {
@@ -224,7 +288,7 @@ export function createRatScene() {
 					k.wait(0.5, () => {
 						hurtSound.stop();
 					});
-					const target = obstacles.find((obj) => obj.id === message.collideID);
+					const target = obstacles.find((obj) => obj.obstacleID === message.collideID);
 
 					if (target) {
 						tweenFunc(target, "scale", target.scale, k.vec2(0, 0), 0.5, 1);
@@ -241,7 +305,7 @@ export function createRatScene() {
 		k.onCollide("obstacle", "player", (collidedObstacle) => {
 			if (cPlayer.state !== "stun") {
 				cPlayer.enterState("stun");
-				room.send("collide", collidedObstacle.id);
+				room.send("collide", collidedObstacle.obstacleID);
 				tweenFunc(collidedObstacle, "scale", collidedObstacle.scale, k.vec2(0, 0), 0.5, 1);
 				hurtSound.play();
 				k.wait(0.5, () => {
@@ -318,6 +382,7 @@ export function createRatScene() {
 
 		k.onCollide("finish", "player", () => {
 			if (cPlayer.stunTime === opponent.stunTime) {
+				// cloudLoop.cancel();
 				const me = room.state.players.get(room.sessionId);
 				const opponent = opponentP;
 				k.scene("DRAW", async () => {
@@ -356,7 +421,6 @@ export function createRatScene() {
 		killRoom.push(
 			room.onMessage("end", (message) => {
 				isEnding = true;
-				cloudLoop.cancel();
 				k.add([k.sprite("portal"), k.pos(lastPos + k.width(), k.height() - 55), k.area(), k.anchor("bot"), k.z(3), k.scale(k.vec2(3, 3)), "finish"]);
 			}),
 		);

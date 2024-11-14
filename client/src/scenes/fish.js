@@ -7,7 +7,7 @@ const FISHSPEED = 50;
 
 export function createFishScene() {
 	k.scene("fish", (room) => {
-		k.setBackground(rgb(109, 128, 250));
+		k.setBackground(rgb(42, 61, 189));
 		const players = {};
 		const killRoom = [];
 		let startP = false;
@@ -82,7 +82,7 @@ export function createFishScene() {
 			room.state.players.onAdd((player, sessionId) => {
 				if (!startO) {
 					if (sessionId !== room.sessionId) {
-						players[0] = k.add([k.sprite("sukomi"), k.pos(startPos), k.opacity(1), k.anchor("center"), k.rotate(), k.timer(), overlay(rgb(174, 226, 255), 0.4)]);
+						players[0] = k.add([k.sprite("sukomi"), k.pos(startPos), k.opacity(1), k.anchor("center"), k.rotate(), k.timer(), overlay(rgb(109, 128, 250), 0.4)]);
 						players[1] = player;
 						createCoolText(players[0], player.name, 0, -players[0].height, 15);
 
@@ -119,7 +119,14 @@ export function createFishScene() {
 
 		let upPressed = false;
 		let downPressed = false;
-
+		k.onGamepadButtonPress("dpad-down", () => (downPressed = true));
+		k.onGamepadButtonRelease("dpad-down", () => (downPressed = false));
+		k.onGamepadButtonPress("dpad-up", () => (upPressed = true));
+		k.onGamepadButtonRelease("dpad-up", () => (upPressed = false));
+		k.onMousePress("left", () => (upPressed = true));
+		k.onMouseRelease("left", () => (upPressed = false));
+		k.onMousePress("right", () => (downPressed = true));
+		k.onMouseRelease("right", () => (downPressed = false));
 		k.onKeyPress(["up", "w"], () => (upPressed = true));
 		k.onKeyRelease(["up", "w"], () => (upPressed = false));
 		k.onKeyPress(["down", "s"], () => (downPressed = true));
@@ -155,6 +162,33 @@ export function createFishScene() {
 			);
 		});
 
+		k.loop(0.05, () => {
+			if (startP) {
+				k.add([
+					k.sprite("bubble"),
+					k.color(rgb(255, 255, 255)),
+					k.pos(cPlayer.pos.x - cPlayer.width / 2, k.rand(cPlayer.pos.y, cPlayer.pos.y + cPlayer.height / 2)),
+					k.anchor("center"),
+					k.scale(k.rand(0.1, 0.7)),
+					k.lifespan(0.5, { fade: 0.25 }),
+					k.opacity(k.rand(0.6, 1)),
+					k.move(k.randi(120, 240), k.rand(120, 240)),
+				]);
+			}
+			if (startO) {
+				k.add([
+					k.sprite("bubble"),
+					k.color(rgb(255, 255, 255)),
+					k.pos(players[0].pos.x - players[0].width / 2, k.rand(players[0].pos.y, players[0].pos.y + players[0].height / 2)),
+					k.anchor("center"),
+					k.scale(k.rand(0.1, 0.7)),
+					k.lifespan(0.5, { fade: 0.25 }),
+					k.opacity(k.rand(0.6, 1)),
+					k.move(k.randi(140, 240), k.rand(120, 240)),
+				]);
+			}
+		});
+
 		cPlayer.onUpdate(() => {
 			if (upPressed && cPlayer.pos.y > 50 && !downPressed) {
 				cPlayer.pos.y += (cPlayer.pos.y - 50 - cPlayer.pos.y) * 12 * k.dt();
@@ -181,10 +215,21 @@ export function createFishScene() {
 
 		const obstacles = [];
 		killRoom.push(
-			room.onMessage("spawnObstacle", (data) => {
+			room.onMessage("spawnObstacle", (message) => {
 				if (!isEnding) {
-					k.randSeed(data);
-					const obstacle = k.add([k.sprite("bobo", { flipX: true }), k.pos(k.rand(lastPos, lastPos + k.width() / 8), k.rand(20, k.height() - 20)), k.area(), k.rotate(), k.timer(), k.opacity(), k.animate(), k.scale(k.rand(0.5, 1.5)), "obstacle"]);
+					k.randSeed(message.data);
+					const obstacle = k.add([
+						k.sprite("bobo", { flipX: true }),
+						k.pos(k.rand(lastPos, lastPos + k.width() / 8), k.rand(20, k.height() - 20)),
+						k.area(),
+						k.rotate(),
+						k.timer(),
+						k.opacity(),
+						k.animate(),
+						k.scale(k.rand(0.5, 1.5)),
+						{ obstacleID: message.obstacleID },
+						"obstacle",
+					]);
 					lastPos = obstacle.pos.x;
 					obstacle.use(move(k.LEFT, 400));
 					obstacle.animate("angle", [k.rand(-25, -15), k.rand(-10, 0)], {
@@ -351,7 +396,7 @@ export function createFishScene() {
 						});
 						tweenFunc(players[0], "angle", 360, 0, 0.25, 1);
 						tweenFunc(players[0], "opacity", 0, 1, 0.25, 4);
-						const target = obstacles.find((obj) => obj.id === message.collideID);
+						const target = obstacles.find((obj) => obj.obstacleID === message.collideID);
 
 						if (target) {
 							tweenFunc(target, "scale", target.scale, k.vec2(0, 0), 0.5, 1);
@@ -387,7 +432,7 @@ export function createFishScene() {
 					}
 				});
 
-				room.send("collide", collidedObstacle.id);
+				room.send("collide", collidedObstacle.obstacleID);
 			}
 		});
 		k.onSceneLeave(() => {
