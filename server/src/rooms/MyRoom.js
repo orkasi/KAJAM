@@ -88,9 +88,11 @@ export class MyRoom extends Room {
 		});
 	}
 
-	gameLoopRat() {
+	gameLoopB() {
+		let id = 0;
 		const delayedInterval = this.clock.setInterval(() => {
-			this.broadcast("spawnObstacle", Math.random() * 9999);
+			id++;
+			this.broadcast("spawnObstacle", { data: Math.random() * 9999, obstacleID: id });
 		}, 20);
 		this.clock.setTimeout(() => {
 			delayedInterval.clear();
@@ -98,24 +100,28 @@ export class MyRoom extends Room {
 		}, 5000);
 	}
 
-	gameLoopB() {
+	gameLoopRat() {
+		let id = 0;
 		const delayedInterval = this.clock.setInterval(() => {
-			this.broadcast("spawnObstacle", Math.random() * 9999);
-		}, 20);
+			id++;
+			this.broadcast("spawnObstacle", { data: Math.random() * 9999, obstacleID: id });
+		}, 1000);
 		this.clock.setTimeout(() => {
 			delayedInterval.clear();
 			this.broadcast("end");
-		}, 5000);
+		}, 1000);
 	}
 
 	gameLoop() {
+		let id = 0;
 		const delayedInterval = this.clock.setInterval(() => {
-			this.broadcast("spawnObstacle", Math.random() * 9999);
+			id++;
+			this.broadcast("spawnObstacle", { data: Math.random() * 9999, obstacleID: id });
 		}, 20);
 		this.clock.setTimeout(() => {
 			delayedInterval.clear();
 			this.broadcast("end");
-		}, 5000);
+		}, 1000);
 	}
 
 	onJoin(client, options) {

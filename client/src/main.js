@@ -22,6 +22,8 @@ async function loadStuff() {
 	await k.loadSprite("butterfly", "sprites/butterfly.png");
 	await k.loadSprite("goldfly", "sprites/goldfly.png");
 	await k.loadSprite("ghosty", "sprites/ghosty.png");
+	await k.loadSprite("white", "sprites/white.png");
+	await k.loadSprite("heart", "sprites/heart.png");
 
 	//Rat Game Sprites
 	await k.loadSprite("gigagantrum", "sprites/gigagantrum.png");
@@ -32,10 +34,12 @@ async function loadStuff() {
 	await k.loadSprite("portal", "sprites/portal.png");
 	await k.loadSprite("moon", "sprites/moon.png");
 	await k.loadSprite("cloud", "sprites/cloud.png");
+	await k.loadSprite("green", "sprites/green.png");
 
 	//Fish Game Sprites
 	await k.loadSprite("sukomi", "sprites/sukomi.png");
 	await k.loadSprite("bobo", "sprites/bobo.png");
+	await k.loadSprite("bubble", "sprites/particles/bubble.png");
 
 	//Sounds
 	await k.loadSound("loseSound", "sounds/synth.ogg");
