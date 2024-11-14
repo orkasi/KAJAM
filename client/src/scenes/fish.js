@@ -22,21 +22,24 @@ export function createFishScene() {
 			});
 			const keyUpUI = rect.add([k.sprite("upKey"), k.pos(rect.width * 0.62, rect.height * 0.2), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
 			const keyDownUI = rect.add([k.sprite("downKey"), k.pos(rect.width * 0.523, rect.height * 0.5), k.opacity(), k.animate(), "backgroundRect"]);
-			const mouseLeftUI = rect.add([k.sprite("mouseLeft"), k.pos(rect.width * 0.85, rect.height * 0.2), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
-			const mouseRightUI = rect.add([k.sprite("mouseRight"), k.pos(rect.width * 0.85, rect.height * 0.75), k.opacity(), k.anchor("center"), k.rotate(), k.animate(), "backgroundRect"])
+			const mouseLeftandRightUI = rect.add([k.sprite("mouseLeftandRight"), k.pos(rect.width * 0.85, rect.height * 0.2), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
+			const gamepadUpandDownUI = rect.add([k.sprite("gamepadUpandDown"), k.pos(rect.width * 0.85, rect.height * 0.74), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
+
 
 			dummyFish.onStateEnter("up", () => {
 				keyUpUI.play("upKeyPressed");
 				keyDownUI.play("downKey");
-				mouseLeftUI.play("mouseLeftPressed");
-				mouseRightUI.play("emptyRightMouse");
+				mouseLeftandRightUI.play("emptyMouse");
+				mouseLeftandRightUI.play("mouseLeftPressed");
+				gamepadUpandDownUI.play("gamepadUp");
 			});
 
 			dummyFish.onStateEnter("down", () => {
 				keyDownUI.play("downKeyPressed");
 				keyUpUI.play("upKey");
-				mouseLeftUI.play("emptyLeftMouse");
-				mouseRightUI.play("mouseRightPressed");
+				mouseLeftandRightUI.play("emptyMouse");
+				mouseLeftandRightUI.play("mouseRightPressed");
+				gamepadUpandDownUI.play("gamepadDown");
 			});
 
 			dummyFish.enterState("up");

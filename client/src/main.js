@@ -52,27 +52,26 @@ async function loadStuff() {
 	await k.loadFont("Iosevka-Heavy", "fonts/IosevkaNerdFontPropo-Heavy.woff2", { outline: 3, filter: "linear" });
 
 	//Key sprites
-	await k.loadSprite("mouseLeft", "sprites/icons/mouseLeft.png", {
+	await k.loadSprite("gamepadUpandDown", "sprites/icons/gamepadUpandDown.png", {
 		sliceX: 2,
 		anims: {
-			"emptyLeftMouse": {
+			"gamepadUp": {
 				from: 0,
 				to: 0,
 				loop: true,
 			},
-
-			"mouseLeftPressed": {
+			"gamepadDown": {
 				from: 1,
 				to: 1,
 				loop: true,
-			}
-		},
-	});
+			},
+		}
+	})
 
-	await k.loadSprite("mouseRight", "sprites/icons/mouseRight.png", {
-		sliceX: 2,
+	await k.loadSprite("mouseLeftandRight", "sprites/icons/mouseLeftandRight.png", {
+		sliceX: 3,
 		anims: {
-			"emptyRightMouse": {
+			"emptyMouse": {
 				from: 0,
 				to: 0,
 				loop: true,
@@ -82,7 +81,13 @@ async function loadStuff() {
 				from: 1,
 				to: 1,
 				loop: true,
-			}
+			},
+
+			"mouseLeftPressed": {
+				from: 2,
+				to: 2,
+				loop: true,
+			},
 		},
 	});
 
