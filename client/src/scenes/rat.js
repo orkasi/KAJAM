@@ -1,5 +1,5 @@
 import { k } from "../init";
-import { createCoolText, overlay, tweenFunc, createTiledBackground } from "../utils";
+import { createCoolText, overlay, tweenFunc, createTiledBackground, createNormalText } from "../utils";
 import { createButterflyScene } from "./butterfly";
 
 export const startPos = k.vec2(k.width() / 2, k.height() - 77.5);
@@ -325,13 +325,19 @@ export function createRatScene() {
 					loseMusic.paused = false;
 
 					k.scene("lost", async () => {
-						const tiledBackground = createTiledBackground("#7b5480", "#ffffff");
+						const tiledBackground = createTiledBackground("#7b5480", "#686767");
 
-						const mText = createCoolText(k, "You have lost!", k.width() / 2, k.height() / 3, 64);
+						const mText = createCoolText(k, "You've lost!", k.width() / 2, k.height() * 0.15, 72);
+						mText.letterSpacing = 15;
+
 						mText.font = "Iosevka-Heavy";
-						createCoolText(k, `${message.loser.name} : ${message.loser.score}		-		${message.winner.name} : ${message.winner.score}`, k.width() / 2, k.height() * 0.15, 32);
-						createCoolText(k, "Get ready to reborn as a butterfly!", k.width() / 2, k.height() * 0.6, 32);
-						const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.8, 48);
+						const score = createNormalText(k, `${message.loser.name} : ${message.loser.score}		-		${message.winner.name} : ${message.winner.score}`, k.width() / 2, k.height() * 0.4, 48);
+						score.font = "Iosevka-Heavy";
+
+						const next = createCoolText(k, "Get ready to reborn as a butterfly!", k.width() / 2, k.height() * 0.7, 40);
+						next.font = "Iosevka-Heavy";
+						next.letterSpacing = 0;
+						const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.85, 56);
 						timer.font = "Iosevka-Heavy";
 						k.play("count");
 
@@ -352,14 +358,20 @@ export function createRatScene() {
 					k.go("lost");
 				} else {
 					k.scene("won", async () => {
-						const tiledBackground = createTiledBackground("#7b5480", "#ffffff");
+						const tiledBackground = createTiledBackground("#7b5480", "#686767");
 
 						wonMusic.paused = false;
-						const mText = createCoolText(k, "You have won!", k.width() / 2, k.height() / 3, 64);
+						const mText = createCoolText(k, "You've won!", k.width() / 2, k.height() * 0.15, 72);
+						mText.letterSpacing = 15;
+
 						mText.font = "Iosevka-Heavy";
-						createCoolText(k, `${message.winner.name} : ${message.winner.score}		-		${message.loser.name} : ${message.loser.score}`, k.width() / 2, k.height() * 0.15, 32);
-						createCoolText(k, "Get ready to reborn as a butterfly!", k.width() / 2, k.height() * 0.6, 32);
-						const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.8, 48);
+						const score = createNormalText(k, `${message.winner.name} : ${message.winner.score}		-		${message.loser.name} : ${message.loser.score}`, k.width() / 2, k.height() * 0.4, 48);
+						score.font = "Iosevka-Heavy";
+
+						const next = createCoolText(k, "Get ready to reborn as a butterfly!", k.width() / 2, k.height() * 0.7, 40);
+						next.font = "Iosevka-Heavy";
+						next.letterSpacing = 0;
+						const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.85, 56);
 						timer.font = "Iosevka-Heavy";
 						k.play("count");
 
@@ -386,15 +398,21 @@ export function createRatScene() {
 				const me = room.state.players.get(room.sessionId);
 				const opponent = opponentP;
 				k.scene("DRAW", async () => {
-					const tiledBackground = createTiledBackground("#7b5480", "#ffffff");
+					const tiledBackground = createTiledBackground("#7b5480", "#686767");
 
 					drawSound.paused = false;
 
-					const mText = createCoolText(k, "DRAW", k.width() / 2, k.height() / 3, 64);
+					const mText = createCoolText(k, "It's a draw!", k.width() / 2, k.height() * 0.15, 72);
+					mText.letterSpacing = 15;
+
 					mText.font = "Iosevka-Heavy";
-					createCoolText(k, `${me.name} : ${me.score}		-		${opponent.name} : ${opponent.score}`, k.width() / 2, k.height() * 0.15, 32);
-					createCoolText(k, "Get ready to reborn as a butterfly!", k.width() / 2, k.height() * 0.6, 32);
-					const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.8, 48);
+					const score = createNormalText(k, `${me.name} : ${me.score}		-		${opponent.name} : ${opponent.score}`, k.width() / 2, k.height() * 0.4, 48);
+					score.font = "Iosevka-Heavy";
+
+					const next = createCoolText(k, "Get ready to reborn as a butterfly!", k.width() / 2, k.height() * 0.7, 40);
+					next.font = "Iosevka-Heavy";
+					next.letterSpacing = 0;
+					const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.85, 56);
 					timer.font = "Iosevka-Heavy";
 					k.play("count");
 

@@ -38,6 +38,22 @@ export function createCoolText(gameObject, text, x, y, size, ...extraComps) {
 	]);
 }
 
+export function createNormalText(gameObject, text, x, y, size, ...extraComps) {
+	return gameObject.add([
+		k.text(text, {
+			font: "Iosevka",
+			width: k.width() - 24 * 2,
+			size: size,
+			align: "center",
+			lineSpacing: 8,
+			letterSpacing: 4,
+		}),
+		k.pos(x, y),
+		k.anchor("center"),
+		...extraComps,
+	]);
+}
+
 export function createTiledBackground(color1, color2) {
 	return k.add([
 		k.uvquad(k.width(), k.height()) /* surface for the shader */,

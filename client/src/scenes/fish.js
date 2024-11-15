@@ -1,6 +1,6 @@
 import { k } from "../init";
 import { createRatScene } from "./rat";
-import { tweenFunc, overlay, createCoolText, createTiledBackground, createTutorialRect } from "../utils";
+import { tweenFunc, overlay, createCoolText, createTiledBackground, createTutorialRect, createNormalText } from "../utils";
 
 export const startPos = k.vec2(k.width() / 2, k.height() / 2);
 const FISHSPEED = 50;
@@ -24,7 +24,6 @@ export function createFishScene() {
 			const keyDownUI = rect.add([k.sprite("downKey"), k.pos(rect.width * 0.523, rect.height * 0.5), k.opacity(), k.animate(), "backgroundRect"]);
 			const mouseLeftandRightUI = rect.add([k.sprite("mouseLeftandRight"), k.pos(rect.width * 0.85, rect.height * 0.2), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
 			const gamepadUpandDownUI = rect.add([k.sprite("gamepadUpandDown"), k.pos(rect.width * 0.85, rect.height * 0.74), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
-
 
 			dummyFish.onStateEnter("up", () => {
 				keyUpUI.play("upKeyPressed");
@@ -56,25 +55,22 @@ export function createFishScene() {
 
 		function fishTutorialBackground() {
 			const rectangle = createTutorialRect(0.625, 0.7, 350, 120, rgb(174, 226, 255), rgb(110, 144, 251), rgb(124, 169, 253), rgb(141, 197, 255));
-			const boboExample = rectangle.add([k.sprite("bobo", { flipX: true} ),k.animate(), k.pos(rectangle.width * 0.85, rectangle.height * 0.5), k.anchor("center"), k.rotate(), k.timer(), k.scale(1.5), "boboExample"]);
-			const fishExample = rectangle.add([k.sprite("sukomi"), k.pos(rectangle.width * 0.15, rectangle.height * 0.5), k.scale(1.5), k.animate(), k.anchor("center"), k.body(), k.area(), k.rotate(), k.timer(), "fishExample"])
-				boboExample.animate("angle", [340, 350], {
-					duration: 0.5,
-					direction: "ping-pong",
-				})
+			const boboExample = rectangle.add([k.sprite("bobo", { flipX: true }), k.animate(), k.pos(rectangle.width * 0.85, rectangle.height * 0.5), k.anchor("center"), k.rotate(), k.timer(), k.scale(1.5), "boboExample"]);
+			const fishExample = rectangle.add([k.sprite("sukomi"), k.pos(rectangle.width * 0.15, rectangle.height * 0.5), k.scale(1.5), k.animate(), k.anchor("center"), k.body(), k.area(), k.rotate(), k.timer(), "fishExample"]);
+			boboExample.animate("angle", [340, 350], {
+				duration: 0.5,
+				direction: "ping-pong",
+			});
 
-				k.loop(2, async () => {
-					await tweenFunc(fishExample, "pos", k.vec2(rectangle.width * 0.15, rectangle.height * 0.5), k.vec2(rectangle.width * 0.65, rectangle.height * 0.5), 0.50, 1);
-					tweenFunc(boboExample, "scale", k.vec2(1.5, 1.5), k.vec2(0, 0), 0.5, 1);
-					tweenFunc(fishExample, "angle", 0, 360, 0.5, 1);
-					tweenFunc(fishExample, "pos", k.vec2(rectangle.width * 0.65, rectangle.height * 0.5), k.vec2(rectangle.width * 0.15, rectangle.height * 0.5), 0.5, 1);
-					await tweenFunc(fishExample, "opacity",1,0,0.25,2);
-					tweenFunc(fishExample, "opacity",0,1,0.25,2);
-					tweenFunc(boboExample, "scale", k.vec2(0, 0),k.vec2(1.5, 1.5),0.2,1);
-
-
-				})
-
+			k.loop(2, async () => {
+				await tweenFunc(fishExample, "pos", k.vec2(rectangle.width * 0.15, rectangle.height * 0.5), k.vec2(rectangle.width * 0.65, rectangle.height * 0.5), 0.5, 1);
+				tweenFunc(boboExample, "scale", k.vec2(1.5, 1.5), k.vec2(0, 0), 0.5, 1);
+				tweenFunc(fishExample, "angle", 0, 360, 0.5, 1);
+				tweenFunc(fishExample, "pos", k.vec2(rectangle.width * 0.65, rectangle.height * 0.5), k.vec2(rectangle.width * 0.15, rectangle.height * 0.5), 0.5, 1);
+				await tweenFunc(fishExample, "opacity", 1, 0, 0.25, 2);
+				tweenFunc(fishExample, "opacity", 0, 1, 0.25, 2);
+				tweenFunc(boboExample, "scale", k.vec2(0, 0), k.vec2(1.5, 1.5), 0.2, 1);
+			});
 		}
 		fishTutorialBackground();
 
@@ -273,12 +269,15 @@ export function createFishScene() {
 					loseMusic.paused = false;
 
 					k.scene("lost", async () => {
-						const tiledBackground = createTiledBackground("#d9bdc8", "#ffffff");
-						const mText = createCoolText(k, "You have lost!", k.width() / 2, k.height() / 3, 64);
+						const tiledBackground = createTiledBackground("#d9bdc8", "#686767");
+						const mText = createCoolText(k, "You've lost!", k.width() / 2, k.height() * 0.15, 72);
+						mText.letterSpacing = 15;
 						mText.font = "Iosevka-Heavy";
-						createCoolText(k, `${message.loser.name} : ${message.loser.score}		-		${message.winner.name} : ${message.winner.score}`, k.width() / 2, k.height() * 0.15, 32);
-						createCoolText(k, "Get ready to reborn as a rat!", k.width() / 2, k.height() * 0.6, 32);
-						const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.8, 48);
+						const score = createNormalText(k, `${message.loser.name} : ${message.loser.score}		-		${message.winner.name} : ${message.winner.score}`, k.width() / 2, k.height() * 0.4, 48);
+						const next = createCoolText(k, "Get ready to reborn as a rat!", k.width() / 2, k.height() * 0.7, 40);
+						next.font = "Iosevka-Heavy";
+						next.letterSpacing = 0;
+						const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.85, 56);
 						timer.font = "Iosevka-Heavy";
 						k.play("count");
 
@@ -298,13 +297,17 @@ export function createFishScene() {
 					k.go("lost");
 				} else {
 					k.scene("won", async () => {
-						const tiledBackground = createTiledBackground("#d9bdc8", "#ffffff");
+						const tiledBackground = createTiledBackground("#d9bdc8", "#686767");
 						wonMusic.paused = false;
-						const mText = createCoolText(k, "You have won!", k.width() / 2, k.height() / 3, 64);
+						const mText = createCoolText(k, "You've won!", k.width() / 2, k.height() * 0.15, 72);
+						mText.letterSpacing = 15;
 						mText.font = "Iosevka-Heavy";
-						createCoolText(k, `${message.winner.name} : ${message.winner.score}		-		${message.loser.name} : ${message.loser.score}`, k.width() / 2, k.height() * 0.15, 32);
-						createCoolText(k, "Get ready to reborn as a rat!", k.width() / 2, k.height() * 0.6, 32);
-						const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.8, 48);
+						const score = createNormalText(k, `${message.winner.name} : ${message.winner.score}		-		${message.loser.name} : ${message.loser.score}`, k.width() / 2, k.height() * 0.4, 48);
+						score.font = "Iosevka-Heavy";
+						const next = createCoolText(k, "Get ready to reborn as a rat!", k.width() / 2, k.height() * 0.7, 40);
+						next.font = "Iosevka-Heavy";
+						next.letterSpacing = 0;
+						const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.85, 56);
 						timer.font = "Iosevka-Heavy";
 						k.play("count");
 
@@ -338,15 +341,20 @@ export function createFishScene() {
 				const me = room.state.players.get(room.sessionId);
 				const opponent = players[1];
 				k.scene("DRAW", async () => {
-					const tiledBackground = createTiledBackground("#d9bdc8", "#ffffff");
+					const tiledBackground = createTiledBackground("#d9bdc8", "#686767");
 
 					drawSound.paused = false;
 
-					const mText = createCoolText(k, "DRAW", k.width() / 2, k.height() / 3, 64);
+					const mText = createCoolText(k, "It's a draw!", k.width() / 2, k.height() * 0.15, 72);
+					mText.letterSpacing = 15;
+
 					mText.font = "Iosevka-Heavy";
-					createCoolText(k, `${me.name} : ${me.score}		-		${opponent.name} : ${opponent.score}`, k.width() / 2, k.height() * 0.15, 32);
-					createCoolText(k, "Get ready to reborn as a rat!", k.width() / 2, k.height() * 0.6, 32);
-					const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.8, 48);
+					const score = createNormalText(k, `${me.name} : ${me.score}		-		${opponent.name} : ${opponent.score}`, k.width() / 2, k.height() * 0.4, 48);
+					score.font = "Iosevka-Heavy";
+					const next = createCoolText(k, "Get ready to reborn as a rat!", k.width() / 2, k.height() * 0.7, 40);
+					next.font = "Iosevka-Heavy";
+					next.letterSpacing = 0;
+					const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.85, 56);
 					timer.font = "Iosevka-Heavy";
 					k.play("count");
 

@@ -1,6 +1,6 @@
 import { k } from "./init";
 import * as Colyseus from "colyseus.js";
-import { createTiledBackground, createCoolText } from "./utils";
+import { createTiledBackground, createCoolText, createNormalText } from "./utils";
 
 import { createFishScene, startPos } from "./scenes/fish";
 
@@ -41,6 +41,9 @@ async function loadStuff() {
 	await k.loadSprite("bobo", "sprites/bobo.png");
 	await k.loadSprite("bubble", "sprites/particles/bubble.png");
 
+	//End Scene Sprites
+	await k.loadSprite("play-o", "sprites/icons/play-o.png");
+
 	//Sounds
 	await k.loadSound("loseSound", "sounds/synth.ogg");
 	await k.loadSound("hitHurt", "sounds/hitHurt.ogg");
@@ -58,35 +61,35 @@ async function loadStuff() {
 	await k.loadSprite("gamepadUpandDown", "sprites/icons/gamepadUpandDown.png", {
 		sliceX: 2,
 		anims: {
-			"gamepadUp": {
+			gamepadUp: {
 				from: 0,
 				to: 0,
 				loop: true,
 			},
-			"gamepadDown": {
+			gamepadDown: {
 				from: 1,
 				to: 1,
 				loop: true,
 			},
-		}
-	})
+		},
+	});
 
 	await k.loadSprite("mouseLeftandRight", "sprites/icons/mouseLeftandRight.png", {
 		sliceX: 3,
 		anims: {
-			"emptyMouse": {
+			emptyMouse: {
 				from: 0,
 				to: 0,
 				loop: true,
 			},
 
-			"mouseRightPressed": {
+			mouseRightPressed: {
 				from: 1,
 				to: 1,
 				loop: true,
 			},
 
-			"mouseLeftPressed": {
+			mouseLeftPressed: {
 				from: 2,
 				to: 2,
 				loop: true,
@@ -97,44 +100,45 @@ async function loadStuff() {
 	await k.loadSprite("upKey", "sprites/icons/upKey.png", {
 		sliceX: 2,
 		anims: {
-			"upKey": {
+			upKey: {
 				from: 0,
 				to: 0,
 				loop: true,
 			},
 
-			"upKeyPressed": {
+			upKeyPressed: {
 				from: 1,
 				to: 1,
 				loop: true,
-			}
+			},
 		},
 	});
 
 	await k.loadSprite("downKey", "sprites/icons/downKey.png", {
 		sliceX: 2,
 		anims: {
-			"downKey": {
+			downKey: {
 				from: 0,
 				to: 0,
 				loop: true,
 			},
 
-			"downKeyPressed": {
+			downKeyPressed: {
 				from: 1,
 				to: 1,
 				loop: true,
-			}
+			},
 		},
 	});
 }
 await loadStuff();
 createFishScene();
 
-const tiledBackground = createTiledBackground("#d9bdc8", "#ffffff");
+const tiledBackground = createTiledBackground("#d9bdc8", "#686767");
 
 async function name() {
 	const askName = createCoolText(k, "Please enter your name", k.width() / 2, k.height() * 0.2, 48, "destroyN", k.timer(), k.rotate());
+	askName.font = "Iosevka-Heavy";
 	const name = createCoolText(k, "", k.width() / 2, k.height() / 2, 48, k.textInput(true, 10), "destroyN");
 
 	const keyPress = k.onKeyPress("enter", async () => {
@@ -155,7 +159,8 @@ async function name() {
 }
 
 async function roomName(nameT) {
-	createCoolText(k, "You can optionally enter a room code", k.width() / 2, k.height() * 0.2, 48, "destroyR", k.timer(), k.rotate());
+	const askCode = createCoolText(k, "You can optionally enter a room code", k.width() / 2, k.height() * 0.2, 48, "destroyR", k.timer(), k.rotate());
+	askCode.font = "Iosevka-Heavy";
 	const roomCode = createCoolText(k, "", k.width() / 2, k.height() / 2, 48, k.textInput(true, 10), "destroyR");
 	k.wait(0.5, () => {
 		const keyPress2 = k.onKeyPress("enter", async () => {

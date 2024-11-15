@@ -1,9 +1,10 @@
 import { k } from "../init";
-import { createCoolText, overlay, tweenFunc, createTiledBackground } from "../utils";
+import { createCoolText, overlay, tweenFunc, createTiledBackground, createNormalText } from "../utils";
+import { createEndScene } from "./end";
 
 export const startPos = k.vec2(k.width() / 2, k.height() - 120);
 
-const BUTTERFLYSPEED = 50;
+const BUTTERFLYSPEED = 75;
 
 export function createButterflyScene() {
 	k.scene("butterfly", (room) => {
@@ -357,16 +358,22 @@ export function createButterflyScene() {
 
 		killRoom.push(
 			room.onMessage("won", (message) => {
+				createEndScene();
 				if (message.winner.sessionId !== room.sessionId) {
 					loseMusic.paused = false;
 
 					k.scene("lost", async () => {
-						const tiledBackground = createTiledBackground("#d9bdc8", "#ffffff");
-						const mText = createCoolText(k, "You have lost!", k.width() / 2, k.height() / 3, 64);
+						const tiledBackground = createTiledBackground("#d9bdc8", "#686767");
+						const mText = createCoolText(k, "You've lost!", k.width() / 2, k.height() * 0.15, 72);
+						mText.letterSpacing = 15;
+
 						mText.font = "Iosevka-Heavy";
-						createCoolText(k, `${message.loser.name} : ${message.loser.score}		-		${message.winner.name} : ${message.winner.score}`, k.width() / 2, k.height() * 0.15, 32);
-						createCoolText(k, "Get ready to reborn as a what!", k.width() / 2, k.height() * 0.6, 32);
-						const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.8, 48);
+						const score = createNormalText(k, `${message.loser.name} : ${message.loser.score}		-		${message.winner.name} : ${message.winner.score}`, k.width() / 2, k.height() * 0.4, 48);
+						score.font = "Iosevka-Heavy";
+						const next = createCoolText(k, "Race has ended", k.width() / 2, k.height() * 0.7, 40);
+						next.font = "Iosevka-Heavy";
+						next.letterSpacing = 0;
+						const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.85, 56);
 						timer.font = "Iosevka-Heavy";
 						k.play("count");
 
@@ -379,22 +386,26 @@ export function createButterflyScene() {
 						k.wait(1, () => {
 							k.play("go");
 							k.destroy(tiledBackground);
-
-							//
+							k.go("end", message.loser, message.winner, room);
 						});
 					});
 					room.send("ended");
 					k.go("lost");
 				} else {
 					k.scene("won", async () => {
-						const tiledBackground = createTiledBackground("#d9bdc8", "#ffffff");
+						const tiledBackground = createTiledBackground("#d9bdc8", "#686767");
 
 						wonMusic.paused = false;
-						const mText = createCoolText(k, "You have won!", k.width() / 2, k.height() / 3, 64);
+						const mText = createCoolText(k, "You've won!", k.width() / 2, k.height() * 0.15, 72);
+						mText.letterSpacing = 15;
+
 						mText.font = "Iosevka-Heavy";
-						createCoolText(k, `${message.winner.name} : ${message.winner.score}		-		${message.loser.name} : ${message.loser.score}`, k.width() / 2, k.height() * 0.15, 32);
-						createCoolText(k, "Get ready to reborn as a what!", k.width() / 2, k.height() * 0.6, 32);
-						const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.8, 48);
+						const score = createNormalText(k, `${message.winner.name} : ${message.winner.score}		-		${message.loser.name} : ${message.loser.score}`, k.width() / 2, k.height() * 0.4, 48);
+						score.font = "Iosevka-Heavy";
+						const next = createCoolText(k, "Race has ended", k.width() / 2, k.height() * 0.7, 40);
+						next.font = "Iosevka-Heavy";
+						next.letterSpacing = 0;
+						const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.85, 56);
 						timer.font = "Iosevka-Heavy";
 						k.play("count");
 
@@ -407,8 +418,7 @@ export function createButterflyScene() {
 						k.wait(1, () => {
 							k.play("go");
 							k.destroy(tiledBackground);
-
-							//
+							k.go("end", message.winner, message.loser, room);
 						});
 					});
 					k.go("won");
@@ -418,18 +428,24 @@ export function createButterflyScene() {
 
 		k.onCollide("finish", "player", () => {
 			if (cPlayer.stunTime === opponent.stunTime) {
+				createEndScene();
 				const me = room.state.players.get(room.sessionId);
 				const opponent = opponentP;
 				k.scene("DRAW", async () => {
-					const tiledBackground = createTiledBackground("#d9bdc8", "#ffffff");
+					const tiledBackground = createTiledBackground("#d9bdc8", "#686767");
 
 					drawSound.paused = false;
 
-					const mText = createCoolText(k, "DRAW", k.width() / 2, k.height() / 3, 64);
+					const mText = createCoolText(k, "It's a draw!", k.width() / 2, k.height() * 0.15, 72);
+					mText.letterSpacing = 15;
+
 					mText.font = "Iosevka-Heavy";
-					createCoolText(k, `${me.name} : ${me.score}		-		${opponent.name} : ${opponent.score}`, k.width() / 2, k.height() * 0.15, 32);
-					createCoolText(k, "Get ready to reborn as a what!", k.width() / 2, k.height() * 0.6, 32);
-					const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.8, 48);
+					const score = createNormalText(k, `${me.name} : ${me.score}		-		${opponent.name} : ${opponent.score}`, k.width() / 2, k.height() * 0.4, 48);
+					score.font = "Iosevka-Heavy";
+					const next = createCoolText(k, "Race has ended", k.width() / 2, k.height() * 0.7, 40);
+					next.font = "Iosevka-Heavy";
+					next.letterSpacing = 0;
+					const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.85, 56);
 					timer.font = "Iosevka-Heavy";
 					k.play("count");
 
@@ -441,8 +457,7 @@ export function createButterflyScene() {
 					k.wait(1, () => {
 						k.play("go");
 						k.destroy(tiledBackground);
-
-						//
+						k.go("end", me, opponent, room);
 					});
 				});
 				room.send("ended");
