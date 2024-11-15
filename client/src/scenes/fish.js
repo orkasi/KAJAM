@@ -14,16 +14,16 @@ export function createFishScene() {
 		let startO = false;
 
 		function fishKeyBackground() {
-			const rect = createTutorialRect(k.width() * 0.8, k.height() * 0.23, k.width() * 0.28, k.height() * 0.17, rgb(174, 226, 255), rgb(110, 144, 251), rgb(124, 169, 253), rgb(141, 197, 255));
-			const dummyFish = rect.add([k.sprite("sukomi"), k.pos(-rect.width / 3.5, -rect.height * 0.05), k.scale(1.5), k.animate(), k.anchor("center"), k.state("up", ["up", "down"]), "backgroundRect"]);
+			const fishMoveRect = createTutorialRect(k.width() * 0.8, k.height() * 0.23, k.width() * 0.28, k.height() * 0.17, rgb(174, 226, 255), rgb(110, 144, 251), rgb(124, 169, 253), rgb(141, 197, 255));
+			const dummyFish = fishMoveRect.add([k.sprite("sukomi"), k.pos(-fishMoveRect.width / 3.5, -fishMoveRect.height * 0.05), k.scale(1.5), k.animate(), k.anchor("center"), k.state("up", ["up", "down"]), "backgroundRect"]);
 			dummyFish.animate("angle", [-30, 30], {
 				duration: 1,
 				direction: "ping-pong",
 			});
-			const keyUpUI = rect.add([k.sprite("upKey"), k.pos(rect.width / 8, -rect.height * 0.23), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
-			const keyDownUI = rect.add([k.sprite("downKey"), k.pos(rect.width / 8, rect.height * 0.23), k.opacity(), k.animate(), k.anchor("center"), "backgroundRect"]);
-			const mouseLeftandRightUI = rect.add([k.sprite("mouseLeftandRight"), k.pos(rect.width * 0.35, -rect.height * 0.27), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
-			const gamepadUpandDownUI = rect.add([k.sprite("gamepadUpandDown"), k.pos(rect.width * 0.35, rect.height * 0.27), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
+			const keyUpUI = fishMoveRect.add([k.sprite("upKey"), k.pos(fishMoveRect.width / 8, -fishMoveRect.height * 0.23), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
+			const keyDownUI = fishMoveRect.add([k.sprite("downKey"), k.pos(fishMoveRect.width / 8, fishMoveRect.height * 0.23), k.opacity(), k.animate(), k.anchor("center"), "backgroundRect"]);
+			const mouseLeftandRightUI = fishMoveRect.add([k.sprite("mouseLeftandRight"), k.pos(fishMoveRect.width * 0.35, -fishMoveRect.height * 0.27), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
+			const gamepadUpandDownUI = fishMoveRect.add([k.sprite("gamepadUpandDown"), k.pos(fishMoveRect.width * 0.35, fishMoveRect.height * 0.27), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
 
 			dummyFish.onStateEnter("up", () => {
 				keyUpUI.play("upKeyPressed");
@@ -41,7 +41,7 @@ export function createFishScene() {
 				gamepadUpandDownUI.play("gamepadDown");
 			});
 
-			rect.onUpdate(() => {
+			fishMoveRect.onUpdate(() => {
 				if (dummyFish.angle > 0 && dummyFish.state !== "down") {
 					dummyFish.enterState("down");
 				} else if (dummyFish.angle < 0 && dummyFish.state !== "up") {
@@ -52,19 +52,19 @@ export function createFishScene() {
 		fishKeyBackground();
 
 		function fishTutorialBackground() {
-			const rectangle = createTutorialRect(k.width() * 0.8, k.height() * 0.78, k.width() * 0.28, k.height() * 0.17, rgb(174, 226, 255), rgb(110, 144, 251), rgb(124, 169, 253), rgb(141, 197, 255));
-			const boboExample = rectangle.add([k.sprite("bobo", { flipX: true }), k.animate(), k.pos(rectangle.width / 3.6, 0), k.anchor("center"), k.rotate(), k.timer(), k.scale(1.5), "boboExample"]);
-			const fishExample = rectangle.add([k.sprite("sukomi"), k.pos(-rectangle.width / 3.5, 0), k.scale(1.5), k.animate(), k.anchor("center"), k.body(), k.area(), k.rotate(), k.timer(), "fishExample"]);
+			const fishObstacleRect = createTutorialRect(k.width() * 0.8, k.height() * 0.78, k.width() * 0.28, k.height() * 0.17, rgb(174, 226, 255), rgb(110, 144, 251), rgb(124, 169, 253), rgb(141, 197, 255));
+			const boboExample = fishObstacleRect.add([k.sprite("bobo", { flipX: true }), k.animate(), k.pos(fishObstacleRect.width / 3.6, 0), k.anchor("center"), k.rotate(), k.timer(), k.scale(1.5), "boboExample"]);
+			const fishExample = fishObstacleRect.add([k.sprite("sukomi"), k.pos(-fishObstacleRect.width / 3.5, 0), k.scale(1.5), k.animate(), k.anchor("center"), k.body(), k.area(), k.rotate(), k.timer(), "fishExample"]);
 			boboExample.animate("angle", [340, 350], {
 				duration: 0.5,
 				direction: "ping-pong",
 			});
 
 			k.loop(2, async () => {
-				await tweenFunc(fishExample, "pos", k.vec2(-rectangle.width / 3.5, 0), k.vec2(rectangle.width * 0.1, 0), 0.5, 1); //goes
-				tweenFunc(boboExample, "scale", k.vec2(1.5, 1.5), k.vec2(0, 0), 0.5, 1); //obstacel becomes smaller
-				tweenFunc(fishExample, "angle", 0, 360, 0.5, 1); //fish hurts
-				tweenFunc(fishExample, "pos", k.vec2(rectangle.width * 0.1, 0), k.vec2(-rectangle.width / 3.5, 0), 0.5, 1);
+				await tweenFunc(fishExample, "pos", k.vec2(-fishObstacleRect.width / 3.5, 0), k.vec2(fishObstacleRect.width * 0.1, 0), 0.5, 1);
+				tweenFunc(boboExample, "scale", k.vec2(1.5, 1.5), k.vec2(0, 0), 0.5, 1);
+				tweenFunc(fishExample, "angle", 0, 360, 0.5, 1);
+				tweenFunc(fishExample, "pos", k.vec2(fishObstacleRect.width * 0.1, 0), k.vec2(-fishObstacleRect.width / 3.5, 0), 0.5, 1);
 				await tweenFunc(fishExample, "opacity", 1, 0, 0.25, 2);
 				tweenFunc(fishExample, "opacity", 0, 1, 0.25, 2);
 				tweenFunc(boboExample, "scale", k.vec2(0, 0), k.vec2(1.5, 1.5), 0.2, 1);

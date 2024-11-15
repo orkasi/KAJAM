@@ -15,31 +15,31 @@ export function createButterflyScene() {
 		k.setBackground(rgb(91, 166, 117));
 
 		function butterflyKeyBackground() {
-			const rect = createTutorialRect(k.width() * 0.8, k.height() * 0.25, k.width() * 0.28, k.height() * 0.23, rgb(165, 225, 183), rgb(104, 178, 129), rgb(117, 190, 141), rgb(137, 204, 158));
-			const dummyButterfly = rect.add([k.sprite("butterfly"), k.pos(-rect.width / 4, rect.height / 3), k.scale(1.2), k.animate(), k.timer(), k.rotate(), k.state("jump", ["jump", "idle"]), k.anchor("center"), "backgroundRect"]);
+			const butterflyMoveRect = createTutorialRect(k.width() * 0.8, k.height() * 0.25, k.width() * 0.28, k.height() * 0.23, rgb(165, 225, 183), rgb(104, 178, 129), rgb(117, 190, 141), rgb(137, 204, 158));
+			const dummyButterfly = butterflyMoveRect.add([k.sprite("butterfly"), k.pos(-butterflyMoveRect.width / 4, butterflyMoveRect.height / 3), k.scale(1.2), k.animate(), k.timer(), k.rotate(), k.state("jump", ["jump", "idle"]), k.anchor("center"), "backgroundRect"]);
 
-			const butterflykeyUpUI = rect.add([k.sprite("upKey"), k.pos(rect.width / 8, -rect.height * 0.23), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
-			const butterflykeyDownUI = rect.add([k.sprite("downKey"), k.pos(rect.width / 8, rect.height * 0.23), k.opacity(), k.animate(), k.anchor("center"), "backgroundRect"]);
-			const butterflymouseLeftandRightUI = rect.add([k.sprite("mouseLeftandRight"), k.pos(rect.width * 0.35, -rect.height * 0.27), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
-			const butterflygamepadUpandDownUI = rect.add([k.sprite("gamepadUpandDown"), k.pos(rect.width * 0.35, rect.height * 0.27), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
+			const butterflykeyUpUI = butterflyMoveRect.add([k.sprite("upKey"), k.pos(butterflyMoveRect.width / 8, -butterflyMoveRect.height * 0.23), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
+			const butterflykeyDownUI = butterflyMoveRect.add([k.sprite("downKey"), k.pos(butterflyMoveRect.width / 8, butterflyMoveRect.height * 0.23), k.opacity(), k.animate(), k.anchor("center"), "backgroundRect"]);
+			const butterflymouseLeftandRightUI = butterflyMoveRect.add([k.sprite("mouseLeftandRight"), k.pos(butterflyMoveRect.width * 0.35, -butterflyMoveRect.height * 0.27), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
+			const butterflygamepadUpandDownUI = butterflyMoveRect.add([k.sprite("gamepadUpandDown"), k.pos(butterflyMoveRect.width * 0.35, butterflyMoveRect.height * 0.27), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
 
 			k.loop(1.5, async () => {
 				butterflykeyUpUI.play("upKeyPressed");
 				butterflymouseLeftandRightUI.play("mouseRightPressed");
 				butterflykeyDownUI.play("downKeyPressed");
 				butterflygamepadUpandDownUI.play("upKeyPressed");
-				await tweenFunc(dummyButterfly, "pos", k.vec2(-rect.width / 4, rect.height / 3), k.vec2(-rect.width / 4, -rect.height * 0.35), 0.6, 1);
+				await tweenFunc(dummyButterfly, "pos", k.vec2(-butterflyMoveRect.width / 4, butterflyMoveRect.height / 3), k.vec2(-butterflyMoveRect.width / 4, -butterflyMoveRect.height * 0.35), 0.6, 1);
 				butterflykeyUpUI.play("upKeyPressed");
 				butterflymouseLeftandRightUI.play("mouseRightPressed");
 				butterflykeyDownUI.play("downKeyPressed");
 				butterflygamepadUpandDownUI.play("upKeyPressed");
-				await tweenFunc(dummyRat, "pos", k.vec2(-rect.width / 4, -rect.height * 0.35), k.vec2(-rect.width / 4, rect.height / 3), 0.6, 1);
+				await tweenFunc(dummyRat, "pos", k.vec2(-butterflyMoveRect.width / 4, -butterflyMoveRect.height * 0.35), k.vec2(-butterflyMoveRect.width / 4, butterflyMoveRect.height / 3), 0.6, 1);
 			});
 		}
 		butterflyKeyBackground();
 
 		function butterflyTutorialBackground() {
-			const rectangle = createTutorialRect(k.width() * 0.8, k.height() * 0.74, k.width() * 0.28, k.height() * 0.23, rgb(165, 225, 183), rgb(104, 178, 129), rgb(117, 190, 141), rgb(137, 204, 158));
+			const butterflyObstacleRectangle = createTutorialRect(k.width() * 0.8, k.height() * 0.74, k.width() * 0.28, k.height() * 0.23, rgb(165, 225, 183), rgb(104, 178, 129), rgb(117, 190, 141), rgb(137, 204, 158));
 		}
 		butterflyTutorialBackground();
 
