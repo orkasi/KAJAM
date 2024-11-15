@@ -272,6 +272,8 @@ export function createFishScene() {
 						mText.letterSpacing = 15;
 						mText.font = "Iosevka-Heavy";
 						const score = createNormalText(k, `${message.loser.name} : ${message.loser.score}		-		${message.winner.name} : ${message.winner.score}`, k.width() / 2, k.height() * 0.4, 48);
+						score.font = "Iosevka-Heavy";
+
 						const next = createCoolText(k, "Get ready to reborn as a rat!", k.width() / 2, k.height() * 0.7, 40);
 						next.font = "Iosevka-Heavy";
 						next.letterSpacing = 0;
