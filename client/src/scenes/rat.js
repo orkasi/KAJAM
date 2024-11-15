@@ -1,5 +1,5 @@
 import { k } from "../init";
-import { createCoolText, overlay, tweenFunc, createTiledBackground } from "../utils";
+import { createCoolText, overlay, tweenFunc, createTiledBackground, createTutorialRect } from "../utils";
 import { createButterflyScene } from "./butterfly";
 
 export const startPos = k.vec2(k.width() / 2, k.height() - 77.5);
@@ -11,8 +11,62 @@ export function createRatScene() {
 		const killRoom = [];
 		let opponent = null;
 		let opponentP = null;
-		k.setBackground(rgb(57, 9, 71));
+		k.setBackground(rgb(78, 24, 124));
 		k.setGravity(1750);
+
+		function ratKeyBackground() {
+			const rect = createTutorialRect(k.width() * 0.8 , k.height() * 0.25, k.width() * 0.280, k.height() * 0.270, rgb(144, 129, 214), rgb(89, 47, 146), rgb(100, 72, 169), rgb(118, 100, 192));
+			const dummyRat = rect.add([k.sprite("karat"), k.pos(-rect.width / 4, rect.height / 2.80), k.scale(1.2), k.animate(), k.timer(), k.rotate(), k.state("jump", ["jump", "idle"]), k.anchor("center"), "backgroundRect"]);
+			dummyRat.animate("angle", [10, -10], {
+				duration: 0.2,
+				direction: "ping-pong",
+			});
+
+			const ratkeyUpUI = rect.add([k.sprite("upKey"), k.pos(rect.width / 8, -rect.height * 0.23), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
+			const ratmouseLeftandRightUI = rect.add([k.sprite("mouseLeftandRight"), k.pos(rect.width * 0.35, -rect.height * 0.27), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
+			const ratgamepadUpandDownUI = rect.add([k.sprite("gamepadUpandDown"), k.pos(rect.width / 8, rect.height * 0.27), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
+			const ratmouseLeftUI = rect.add([k.sprite("mouseLeftandRight"), k.pos(rect.width * 0.35, rect.height * 0.27), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
+ 
+			k.loop(1.50, async () => {
+				ratkeyUpUI.play("upKeyPressed");
+				ratmouseLeftandRightUI.play("mouseRightPressed");
+				ratmouseLeftUI.play("mouseLeftPressed");
+				ratgamepadUpandDownUI.play("gamepadUp");
+				await tweenFunc(dummyRat, "pos", k.vec2(-rect.width / 4, rect.height / 2.80), k.vec2(-rect.width / 3.5, -rect.height * 0.35), 0.60, 1);
+				ratkeyUpUI.play("upKey");
+				ratmouseLeftandRightUI.play("emptyMouse");
+				ratmouseLeftUI.play("emptyMouse");
+				ratgamepadUpandDownUI.play("emptyGamepad");
+				await tweenFunc(dummyRat, "pos", k.vec2(-rect.width / 3.5, -rect.height * 0.35), k.vec2(-rect.width / 4, rect.height / 2.80), 0.6, 1);
+			})
+		}
+		ratKeyBackground();
+
+		function ratTutorialBackground() {
+			const rectangle = createTutorialRect(k.width() * 0.8 , k.height() * 0.74, k.width() * 0.280, k.height() * 0.180, rgb(144, 129, 214), rgb(89, 47, 146), rgb(100, 72, 169), rgb(118, 100, 192));
+			const dummyRat = rectangle.add([k.sprite("karat"), k.pos(-rectangle.width / 4 - 20, rectangle.height / 4 - 25), k.scale(1.2), k.animate(), k.timer(), k.rotate(), k.state("jump", ["jump", "idle"]), k.anchor("center"), "backgroundRect"]);
+			dummyRat.animate("angle", [10, -10], {
+				duration: 0.2,
+				direction: "ping-pong",
+			});
+
+			const obstacleExample = rectangle.add([k.sprite("bag", { flipX: true }), k.animate(), k.pos(rectangle.width / 4 + 30, rectangle.height / 4 - 25), k.anchor("center"), k.rotate(), k.timer(), k.scale(1.5), "boboExample"]);
+			obstacleExample.animate("angle", [-5, 5], {
+				duration: 0.2,
+				direction: "ping-pong",
+			});
+
+			k.loop(2, async () => {
+				await tweenFunc(dummyRat, "pos", k.vec2(-rectangle.width / 4 - 20, rectangle.height / 4 - 25), k.vec2(-rectangle.width / 4 + 120, rectangle.height / 4 - 25), 0.25, 1);
+				tweenFunc(obstacleExample, "scale", k.vec2(1.5, 1.5), k.vec2(0, 0), 0.25, 1);			
+				tweenFunc(dummyRat, "pos", k.vec2(-rectangle.width / 4 + 120, rectangle.height / 4 - 25), k.vec2(-rectangle.width / 4 - 20, rectangle.height / 4 - 25), 0.25, 1);
+				await tweenFunc(dummyRat, "opacity",1,0,0.25,1);
+				tweenFunc(dummyRat, "opacity",0,1,0.25,3);
+				tweenFunc(obstacleExample, "scale", k.vec2(0, 0),k.vec2(1.5, 1.5),0.25,1);
+			})
+		}
+		ratTutorialBackground();
+
 		const loseMusic = k.play("loseSound", {
 			loop: false,
 			paused: true,
@@ -83,7 +137,7 @@ export function createRatScene() {
 				if (opponent === null) {
 					if (sessionId !== room.sessionId) {
 						opponentP = player;
-						opponent = k.add([k.sprite("karat"), k.pos(startPos), k.opacity(1), k.anchor("center"), k.rotate(), k.timer(), k.state("start", ["start", "stun", "move"]), overlay(rgb(57, 9, 71), 0.4), k.z(2), { stuntime: 0 }, "player"]);
+						opponent = k.add([k.sprite("karat"), k.pos(startPos), k.opacity(1), k.anchor("center"), k.rotate(), k.timer(), k.state("start", ["start", "stun", "move"]), overlay(rgb(78, 24, 124), 0.4), k.z(2), { stuntime: 0 }, "player"]);
 
 						createCoolText(opponent, player.name, 0, opponent.height, 15);
 
@@ -215,6 +269,7 @@ export function createRatScene() {
 
 		const readyKey = k.onKeyPress("space", () => {
 			readyKey.cancel();
+			k.destroyAll("backgroundRect");
 			readyText.text = "Ready";
 			room.send("readyRat");
 			room.onMessage("start", async () => {

@@ -1,5 +1,5 @@
 import { k } from "../init";
-import { createCoolText, overlay, tweenFunc, createTiledBackground } from "../utils";
+import { createCoolText, overlay, tweenFunc, createTiledBackground, createTutorialRect } from "../utils";
 
 export const startPos = k.vec2(k.width() / 2, k.height() - 120);
 
@@ -12,6 +12,39 @@ export function createButterflyScene() {
 		let opponent = null;
 		let opponentP = null;
 		k.setBackground(rgb(91, 166, 117));
+
+		function butterflyKeyBackground() {
+			const rect = createTutorialRect(k.width() * 0.8 , k.height() * 0.25, k.width() * 0.280, k.height() * 0.230, rgb(165, 225, 183), rgb(104, 178, 129), rgb(117, 190, 141), rgb(137, 204, 158));
+			const dummyButterfly = rect.add([k.sprite("butterfly"), k.pos(-rect.width / 4, rect.height / 3), k.scale(1.2), k.animate(), k.timer(), k.rotate(), k.state("jump", ["jump", "idle"]), k.anchor("center"), "backgroundRect"]);
+
+			const butterflykeyUpUI = rect.add([k.sprite("upKey"), k.pos(rect.width / 8, -rect.height * 0.23), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
+			const butterflykeyDownUI = rect.add([k.sprite("downKey"), k.pos(rect.width / 8, rect.height * 0.23), k.opacity(), k.animate(), k.anchor("center"), "backgroundRect"]);
+			const butterflymouseLeftandRightUI = rect.add([k.sprite("mouseLeftandRight"), k.pos(rect.width * 0.35, -rect.height * 0.27), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
+			const butterflygamepadUpandDownUI = rect.add([k.sprite("gamepadUpandDown"), k.pos(rect.width * 0.35, rect.height * 0.27), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
+
+			k.loop(1.50, async () => {
+				butterflykeyUpUI.play("upKeyPressed");
+				butterflymouseLeftandRightUI.play("mouseRightPressed");
+				butterflykeyDownUI.play("downKeyPressed");
+				butterflygamepadUpandDownUI.play("upKeyPressed");
+				await tweenFunc(dummyButterfly, "pos", k.vec2(-rect.width / 4, rect.height / 3), k.vec2(-rect.width / 4, -rect.height * 0.35), 0.60, 1);
+				butterflykeyUpUI.play("upKeyPressed");
+				butterflymouseLeftandRightUI.play("mouseRightPressed");
+				butterflykeyDownUI.play("downKeyPressed");
+				butterflygamepadUpandDownUI.play("upKeyPressed");
+				await tweenFunc(dummyRat, "pos", k.vec2(-rect.width / 4, -rect.height * 0.35), k.vec2(-rect.width / 4, rect.height / 3), 0.6, 1);
+
+
+			})
+		}
+		butterflyKeyBackground();
+
+		function butterflyTutorialBackground() {
+			const rectangle = createTutorialRect(k.width() * 0.8 , k.height() * 0.74, k.width() * 0.280, k.height() * 0.230, rgb(165, 225, 183), rgb(104, 178, 129), rgb(117, 190, 141), rgb(137, 204, 158));
+			
+		}
+		butterflyTutorialBackground();
+
 		const loseMusic = k.play("loseSound", {
 			loop: false,
 			paused: true,

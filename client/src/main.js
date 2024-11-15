@@ -56,16 +56,21 @@ async function loadStuff() {
 
 	//Key sprites
 	await k.loadSprite("gamepadUpandDown", "sprites/icons/gamepadUpandDown.png", {
-		sliceX: 2,
+		sliceX: 3,
 		anims: {
-			"gamepadUp": {
+			"emptyGamepad": {
 				from: 0,
 				to: 0,
 				loop: true,
 			},
-			"gamepadDown": {
+			"gamepadUp": {
 				from: 1,
 				to: 1,
+				loop: true,
+			},
+			"gamepadDown": {
+				from: 2,
+				to: 2,
 				loop: true,
 			},
 		}
@@ -107,6 +112,12 @@ async function loadStuff() {
 				from: 1,
 				to: 1,
 				loop: true,
+			},
+
+			"upKeys": {
+				from: 0,
+				to: 1,
+				duration: 1,
 			}
 		},
 	});
