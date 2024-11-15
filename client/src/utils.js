@@ -76,26 +76,26 @@ export function createTiledBackground(color1, color2) {
 // It will return the main background rect
 
 export function createTutorialRect(x, y, size_x, size_y, color, outlinecolor, outlinecolor1, outlinecolor2) {
-	const rect = k.add([k.pos(k.width() * x, k.height() * y), k.rect(size_x, size_y), k.scale(), k.opacity(1), k.outline(20, color, 1, "round"), k.color(color), "backgroundRect"]);
+	const rect = k.add([k.pos(x, y), k.rect(size_x, size_y), k.scale(), k.opacity(1), k.outline(20, color, 1, "round"), k.color(color), k.anchor("center"), "backgroundRect"]);
 
 	rect.outlineColors = [outlinecolor, outlinecolor1, outlinecolor2];
 	rect.onUpdate(() => {
 		k.drawRect({
 			width: rect.width,
 			height: rect.height,
-			pos: k.vec2(rect.pos.x, rect.pos.y),
+			pos: k.vec2(rect.pos.x - rect.width / 2, rect.pos.y - rect.height / 2),
 			outline: { color: outlinecolor, width: 80, join: "round" },
 		});
 		k.drawRect({
 			width: rect.width,
 			height: rect.height,
-			pos: k.vec2(rect.pos.x, rect.pos.y),
+			pos: k.vec2(rect.pos.x - rect.width / 2, rect.pos.y - rect.height / 2),
 			outline: { color: outlinecolor1, width: 60, join: "round" },
 		});
 		k.drawRect({
 			width: rect.width,
 			height: rect.height,
-			pos: k.vec2(rect.pos.x, rect.pos.y),
+			pos: k.vec2(rect.pos.x - rect.width / 2, rect.pos.y - rect.height / 2),
 			outline: { color: outlinecolor2, width: 40, join: "round" },
 		});
 	});
