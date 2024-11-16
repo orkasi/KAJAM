@@ -18,6 +18,26 @@ async function loadStuff() {
 	//Shaders
 	await k.loadShaderURL("tiledPattern", null, "shaders/tiledPattern.frag");
 
+	//Fish Game Sprites
+	k.loadSprite("sukomi", "sprites/sukomi.png");
+	k.loadSprite("bobo", "sprites/bobo.png");
+	k.loadSprite("bubble", "sprites/particles/bubble.png");
+
+	//Sounds
+	k.loadSound("loseSound", "sounds/lost.ogg");
+	k.loadSound("fishHit", "sounds/fishHit.ogg");
+	k.loadSound("wonSound", "sounds/won.ogg");
+	k.loadSound("drawSound", "sounds/draw.ogg");
+	await k.loadSound("wrongName", "sounds/wrongName.ogg");
+	await k.loadSound("count", "sounds/count.ogg");
+	await k.loadSound("go", "sounds/go.ogg");
+	k.loadSound("ratHurt", "sounds/ratHurt.ogg");
+	await k.loadSound("lobbyScene", "sounds/lobbyScene.ogg");
+	k.loadSound("fishScene", "sounds/fishScene.ogg");
+	k.loadSound("ratScene", "sounds/ratScene.ogg");
+	k.loadSound("butterflyScene", "sounds/butterflyScene.ogg");
+	k.loadSound("butterflyHit", "sounds/butterflyHit.ogg");
+
 	//Butterfly Game Sprites
 	k.loadSprite("butterfly", "sprites/butterfly.png");
 	k.loadSprite("goldfly", "sprites/goldfly.png");
@@ -36,31 +56,11 @@ async function loadStuff() {
 	k.loadSprite("cloud", "sprites/cloud.png");
 	k.loadSprite("green", "sprites/green.png");
 
-	//Fish Game Sprites
-	await k.loadSprite("sukomi", "sprites/sukomi.png");
-	await k.loadSprite("bobo", "sprites/bobo.png");
-	await k.loadSprite("bubble", "sprites/particles/bubble.png");
-
 	//Icons
 	await k.loadSprite("play-o", "sprites/icons/play-o.png");
 	await k.loadSprite("kaplay", "sprites/icons/kaplay.png");
 	await k.loadSprite("kajam", "sprites/icons/kajam.png");
 	await k.loadSprite("colyseus", "sprites/icons/colyseus.png");
-
-	//Sounds
-	await k.loadSound("loseSound", "sounds/lost.ogg");
-	await k.loadSound("fishHit", "sounds/fishHit.ogg");
-	await k.loadSound("wonSound", "sounds/won.ogg");
-	await k.loadSound("drawSound", "sounds/draw.ogg");
-	await k.loadSound("wrongName", "sounds/wrongName.ogg");
-	await k.loadSound("count", "sounds/count.ogg");
-	await k.loadSound("go", "sounds/go.ogg");
-	await k.loadSound("ratHurt", "sounds/ratHurt.ogg");
-	await k.loadSound("lobbyScene", "sounds/lobbyScene.ogg");
-	await k.loadSound("fishScene", "sounds/fishScene.ogg");
-	await k.loadSound("ratScene", "sounds/ratScene.ogg");
-	await k.loadSound("butterflyScene", "sounds/butterflyScene.ogg");
-	await k.loadSound("butterflyHit", "sounds/butterflyHit.ogg");
 
 	//Fonts
 	await k.loadFont("Iosevka", "fonts/Iosevka-Regular.woff2", { outline: 1, filter: "linear" });
