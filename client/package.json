@@ -9,7 +9,7 @@
 	},
 	"dependencies": {
 		"colyseus.js": "^0.15.26",
-		"kaplay": "github:kaplayjs/kaplay#9cb2451"
+		"kaplay": "3001.0.2"
 	},
 	"devDependencies": {
 		"vite": "^5.4.10"
