@@ -8,7 +8,7 @@ const RATSPEED = 75;
 
 export function createRatScene() {
 	k.scene("rat", (room) => {
-		const ratSound = k.play("ratScene",{
+		const ratSound = k.play("ratScene", {
 			loop: false,
 			paused: false,
 			volume: 0.05,
@@ -109,11 +109,6 @@ export function createRatScene() {
 			volume: 0.3,
 		});
 
-		const hurtSound = k.play("ratHurt", {
-			loop: false,
-			paused: true,
-			volume: 0.3,
-		});
 		const moon = k.add([k.sprite("moon"), k.pos(k.width() * 0.85, k.height() * 0.1), k.scale(1), k.fixed(), k.animate()]);
 		moon.animate("angle", [-15, 15], {
 			duration: 1,
@@ -365,10 +360,7 @@ export function createRatScene() {
 					opponent.enterState("stun");
 					opponent.stunTime += 1;
 
-					hurtSound.play();
-					k.wait(0.5, () => {
-						hurtSound.stop();
-					});
+					k.play("ratHurt", { volume: 0.3 });
 					const target = obstacles.find((obj) => obj.obstacleID === message.collideID);
 
 					if (target) {
@@ -389,10 +381,7 @@ export function createRatScene() {
 				cPlayer.stunTime += 1;
 				room.send("collide", collidedObstacle.obstacleID);
 				tweenFunc(collidedObstacle, "scale", collidedObstacle.scale, k.vec2(0, 0), 0.5, 1);
-				hurtSound.play();
-				k.wait(0.5, () => {
-					hurtSound.stop();
-				});
+				k.play("ratHurt");
 				k.wait(0.5, () => {
 					if (collidedObstacle) {
 						k.destroy(collidedObstacle);
