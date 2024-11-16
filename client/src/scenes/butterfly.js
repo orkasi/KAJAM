@@ -19,7 +19,7 @@ export function createButterflyScene() {
 		let opponentP = null;
 		k.setBackground(rgb(91, 166, 117));
 
-		let muteButton;
+		const muteButton = createMuteButton();
 
 		k.onClick("mute", () => {
 			if (butterflySound.paused === false) {
@@ -30,8 +30,6 @@ export function createButterflyScene() {
 				muteButton.unuse("color");
 			}
 		});
-
-		muteButton = createMuteButton();
 
 		function butterflyKeyBackground() {
 			const butterflyMoveRect = createTutorialRect(k.width() * 0.8, k.height() * 0.25, k.width() * 0.28, k.height() * 0.23, rgb(165, 225, 183), rgb(104, 178, 129), rgb(117, 190, 141), rgb(137, 204, 158));
