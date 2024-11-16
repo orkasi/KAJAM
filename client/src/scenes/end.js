@@ -4,11 +4,24 @@ import { createFishScene } from "./fish";
 
 export function createEndScene() {
 	k.scene("end", (player, opponent, room) => {
-		const lobbySound = k.play("lobbyScene",{
+		const lobbySound = k.play("lobbyScene", {
 			loop: true,
 			paused: false,
 			volume: 0.05,
 		});
+		let muteButton;
+
+		k.onClick("mute", () => {
+			if (lobbySound.paused === false) {
+				lobbySound.paused = true;
+				muteButton.use(k.color(k.RED));
+			} else {
+				lobbySound.paused = false;
+				muteButton.unuse("color");
+			}
+		});
+
+		muteButton = createMuteButton();
 		createFishScene();
 		let sText;
 		const tiledBackground = createTiledBackground("#000000", "#686767");
