@@ -49,14 +49,14 @@ async function loadStuff() {
 
 	//Sounds
 	await k.loadSound("loseSound", "sounds/lost.ogg");
-	await k.loadSound("hitHurt", "sounds/hitHurt.ogg");
+	await k.loadSound("fishHit", "sounds/fishHit.ogg");
 	await k.loadSound("wonSound", "sounds/won.ogg");
 	await k.loadSound("drawSound", "sounds/draw.ogg");
 	await k.loadSound("wrongName", "sounds/wrongName.ogg");
 	await k.loadSound("count", "sounds/count.ogg");
 	await k.loadSound("go", "sounds/go.ogg");
 	await k.loadSound("ratHurt", "sounds/ratHurt.ogg");
-	await k.loadSound("lobbySound", "sounds/Pixelland.ogg");
+	await k.loadSound("lobbyScene", "sounds/lobbyScene.ogg");
 	await k.loadSound("fishScene", "sounds/fishScene.ogg");
 	await k.loadSound("ratScene", "sounds/ratScene.ogg");
 	await k.loadSound("butterflyScene", "sounds/butterflyScene.ogg");
@@ -150,7 +150,7 @@ createFishScene();
 
 const tiledBackground = createTiledBackground("#9982e8", "#8465ec");
 
-const lobbySound = k.play("lobbySound", {
+const lobbySound = k.play("lobbyScene", {
 	loop: true,
 	paused: true,
 	volume: 0.05,
