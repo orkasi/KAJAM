@@ -1,5 +1,5 @@
 import { k } from "../init";
-import { createNormalText, createCoolText, createTiledBackground } from "../utils";
+import { createNormalText, createCoolText, createTiledBackground, createMuteButton } from "../utils";
 import { createFishScene } from "./fish";
 
 export function createEndScene() {
