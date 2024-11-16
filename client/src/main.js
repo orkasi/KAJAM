@@ -10,7 +10,7 @@ window.addEventListener("keydown", (e) => {
 	}
 });
 
-const client = new Colyseus.Client("ws://localhost:2567");
+const client = new Colyseus.Client("https://de-fra-1cb3f4c6.colyseus.cloud/");
 
 async function loadStuff() {
 	k.loadRoot("/");
