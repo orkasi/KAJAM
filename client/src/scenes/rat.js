@@ -4,7 +4,7 @@ import { createButterflyScene } from "./butterfly";
 
 export const startPos = k.vec2(k.width() / 2, k.height() - 77.5);
 
-const RATSPEED = 60;
+const RATSPEED = 75;
 
 export function createRatScene() {
 	k.scene("rat", (room) => {
@@ -339,7 +339,7 @@ export function createRatScene() {
 				const rand = k.randi(3);
 				const obstacle = k.add([
 					sprites[rand],
-					k.pos(k.rand(lastPos + k.width() / 4, lastPos + k.width()), k.height() - 55),
+					k.pos(k.rand(lastPos + k.width() / 2, lastPos + k.width()), k.height() - 55),
 					k.area(),
 					k.anchor("bot"),
 					k.rotate(),
