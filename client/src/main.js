@@ -152,13 +152,30 @@ function isAlphanumeric(str) {
 async function name() {
 	const askName = createCoolText(k, "Please enter your name", k.width() / 2, k.height() * 0.2, 48, "destroyN", k.timer(), k.rotate());
 	askName.font = "Iosevka-Heavy";
-	const name = createCoolText(k, "", k.width() / 2, k.height() / 2, 48, k.textInput(true, 10), "destroyN");
+	const name = createCoolText(k, "", k.width() / 2, k.height() / 2, 48, "destroyN");
+	const kInput = k.onCharInput(async (ch) => {
+		if (ch === "\\") {
+			return;
+		} else if (name.text.length <= 10) {
+			name.text += ch;
+		} else {
+			const warning = createNormalText(k, "Name must be at most 10 characters.", k.width() / 2, k.height() * 0.3, 32, "destroyN");
+			warning.font = "Iosevka-Heavy";
 
+			k.wait(5, () => {
+				destroy(warning);
+			});
+		}
+	});
+	const bInput = k.onKeyPressRepeat("backspace", () => {
+		name.text = name.text.slice(0, -1);
+	});
 	const keyPress = k.onKeyPress("enter", async () => {
 		name.text = name.text.trim();
 		if (name.text.length > 1 && isAlphanumeric(name.text)) {
 			keyPress.cancel();
-
+			kInput.cancel();
+			bInput.cancel();
 			k.destroyAll("destroyN");
 			roomName(name);
 		} else {
@@ -168,10 +185,10 @@ async function name() {
 			});
 			await askName.tween(-10, 10, 0.1, (value) => (askName.angle = value));
 			await askName.tween(10, 0, 0.1, (value) => (askName.angle = value));
-			const warning = createNormalText(k, "Do not use special characters. Name must be longer than 1 characters and shorter than 10 characters.", k.width() / 2, k.height() * 0.3, 32, "destroyN");
+			const warning = createNormalText(k, "Do not use special characters. Name must be longer than 1 characters and at most 10 characters.", k.width() / 2, k.height() * 0.3, 32, "destroyN");
 			warning.font = "Iosevka-Heavy";
 
-			k.wait(5, () => {
+			k.wait(3, () => {
 				destroy(warning);
 			});
 		}
@@ -181,16 +198,38 @@ async function name() {
 async function roomName(nameT) {
 	const askCode = createCoolText(k, "You can optionally enter a room code", k.width() / 2, k.height() * 0.2, 48, "destroyR", k.timer(), k.rotate());
 	askCode.font = "Iosevka-Heavy";
-	const roomCode = createCoolText(k, "", k.width() / 2, k.height() / 2, 48, k.textInput(true, 10), "destroyR");
+	const roomCode = createCoolText(k, "", k.width() / 2, k.height() / 2, 48, "destroyR");
+
+	const kInput = k.onCharInput(async (ch) => {
+		if (ch === "\\") {
+			return;
+		} else if (roomCode.text.length <= 10) {
+			roomCode.text += ch;
+			const warning = createNormalText(k, "Code must be at most 10 characters.", k.width() / 2, k.height() * 0.3, 32, "destroyN");
+			warning.font = "Iosevka-Heavy";
+
+			k.wait(3, () => {
+				destroy(warning);
+			});
+		}
+	});
+	const bInput = k.onKeyPressRepeat("backspace", () => {
+		roomCode.text = roomCode.text.slice(0, -1);
+	});
+
 	k.wait(0.5, () => {
 		const keyPress2 = k.onKeyPress("enter", async () => {
 			if (roomCode.text.length < 1) {
 				main(nameT.text);
 				keyPress2.cancel();
+				kInput.cancel();
+				bInput.cancel();
 				destroyAll("destroyR");
 			} else if (roomCode.text.length > 1 && isAlphanumeric(roomCode.text)) {
 				main(nameT.text, roomCode.text);
 				keyPress2.cancel();
+				kInput.cancel();
+				bInput.cancel();
 				destroyAll("destroyR");
 			} else {
 				await k.play("wrongName", {
