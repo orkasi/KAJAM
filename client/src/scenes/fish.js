@@ -251,13 +251,13 @@ export function createFishScene() {
 		const loseMusic = k.play("loseSound", {
 			loop: false,
 			paused: true,
-			volume: 0.5,
+			volume: 0.3,
 		});
 
 		const wonMusic = k.play("wonSound", {
 			loop: false,
 			paused: true,
-			volume: 0.5,
+			volume: 0.3,
 		});
 
 		killRoom.push(
@@ -267,7 +267,7 @@ export function createFishScene() {
 					loseMusic.paused = false;
 
 					k.scene("lost", async () => {
-						const tiledBackground = createTiledBackground("#d9bdc8", "#686767");
+						const tiledBackground = createTiledBackground("#E07A7A", "#C25A5A");
 						const mText = createCoolText(k, "You've lost!", k.width() / 2, k.height() * 0.15, 72);
 						mText.letterSpacing = 15;
 						mText.font = "Iosevka-Heavy";
@@ -297,7 +297,7 @@ export function createFishScene() {
 					k.go("lost");
 				} else {
 					k.scene("won", async () => {
-						const tiledBackground = createTiledBackground("#d9bdc8", "#686767");
+						const tiledBackground = createTiledBackground("#6FCF97", "#4CAF71");
 						wonMusic.paused = false;
 						const mText = createCoolText(k, "You've won!", k.width() / 2, k.height() * 0.15, 72);
 						mText.letterSpacing = 15;
@@ -332,7 +332,7 @@ export function createFishScene() {
 		const drawSound = k.play("drawSound", {
 			loop: false,
 			paused: true,
-			volume: 0.5,
+			volume: 0.3,
 		});
 
 		k.onCollide("finish", "player", () => {
@@ -341,7 +341,7 @@ export function createFishScene() {
 				const me = room.state.players.get(room.sessionId);
 				const opponent = players[1];
 				k.scene("DRAW", async () => {
-					const tiledBackground = createTiledBackground("#d9bdc8", "#686767");
+					const tiledBackground = createTiledBackground("#89C3E0", "#6FAFD4");
 
 					drawSound.paused = false;
 
@@ -385,7 +385,7 @@ export function createFishScene() {
 		const hurtSound = k.play("hitHurt", {
 			loop: false,
 			paused: true,
-			volume: 0.5,
+			volume: 0.3,
 		});
 
 		killRoom.push(
@@ -394,7 +394,6 @@ export function createFishScene() {
 					if (!stunTimerO) {
 						opponentStunTime += 1;
 						hurtSound.play();
-						hurtSound.volume = 0.5;
 						startO = false;
 						stunTimerO = true;
 						k.wait(1, () => {

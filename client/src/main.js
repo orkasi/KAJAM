@@ -54,6 +54,7 @@ async function loadStuff() {
 	await k.loadSound("wrongName", "sounds/wrongName.ogg");
 	await k.loadSound("count", "sounds/count.ogg");
 	await k.loadSound("go", "sounds/go.ogg");
+	await k.loadSound("ratHurt", "sounds/ratHurt.ogg");
 
 	//Fonts
 	await k.loadFont("Iosevka", "fonts/Iosevka-Regular.woff2", { outline: 1, filter: "linear" });
@@ -141,7 +142,7 @@ async function loadStuff() {
 await loadStuff();
 createFishScene();
 
-const tiledBackground = createTiledBackground("#d9bdc8", "#686767");
+const tiledBackground = createTiledBackground("#9982e8", "#8465ec");
 
 function isAlphanumeric(str) {
 	const regex = /^[a-z0-9]+$/i;
@@ -180,6 +181,7 @@ async function name() {
 		} else {
 			await k.play("wrongName", {
 				loop: false,
+				volume: 0.1,
 			});
 			await askName.tween(-10, 10, 0.1, (value) => (askName.angle = value));
 			await askName.tween(10, 0, 0.1, (value) => (askName.angle = value));
