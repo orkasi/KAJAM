@@ -285,7 +285,7 @@ async function main(name, roomCode = "nocode") {
 				k.destroy(tiledBackground);
 				lobbySound.stop();
 				destroy(muteButton);
-				k.go("fish", room, name);
+				k.go("fish", room);
 			});
 		})
 		.catch((e) => {
