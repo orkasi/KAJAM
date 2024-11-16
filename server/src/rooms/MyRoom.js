@@ -109,7 +109,7 @@ export class MyRoom extends Room {
 		this.clock.setTimeout(() => {
 			delayedInterval.clear();
 			this.broadcast("end");
-		}, 2000);
+		}, 3000);
 	}
 
 	gameLoop() {
