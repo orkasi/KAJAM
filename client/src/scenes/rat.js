@@ -11,7 +11,7 @@ export function createRatScene() {
 		const ratSound = k.play("ratScene",{
 			loop: false,
 			paused: false,
-			volume: 0.05,
+			volume: 0.01,
 		});
 		const killRoom = [];
 		let opponent = null;
@@ -112,7 +112,7 @@ export function createRatScene() {
 		const hurtSound = k.play("ratHurt", {
 			loop: false,
 			paused: true,
-			volume: 0.3,
+			volume: 0.8,
 		});
 		const moon = k.add([k.sprite("moon"), k.pos(k.width() * 0.85, k.height() * 0.1), k.scale(1), k.fixed(), k.animate()]);
 		moon.animate("angle", [-15, 15], {
