@@ -10,7 +10,7 @@ export function createFishScene() {
 		const fishSound = k.play("fishScene", {
 			loop: false,
 			paused: false,
-			volume: 0.01,
+			volume: 0.05,
 		});
 		k.setBackground(rgb(90, 108, 230));
 		const players = {};

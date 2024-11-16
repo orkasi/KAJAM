@@ -11,7 +11,7 @@ export function createButterflyScene() {
 		const butterflySound = k.play("butterflyScene",{
 			loop: false,
 			paused: false,
-			volume: 0.01,
+			volume: 0.05,
 		});
 		k.setGravity(0);
 		const killRoom = [];
@@ -125,12 +125,6 @@ export function createButterflyScene() {
 		const drawSound = k.play("drawSound", {
 			loop: false,
 			paused: true,
-		});
-
-		const hurtSound = k.play("butterflyHit", {
-			loop: false,
-			paused: true,
-			volume: 0.2,
 		});
 
 		function addGround() {
@@ -433,11 +427,7 @@ export function createButterflyScene() {
 				if (message.sessionId !== room.sessionId) {
 					opponent.stunTime += 1;
 					opponent.enterState("stun");
-					hurtSound.play();
-					hurtSound.volume = 0.5;
-					k.wait(0.5, () => {
-						hurtSound.stop();
-					});
+					k.play("butterflyHit", { volume: 0.3 });					
 					const target = obstacles.find((obj) => obj.obstacleID === message.collideID);
 
 					if (target) {
@@ -458,10 +448,7 @@ export function createButterflyScene() {
 				cPlayer.enterState("stun");
 				room.send("collide", collidedObstacle.obstacleID);
 				tweenFunc(collidedObstacle, "scale", collidedObstacle.scale, k.vec2(0, 0), 0.5, 1);
-				hurtSound.play();
-				k.wait(0.5, () => {
-					hurtSound.stop();
-				});
+				k.play("butterflyHit");
 				k.wait(0.5, () => {
 					if (collidedObstacle) {
 						k.destroy(collidedObstacle);
