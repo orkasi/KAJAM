@@ -390,7 +390,7 @@ export function createFishScene() {
 		let stunTimerP = false;
 		let stunTimerO = false;
 
-		const hurtSound = k.play("hitHurt", {
+		const hurtSound = k.play("fishHit", {
 			loop: false,
 			paused: true,
 			volume: 0.3,
