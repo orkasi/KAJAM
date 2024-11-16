@@ -80,23 +80,25 @@ export function createRatScene() {
 		const loseMusic = k.play("loseSound", {
 			loop: false,
 			paused: true,
-			volume: 0.8,
+			volume: 0.3,
 		});
 
 		const wonMusic = k.play("wonSound", {
 			loop: false,
 			paused: true,
+			volume: 0.3,
 		});
 
 		const drawSound = k.play("drawSound", {
 			loop: false,
 			paused: true,
+			volume: 0.3,
 		});
 
-		const hurtSound = k.play("hitHurt", {
+		const hurtSound = k.play("ratHurt", {
 			loop: false,
 			paused: true,
-			volume: 0.8,
+			volume: 0.3,
 		});
 		const moon = k.add([k.sprite("moon"), k.pos(k.width() * 0.85, k.height() * 0.1), k.scale(1), k.fixed(), k.animate()]);
 		moon.animate("angle", [-15, 15], {
@@ -349,7 +351,6 @@ export function createRatScene() {
 				if (message.sessionId !== room.sessionId) {
 					opponent.enterState("stun");
 					hurtSound.play();
-					hurtSound.volume = 0.5;
 					k.wait(0.5, () => {
 						hurtSound.stop();
 					});
@@ -390,7 +391,7 @@ export function createRatScene() {
 					loseMusic.paused = false;
 
 					k.scene("lost", async () => {
-						const tiledBackground = createTiledBackground("#7b5480", "#686767");
+						const tiledBackground = createTiledBackground("#E07A7A", "#C25A5A");
 
 						const mText = createCoolText(k, "You've lost!", k.width() / 2, k.height() * 0.15, 72);
 						mText.letterSpacing = 15;
@@ -423,8 +424,7 @@ export function createRatScene() {
 					k.go("lost");
 				} else {
 					k.scene("won", async () => {
-						const tiledBackground = createTiledBackground("#7b5480", "#686767");
-
+						const tiledBackground = createTiledBackground("#6FCF97", "#4CAF71");
 						wonMusic.paused = false;
 						const mText = createCoolText(k, "You've won!", k.width() / 2, k.height() * 0.15, 72);
 						mText.letterSpacing = 15;
@@ -463,7 +463,7 @@ export function createRatScene() {
 				const me = room.state.players.get(room.sessionId);
 				const opponent = opponentP;
 				k.scene("DRAW", async () => {
-					const tiledBackground = createTiledBackground("#7b5480", "#686767");
+					const tiledBackground = createTiledBackground("#A98BC7", "#8F76B8");
 
 					drawSound.paused = false;
 

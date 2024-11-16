@@ -393,7 +393,7 @@ export function createButterflyScene() {
 					loseMusic.paused = false;
 
 					k.scene("lost", async () => {
-						const tiledBackground = createTiledBackground("#d9bdc8", "#686767");
+						const tiledBackground = createTiledBackground("#E07A7A", "#C25A5A");
 						const mText = createCoolText(k, "You've lost!", k.width() / 2, k.height() * 0.15, 72);
 						mText.letterSpacing = 15;
 
@@ -423,7 +423,7 @@ export function createButterflyScene() {
 					k.go("lost");
 				} else {
 					k.scene("won", async () => {
-						const tiledBackground = createTiledBackground("#d9bdc8", "#686767");
+						const tiledBackground = createTiledBackground("#6FCF97", "#4CAF71");
 
 						wonMusic.paused = false;
 						const mText = createCoolText(k, "You've won!", k.width() / 2, k.height() * 0.15, 72);
@@ -462,7 +462,7 @@ export function createButterflyScene() {
 				const me = room.state.players.get(room.sessionId);
 				const opponent = opponentP;
 				k.scene("DRAW", async () => {
-					const tiledBackground = createTiledBackground("#d9bdc8", "#686767");
+					const tiledBackground = createTiledBackground("#D7A8C9", "#C48BB2");
 
 					drawSound.paused = false;
 
