@@ -4,7 +4,7 @@ import { createButterflyScene } from "./butterfly";
 
 export const startPos = k.vec2(k.width() / 2, k.height() - 77.5);
 
-const RATSPEED = 50;
+const RATSPEED = 75;
 
 export function createRatScene() {
 	k.scene("rat", (room) => {
@@ -60,7 +60,16 @@ export function createRatScene() {
 				direction: "ping-pong",
 			});
 
-			const obstacleExample = ratObstacleRectangle.add([k.sprite("bag", { flipX: true }), k.animate(), k.pos(ratObstacleRectangle.width / 4 + 30, ratObstacleRectangle.height / 4 - 25), k.anchor("center"), k.rotate(), k.timer(), k.scale(1.5), "boboExample"]);
+			const obstacleExample = ratObstacleRectangle.add([
+				k.sprite("bag", { flipX: true }),
+				k.animate(),
+				k.pos(ratObstacleRectangle.width / 4 + 30, ratObstacleRectangle.height / 4 - 25),
+				k.anchor("center"),
+				k.rotate(),
+				k.timer(),
+				k.scale(1.5),
+				"boboExample",
+			]);
 			obstacleExample.animate("angle", [-5, 5], {
 				duration: 0.2,
 				direction: "ping-pong",
@@ -179,7 +188,7 @@ export function createRatScene() {
 						});
 
 						opponent.onStateUpdate("move", () => {
-							opponent.pos.x += (opponent.pos.x + RATSPEED - opponent.pos.x) * 12 * k.dt();
+							opponent.pos.x += RATSPEED * 12 * k.dt();
 						});
 					}
 				}
@@ -265,7 +274,7 @@ export function createRatScene() {
 		});
 
 		cPlayer.onStateUpdate("move", () => {
-			cPlayer.pos.x += (cPlayer.pos.x + RATSPEED - cPlayer.pos.x) * 12 * k.dt();
+			cPlayer.pos.x += RATSPEED * 12 * k.dt();
 			room.send("move", cPlayer.pos);
 		});
 
@@ -278,8 +287,8 @@ export function createRatScene() {
 		const readyText = createCoolText(k, "Press space to get ready", k.width() * 0.85, k.height() / 2, 50);
 
 		const readyKey = k.onKeyPress("space", () => {
-			readyKey.cancel();
 			k.destroyAll("backgroundRect");
+			readyKey.cancel();
 			readyText.text = "Ready";
 			room.send("readyRat");
 			room.onMessage("start", async () => {
@@ -290,6 +299,9 @@ export function createRatScene() {
 					k.play("count");
 					await k.wait(1);
 				}
+				opponent.enterState("move");
+				cPlayer.enterState("move");
+
 				k.play("go");
 
 				readyText.text = "Go";
@@ -297,9 +309,6 @@ export function createRatScene() {
 				readyText.font = "Iosevka-Heavy";
 				readyText.pos = k.vec2(k.width() * 1.2, k.height() / 2, 50);
 				readyText.use(move(k.LEFT, 400));
-				cPlayer.enterState("move");
-				opponent.enterState("move");
-				readyKey.cancel();
 				k.wait(5, () => {
 					k.destroy(readyText);
 				});
