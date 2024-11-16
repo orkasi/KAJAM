@@ -4,7 +4,7 @@ import { createButterflyScene } from "./butterfly";
 
 export const startPos = k.vec2(k.width() / 2, k.height() - 77.5);
 
-const RATSPEED = 50;
+const RATSPEED = 60;
 
 export function createRatScene() {
 	k.scene("rat", (room) => {
