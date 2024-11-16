@@ -121,7 +121,7 @@ export class MyRoom extends Room {
 		this.clock.setTimeout(() => {
 			delayedInterval.clear();
 			this.broadcast("end");
-		}, 1000);
+		}, 5000);
 	}
 
 	onJoin(client, options) {
