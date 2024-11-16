@@ -97,7 +97,7 @@ export class MyRoom extends Room {
 		this.clock.setTimeout(() => {
 			delayedInterval.clear();
 			this.broadcast("end");
-		}, 5000);
+		}, 10000);
 	}
 
 	gameLoopRat() {
@@ -105,11 +105,11 @@ export class MyRoom extends Room {
 		const delayedInterval = this.clock.setInterval(() => {
 			id++;
 			this.broadcast("spawnObstacle", { data: Math.random() * 9999, obstacleID: id });
-		}, 200);
+		}, 100);
 		this.clock.setTimeout(() => {
 			delayedInterval.clear();
 			this.broadcast("end");
-		}, 2000);
+		}, 5000);
 	}
 
 	gameLoop() {
@@ -121,7 +121,7 @@ export class MyRoom extends Room {
 		this.clock.setTimeout(() => {
 			delayedInterval.clear();
 			this.broadcast("end");
-		}, 5000);
+		}, 10000);
 	}
 
 	onJoin(client, options) {
