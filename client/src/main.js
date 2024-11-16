@@ -42,8 +42,8 @@ async function loadStuff() {
 	k.loadSprite("butterfly", "sprites/butterfly.png");
 	k.loadSprite("goldfly", "sprites/goldfly.png");
 	k.loadSprite("ghosty", "sprites/ghosty.png");
-	k.loadSprite("white", "sprites/white.png");
-	k.loadSprite("heart", "sprites/heart.png");
+	k.loadSprite("white", "sprites/particles/white.png");
+	k.loadSprite("heart", "sprites/particles/heart.png");
 
 	//Rat Game Sprites
 	k.loadSprite("gigagantrum", "sprites/gigagantrum.png");
@@ -54,7 +54,7 @@ async function loadStuff() {
 	k.loadSprite("portal", "sprites/portal.png");
 	k.loadSprite("moon", "sprites/moon.png");
 	k.loadSprite("cloud", "sprites/cloud.png");
-	k.loadSprite("green", "sprites/green.png");
+	k.loadSprite("green", "sprites/particles/green.png");
 
 	//Icons
 	await k.loadSprite("play-o", "sprites/icons/play-o.png");
