@@ -22,73 +22,87 @@ export function createButterflyScene() {
 			const butterflygamepadUpandDownUI = butterflyMoveRect.add([k.sprite("gamepadUpandDown"), k.pos(butterflyMoveRect.width * 0.35, butterflyMoveRect.height * 0.27), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
 
 			k.loop(2, async () => {
-
 				butterflykeyUpUI.play("upKeyPressed");
 				butterflymouseLeftandRightUI.play("mouseLeftPressed");
 				butterflygamepadUpandDownUI.play("gamepadDown");
-	
+
 				await k.wait(0.1);
 				butterflymouseLeftandRightUI.play("emptyMouse");
 				butterflygamepadUpandDownUI.play("emptyGamepad");
 				butterflykeyUpUI.play("upKey");
 
-				
-
-
-				 tweenFunc(dummyButterfly, "angle",-5 ,175 , 0.6, 1);
+				tweenFunc(dummyButterfly, "angle", -5, 175, 0.6, 1);
 
 				await tweenFunc(dummyButterfly, "pos", k.vec2(-butterflyMoveRect.width / 4, butterflyMoveRect.height / 3), k.vec2(-butterflyMoveRect.width / 4, -butterflyMoveRect.height * 0.35), 0.6, 1);
-	
+
 				butterflykeyUpUI.play("upKeyPressed");
 				butterflymouseLeftandRightUI.play("mouseLeftPressed");
 				butterflygamepadUpandDownUI.play("gamepadDown");
-	
+
 				await k.wait(0.1);
 				butterflymouseLeftandRightUI.play("emptyMouse");
 				butterflygamepadUpandDownUI.play("emptyGamepad");
 				butterflykeyUpUI.play("upKey");
 
-				
-
-				 tweenFunc(dummyButterfly, "angle",175,-5  , 0.6, 1);
+				tweenFunc(dummyButterfly, "angle", 175, -5, 0.6, 1);
 
 				await tweenFunc(dummyButterfly, "pos", k.vec2(-butterflyMoveRect.width / 4, -butterflyMoveRect.height * 0.35), k.vec2(-butterflyMoveRect.width / 4, butterflyMoveRect.height / 3), 0.6, 1);
-	
 			});
 		}
 		butterflyKeyBackground();
 
 		function butterflyTutorialBackground() {
-		const butterflyObstacleRectangle = createTutorialRect(k.width() * 0.8, k.height() * 0.74, k.width() * 0.28, k.height() * 0.23, rgb(165, 225, 183), rgb(104, 178, 129), rgb(117, 190, 141), rgb(137, 204, 158));
-		const dummyTutorialButterfly = butterflyObstacleRectangle.add([k.sprite("butterfly"), k.pos(-butterflyObstacleRectangle.width / 4, butterflyObstacleRectangle.height / 3), k.scale(1.2), k.animate(), k.timer(), k.rotate(), k.anchor("center"), "backgroundRect"]);
-		dummyTutorialButterfly.animate("angle", [10, -10], {
-			duration: 0.2,
-			direction: "ping-pong",
-		});
-		const obstacleButterflyExample = butterflyObstacleRectangle.add([
-			k.sprite("ghosty"),
-			k.animate(),
-			k.pos(butterflyObstacleRectangle.width / 4 + 30, butterflyObstacleRectangle.height / 4 - 25),
-			k.anchor("center"),
-			k.rotate(),
-			k.timer(),
-			k.scale(1.5),
-			"boboExample",
-		]);
-		obstacleButterflyExample.animate("angle", [-5, 5], {
-			duration: 0.2,
-			direction: "ping-pong",
-		});
-		k.loop(2, async () => {
-			await tweenFunc(dummyTutorialButterfly, "pos", k.vec2(-butterflyObstacleRectangle.width / 4 - 20, butterflyObstacleRectangle.height / 4 - 25), k.vec2(-butterflyObstacleRectangle.width / 4 + 120, butterflyObstacleRectangle.height / 4 - 25), 0.25, 1);
-			tweenFunc(obstacleButterflyExample, "scale", k.vec2(1.5, 1.5), k.vec2(0, 0), 0.25, 1);
-			tweenFunc(dummyTutorialButterfly, "pos", k.vec2(-butterflyObstacleRectangle.width / 4 + 120, butterflyObstacleRectangle.height / 4 - 25), k.vec2(-butterflyObstacleRectangle.width / 4 - 20, butterflyObstacleRectangle.height / 4 - 25), 0.25, 1);
-			await tweenFunc(dummyTutorialButterfly, "opacity", 1, 0, 0.25, 1);
-			tweenFunc(dummyTutorialButterfly, "opacity", 0, 1, 0.25, 3);
-			tweenFunc(obstacleButterflyExample, "scale", k.vec2(0, 0), k.vec2(1.5, 1.5), 0.25, 1);
-		});
-
-
+			const butterflyObstacleRectangle = createTutorialRect(k.width() * 0.8, k.height() * 0.74, k.width() * 0.28, k.height() * 0.23, rgb(165, 225, 183), rgb(104, 178, 129), rgb(117, 190, 141), rgb(137, 204, 158));
+			const dummyTutorialButterfly = butterflyObstacleRectangle.add([
+				k.sprite("butterfly"),
+				k.pos(-butterflyObstacleRectangle.width / 4, butterflyObstacleRectangle.height / 3),
+				k.scale(1.2),
+				k.animate(),
+				k.timer(),
+				k.rotate(),
+				k.anchor("center"),
+				"backgroundRect",
+			]);
+			dummyTutorialButterfly.animate("angle", [10, -10], {
+				duration: 0.2,
+				direction: "ping-pong",
+			});
+			const obstacleButterflyExample = butterflyObstacleRectangle.add([
+				k.sprite("ghosty"),
+				k.animate(),
+				k.pos(butterflyObstacleRectangle.width / 4 + 30, butterflyObstacleRectangle.height / 4 - 25),
+				k.anchor("center"),
+				k.rotate(),
+				k.timer(),
+				k.scale(1.5),
+				"boboExample",
+			]);
+			obstacleButterflyExample.animate("angle", [-5, 5], {
+				duration: 0.2,
+				direction: "ping-pong",
+			});
+			k.loop(2, async () => {
+				await tweenFunc(
+					dummyTutorialButterfly,
+					"pos",
+					k.vec2(-butterflyObstacleRectangle.width / 4 - 20, butterflyObstacleRectangle.height / 4 - 25),
+					k.vec2(-butterflyObstacleRectangle.width / 4 + 120, butterflyObstacleRectangle.height / 4 - 25),
+					0.25,
+					1,
+				);
+				tweenFunc(obstacleButterflyExample, "scale", k.vec2(1.5, 1.5), k.vec2(0, 0), 0.25, 1);
+				tweenFunc(
+					dummyTutorialButterfly,
+					"pos",
+					k.vec2(-butterflyObstacleRectangle.width / 4 + 120, butterflyObstacleRectangle.height / 4 - 25),
+					k.vec2(-butterflyObstacleRectangle.width / 4 - 20, butterflyObstacleRectangle.height / 4 - 25),
+					0.25,
+					1,
+				);
+				await tweenFunc(dummyTutorialButterfly, "opacity", 1, 0, 0.25, 1);
+				tweenFunc(dummyTutorialButterfly, "opacity", 0, 1, 0.25, 3);
+				tweenFunc(obstacleButterflyExample, "scale", k.vec2(0, 0), k.vec2(1.5, 1.5), 0.25, 1);
+			});
 		}
 		butterflyTutorialBackground();
 
@@ -115,14 +129,14 @@ export function createButterflyScene() {
 		});
 
 		function addGround() {
-			let lastGroundPos = k.width() * -5;
+			let lastGroundPos = k.width() * -1;
 			const tiles = [];
 			for (let i = 0; i < 150; i++) {
 				tiles.push(k.add([k.sprite("grass"), k.pos(lastGroundPos, k.height()), k.anchor("bot"), k.z(1), k.offscreen()]));
 				lastGroundPos += 55;
 			}
 
-			k.loop(0.1, () => {
+			k.onUpdate(() => {
 				if (tiles[0].isOffScreen()) {
 					const tile = tiles.shift();
 					tile.pos.x = lastGroundPos;
@@ -133,14 +147,14 @@ export function createButterflyScene() {
 		}
 
 		function addCeiling() {
-			let lastGroundPos = k.width() * -5;
+			let lastGroundPos = k.width() * -1;
 			const tiles = [];
 			for (let i = 0; i < 150; i++) {
 				tiles.push(k.add([k.sprite("grass"), k.pos(lastGroundPos, 0), k.anchor("bot"), k.rotate(180), k.z(1), k.offscreen()]));
 				lastGroundPos += 55;
 			}
 
-			k.loop(0.1, () => {
+			k.onUpdate(() => {
 				if (tiles[0].isOffScreen()) {
 					const tile = tiles.shift();
 					tile.pos.x = lastGroundPos;
@@ -368,7 +382,18 @@ export function createButterflyScene() {
 				const sprites = [k.sprite("ghosty", { flipX: false }), k.sprite("goldfly", { flipX: true })];
 				const orand = k.randi(2);
 				const rand = k.randi(2);
-				const obstacle = k.add([sprites[rand], k.pos(k.rand(lastPos, lastPos + k.width() / 2), orientation[orand]), k.area(), k.anchor("bot"), k.rotate(), k.timer(), k.scale(k.rand(0.8, 2)), { obstacleID: message.obstacleID }, "obstacle"]);
+				const obstacle = k.add([
+					sprites[rand],
+					k.pos(k.rand(lastPos, lastPos + k.width() * 0.4), orientation[orand]),
+					k.area(),
+					k.anchor("bot"),
+					k.animate(),
+					k.rotate(),
+					k.timer(),
+					k.scale(k.rand(0.8, 2)),
+					{ obstacleID: message.obstacleID },
+					"obstacle",
+				]);
 
 				if (rand === 1) {
 					if (orand === 1) {
@@ -383,6 +408,10 @@ export function createButterflyScene() {
 						obstacle.flipX = true;
 					}
 				}
+				obstacle.animate("angle", [obstacle.angle - 5, obstacle.angle + 5], { duration: 1, direction: "ping-pong" });
+
+				obstacle.animate("scale", [k.vec2(obstacle.scale.x - 0.1, obstacle.scale.y - 0.1), obstacle.scale], { duration: 2, direction: "ping-pong" });
+
 				lastPos = obstacle.pos.x;
 				obstacle.use(move(k.LEFT, 20));
 				obstacle.onUpdate(() => {
