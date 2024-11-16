@@ -137,12 +137,12 @@ export function createRatScene() {
 		function addGround() {
 			let lastGroundPos = k.width() * -1;
 			const tiles = [];
-			for (let i = 0; i < 50; i++) {
+			for (let i = 0; i < 100; i++) {
 				tiles.push(k.add([k.sprite("grass"), k.pos(lastGroundPos, k.height()), k.area(), k.body({ isStatic: true }), k.anchor("bot"), k.z(1), k.offscreen()]));
 				lastGroundPos += 55;
 			}
 
-			k.loop(0.1, () => {
+			k.onUpdate(() => {
 				if (tiles[0].isOffScreen()) {
 					const tile = tiles.shift();
 					tile.pos.x = lastGroundPos;
