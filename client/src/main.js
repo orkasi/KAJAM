@@ -45,6 +45,7 @@ async function loadStuff() {
 	await k.loadSprite("play-o", "sprites/icons/play-o.png");
 	await k.loadSprite("kaplay", "sprites/icons/kaplay.png");
 	await k.loadSprite("kajam", "sprites/icons/kajam.png");
+	await k.loadSprite("colyseus", "sprites/icons/colyseus.png");
 
 	//Sounds
 	await k.loadSound("loseSound", "sounds/synth.ogg");
@@ -272,11 +273,15 @@ async function main(name, roomCode = "nocode") {
 function titleScreen() {
 	const tiledBackground = createTiledBackground("#000000", "#686767");
 
+	const hText = createNormalText(k, "Made by Orkun Kaan Şimşek & -REDACTED-", k.width() / 2, k.height() * 0.05, 16, "title");
+	hText.letterSpacing = 4;
+
 	const sText = createCoolText(k, "Reincarnation Racing", k.width() / 2, k.height() * 0.2, 80, "title");
 
 	sText.font = "Iosevka-Heavy";
-	const hText = createNormalText(k, "Made by Orkun Kaan Şimşek & -REDACTED-", k.width() / 2, k.height() * 0.05, 16, "title");
-	hText.letterSpacing = 4;
+	const kajam = k.add([k.sprite("kajam"), k.rotate(10), k.scale(0.04), k.pos(k.width() * 0.879, k.height() * 0.12), k.animate(), "title"]);
+	kajam.animate("scale", [k.vec2(0.04, 0.04), k.vec2(0.05, 0.05)], { duration: 1, direction: "ping-pong" });
+	kajam.animate("angle", [0, 10], { duration: 1.5, direction: "ping-pong" });
 
 	const rText = createNormalText(k, "A race where you reincarnate continuously", k.width() / 2, k.height() * 0.85, 32, "title");
 	rText.letterSpacing = 0;
@@ -284,8 +289,9 @@ function titleScreen() {
 	const pText = createNormalText(k, "(it's a two player game)", k.width() / 2, k.height() * 0.9, 16, "title");
 	pText.letterSpacing = 2;
 
-	k.add([k.sprite("kaplay"), k.pos(k.getSprite("kaplay").data.width * 1.2, k.height() - k.getSprite("kaplay").data.height * 1.2), k.anchor("topright"), k.scale(1.2), "title"]);
-	k.add([k.sprite("kajam"), k.scale(0.15), k.pos(k.width() - k.getSprite("kajam").data.width * 0.15, k.height() - k.getSprite("kajam").data.height * 0.15), k.anchor("topleft"), "title"]);
+	k.add([k.sprite("kaplay"), k.pos(k.getSprite("kaplay").data.width * 0.8, k.height() - k.getSprite("kaplay").data.height * 0.8), k.anchor("topright"), k.scale(0.8), "title"]);
+	k.add([k.sprite("colyseus"), k.scale(0.05), k.pos(k.width() - k.getSprite("colyseus").data.width * 0.054, k.height() - k.getSprite("colyseus").data.height * 0.06), k.anchor("topleft"), "title"]);
+
 	const replayButton = k.add([k.sprite("play-o"), k.pos(k.width() / 2, k.height() * 0.5), k.anchor("center"), k.scale(2), k.area(), k.animate(), k.rotate(), "replay", "title"]);
 	replayButton.animate("scale", [k.vec2(2, 2), k.vec2(2.1, 2.1)], { duration: 1.5, direction: "ping-pong" });
 
