@@ -8,6 +8,11 @@ const RATSPEED = 75;
 
 export function createRatScene() {
 	k.scene("rat", (room) => {
+		const ratSound = k.play("ratScene",{
+			loop: false,
+			paused: false,
+			volume: 0.05,
+		});
 		const killRoom = [];
 		let opponent = null;
 		let opponentP = null;
@@ -192,6 +197,19 @@ export function createRatScene() {
 						opponent.onStateUpdate("move", () => {
 							opponent.pos.x += RATSPEED * 12 * k.dt();
 						});
+						k.loop(0.1, () => {
+							if (opponent.state === "move" && opponent.pos.y > k.height() - (60 + opponent.height / 2)) {
+								k.add([
+									k.sprite("green"),
+									k.pos(k.rand(opponent.pos.x - opponent.width / 2, opponent.pos.x + opponent.width * 0.4), k.rand(opponent.pos.y + opponent.height * 0.5, opponent.pos.y + opponent.height * 0.6)),
+									k.anchor("center"),
+									k.scale(k.rand(0.05, 0.1)),
+									k.lifespan(0.3, { fade: 0.25 }),
+									k.opacity(k.rand(0.3, 1)),
+									k.move(k.randi(180, 260), k.rand(60, 100)),
+								]);
+							}
+						});
 					}
 				}
 			}),
@@ -239,20 +257,6 @@ export function createRatScene() {
 			k.wait(1, () => {
 				cPlayer.enterState("move");
 			});
-		});
-
-		k.loop(0.1, () => {
-			if (opponent.state === "move" && opponent.pos.y > k.height() - (60 + opponent.height / 2)) {
-				k.add([
-					k.sprite("green"),
-					k.pos(k.rand(opponent.pos.x - opponent.width / 2, opponent.pos.x + opponent.width * 0.4), k.rand(opponent.pos.y + opponent.height * 0.5, opponent.pos.y + opponent.height * 0.6)),
-					k.anchor("center"),
-					k.scale(k.rand(0.05, 0.1)),
-					k.lifespan(0.3, { fade: 0.25 }),
-					k.opacity(k.rand(0.3, 1)),
-					k.move(k.randi(180, 260), k.rand(60, 100)),
-				]);
-			}
 		});
 
 		k.loop(0.1, () => {
@@ -400,6 +404,7 @@ export function createRatScene() {
 		killRoom.push(
 			room.onMessage("won", (message) => {
 				if (message.winner.sessionId !== room.sessionId) {
+					ratSound.stop();
 					loseMusic.paused = false;
 
 					k.scene("lost", async () => {
@@ -437,6 +442,7 @@ export function createRatScene() {
 				} else {
 					k.scene("won", async () => {
 						const tiledBackground = createTiledBackground("#6FCF97", "#4CAF71");
+						ratSound.stop();
 						wonMusic.paused = false;
 						const mText = createCoolText(k, "You've won!", k.width() / 2, k.height() * 0.15, 72);
 						mText.letterSpacing = 15;
@@ -476,7 +482,7 @@ export function createRatScene() {
 				const opponent = opponentP;
 				k.scene("DRAW", async () => {
 					const tiledBackground = createTiledBackground("#A98BC7", "#8F76B8");
-
+					ratSound.stop();
 					drawSound.paused = false;
 
 					const mText = createCoolText(k, "It's a draw!", k.width() / 2, k.height() * 0.15, 72);
