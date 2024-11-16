@@ -4,7 +4,7 @@ import { createFishScene } from "./fish";
 
 export function createEndScene() {
 	k.scene("end", (player, opponent, room) => {
-		const lobbySound = k.play("lobbySound",{
+		const lobbySound = k.play("lobbyScene",{
 			loop: true,
 			paused: false,
 			volume: 0.05,
