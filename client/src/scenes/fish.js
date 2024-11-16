@@ -13,7 +13,7 @@ export function createFishScene() {
 			volume: 0.05,
 		});
 		k.setBackground(rgb(90, 108, 230));
-		let muteButton;
+		const muteButton = createMuteButton();
 
 		k.onClick("mute", () => {
 			if (fishSound.paused === false) {
@@ -25,7 +25,6 @@ export function createFishScene() {
 			}
 		});
 
-		muteButton = createMuteButton();
 		const players = {};
 		const killRoom = [];
 		let startP = false;
