@@ -11,7 +11,7 @@ export function createButterflyScene() {
 		const butterflySound = k.play("butterflyScene",{
 			loop: false,
 			paused: false,
-			volume: 0.05,
+			volume: 0.01,
 		});
 		k.setGravity(0);
 		const killRoom = [];
@@ -130,7 +130,7 @@ export function createButterflyScene() {
 		const hurtSound = k.play("butterflyHit", {
 			loop: false,
 			paused: true,
-			volume: 0.8,
+			volume: 0.2,
 		});
 
 		function addGround() {
