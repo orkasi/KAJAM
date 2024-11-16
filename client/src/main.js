@@ -302,7 +302,7 @@ function titleScreen() {
 	const tiledBackground = createTiledBackground("#000000", "#686767");
 	muteButton = createMuteButton();
 
-	const hText = createNormalText(k, "made by orkun kaan şimşek & irem ünlü", k.width() / 2, k.height() * 0.05, 16, "title");
+	const hText = createNormalText(k, "Made by Orkun Kaan & Irem", k.width() / 2, k.height() * 0.05, 16, "title");
 	hText.letterSpacing = 2;
 
 	const sText = createCoolText(k, "Reincarnation Racing", k.width() / 2, k.height() * 0.2, 80, "title");
