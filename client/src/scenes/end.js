@@ -4,6 +4,11 @@ import { createFishScene } from "./fish";
 
 export function createEndScene() {
 	k.scene("end", (player, opponent, room) => {
+		const lobbySound = k.play("lobbySound",{
+			loop: true,
+			paused: false,
+			volume: 0.05,
+		});
 		createFishScene();
 		let sText;
 		const tiledBackground = createTiledBackground("#000000", "#686767");
@@ -36,6 +41,7 @@ export function createEndScene() {
 		replayButton.animate("pos", [k.vec2(k.width() * 0.49, k.height() * 0.75), k.vec2(k.width() * 0.51, k.height() * 0.75)], { duration: 1, direction: "ping-pong" });
 		k.onClick("replay", () => {
 			destroy(tiledBackground);
+			lobbySound.stop();
 			k.go("fish", room);
 		});
 	});

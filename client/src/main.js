@@ -56,6 +56,11 @@ async function loadStuff() {
 	await k.loadSound("count", "sounds/count.ogg");
 	await k.loadSound("go", "sounds/go.ogg");
 	await k.loadSound("ratHurt", "sounds/ratHurt.ogg");
+	await k.loadSound("lobbySound", "sounds/Pixelland.ogg");
+	await k.loadSound("fishScene", "sounds/fishScene.ogg");
+	await k.loadSound("ratScene", "sounds/ratScene.ogg");
+	await k.loadSound("butterflyScene", "sounds/butterflyScene.ogg");
+	await k.loadSound("butterflyHit", "sounds/butterflyHit.ogg");
 
 	//Fonts
 	await k.loadFont("Iosevka", "fonts/Iosevka-Regular.woff2", { outline: 1, filter: "linear" });
@@ -144,6 +149,14 @@ await loadStuff();
 createFishScene();
 
 const tiledBackground = createTiledBackground("#9982e8", "#8465ec");
+
+const lobbySound = k.play("lobbySound",{
+	loop: true,
+	paused: true,
+	volume: 0.05,
+});
+
+const playOnClick = k.onClick(() => lobbySound.paused = false);
 
 function isAlphanumeric(str) {
 	const regex = /^[a-z0-9]+$/i;
@@ -257,6 +270,8 @@ async function main(name, roomCode = "nocode") {
 
 			k.wait(1, async () => {
 				k.destroy(tiledBackground);
+				lobbySound.stop();
+				playOnClick.cancel();
 				k.go("fish", room, name);
 			});
 		})

@@ -8,6 +8,11 @@ const BUTTERFLYSPEED = 75;
 
 export function createButterflyScene() {
 	k.scene("butterfly", (room) => {
+		const butterflySound = k.play("butterflyScene",{
+			loop: false,
+			paused: false,
+			volume: 0.05,
+		});
 		k.setGravity(0);
 		const killRoom = [];
 		let opponent = null;
@@ -122,7 +127,7 @@ export function createButterflyScene() {
 			paused: true,
 		});
 
-		const hurtSound = k.play("hitHurt", {
+		const hurtSound = k.play("butterflyHit", {
 			loop: false,
 			paused: true,
 			volume: 0.8,
@@ -469,6 +474,7 @@ export function createButterflyScene() {
 			room.onMessage("won", (message) => {
 				createEndScene();
 				if (message.winner.sessionId !== room.sessionId) {
+					butterflySound.stop();
 					loseMusic.paused = false;
 
 					k.scene("lost", async () => {
@@ -503,7 +509,7 @@ export function createButterflyScene() {
 				} else {
 					k.scene("won", async () => {
 						const tiledBackground = createTiledBackground("#6FCF97", "#4CAF71");
-
+						butterflySound.stop();
 						wonMusic.paused = false;
 						const mText = createCoolText(k, "You've won!", k.width() / 2, k.height() * 0.15, 72);
 						mText.letterSpacing = 15;
@@ -542,7 +548,7 @@ export function createButterflyScene() {
 				const opponent = opponentP;
 				k.scene("DRAW", async () => {
 					const tiledBackground = createTiledBackground("#D7A8C9", "#C48BB2");
-
+					butterflySound.stop();
 					drawSound.paused = false;
 
 					const mText = createCoolText(k, "It's a draw!", k.width() / 2, k.height() * 0.15, 72);
