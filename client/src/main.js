@@ -1,6 +1,6 @@
 import { k } from "./init";
 import * as Colyseus from "colyseus.js";
-import { createTiledBackground, createCoolText, createNormalText } from "./utils";
+import { createTiledBackground, createCoolText, createNormalText, createMuteButton } from "./utils";
 
 import { createFishScene, startPos } from "./scenes/fish";
 
@@ -61,6 +61,7 @@ async function loadStuff() {
 	await k.loadSprite("kaplay", "sprites/icons/kaplay.png");
 	await k.loadSprite("kajam", "sprites/icons/kajam.png");
 	await k.loadSprite("colyseus", "sprites/icons/colyseus.png");
+	await k.loadSprite("mute", "sprites/icons/mute.png");
 
 	//Fonts
 	await k.loadFont("Iosevka", "fonts/Iosevka-Regular.woff2", { outline: 1, filter: "linear" });
@@ -156,7 +157,19 @@ const lobbySound = k.play("lobbyScene", {
 	volume: 0.05,
 });
 
-const playOnClick = k.onClick(() => (lobbySound.paused = false));
+const playOnClick = k.onClick(() => ((lobbySound.paused = false), playOnClick.cancel()));
+
+let muteButton;
+
+k.onClick("mute", () => {
+	if (lobbySound.paused === false) {
+		lobbySound.paused = true;
+		muteButton.use(k.color(k.RED));
+	} else {
+		lobbySound.paused = false;
+		muteButton.unuse("color");
+	}
+});
 
 function isAlphanumeric(str) {
 	const regex = /^[a-z0-9]+$/i;
@@ -271,7 +284,7 @@ async function main(name, roomCode = "nocode") {
 			k.wait(1, async () => {
 				k.destroy(tiledBackground);
 				lobbySound.stop();
-				playOnClick.cancel();
+				destroy(muteButton);
 				k.go("fish", room, name);
 			});
 		})
@@ -287,6 +300,7 @@ async function main(name, roomCode = "nocode") {
 
 function titleScreen() {
 	const tiledBackground = createTiledBackground("#000000", "#686767");
+	muteButton = createMuteButton();
 
 	const hText = createNormalText(k, "made by orkun kaan şimşek & irem ünlü", k.width() / 2, k.height() * 0.05, 16, "title");
 	hText.letterSpacing = 2;

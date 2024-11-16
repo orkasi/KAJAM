@@ -56,7 +56,7 @@ export function createNormalText(gameObject, text, x, y, size, ...extraComps) {
 
 export function createTiledBackground(color1, color2) {
 	return k.add([
-		k.uvquad(k.width(), k.height()) /* surface for the shader */,
+		k.uvquad(k.width(), k.height()),
 		k.shader("tiledPattern", () => ({
 			u_time: k.time() / 20,
 			u_color1: k.Color.fromHex(color1),
@@ -69,11 +69,6 @@ export function createTiledBackground(color1, color2) {
 		k.fixed(),
 	]);
 }
-
-// This function will create the main tutorial rectangle and the ones with the outlines beneath them.
-// Yes sir!
-// It will allow you to set their colors and size.
-// It will return the main background rect
 
 export function createTutorialRect(x, y, size_x, size_y, color, outlinecolor, outlinecolor1, outlinecolor2) {
 	const rect = k.add([k.pos(x, y), k.rect(size_x, size_y), k.scale(), k.opacity(1), k.outline(20, color, 1, "round"), k.color(color), k.anchor("center"), "backgroundRect"]);
@@ -100,4 +95,8 @@ export function createTutorialRect(x, y, size_x, size_y, color, outlinecolor, ou
 		});
 	});
 	return rect;
+}
+
+export function createMuteButton() {
+	return k.add([k.sprite("mute"), k.pos(k.width(), 0), k.scale(0.5), k.area(), k.opacity(0.5), k.fixed(), k.anchor("topright"), "mute"]);
 }

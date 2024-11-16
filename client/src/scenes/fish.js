@@ -1,6 +1,6 @@
 import { k } from "../init";
 import { createRatScene } from "./rat";
-import { tweenFunc, overlay, createCoolText, createTiledBackground, createTutorialRect, createNormalText } from "../utils";
+import { tweenFunc, overlay, createCoolText, createTiledBackground, createTutorialRect, createNormalText, createMuteButton } from "../utils";
 
 export const startPos = k.vec2(k.width() / 2, k.height() / 2);
 const FISHSPEED = 50;
@@ -13,6 +13,19 @@ export function createFishScene() {
 			volume: 0.05,
 		});
 		k.setBackground(rgb(90, 108, 230));
+		let muteButton;
+
+		k.onClick("mute", () => {
+			if (fishSound.paused === false) {
+				fishSound.paused = true;
+				muteButton.use(k.color(k.RED));
+			} else {
+				fishSound.paused = false;
+				muteButton.unuse("color");
+			}
+		});
+
+		muteButton = createMuteButton();
 		const players = {};
 		const killRoom = [];
 		let startP = false;

@@ -1,5 +1,5 @@
 import { k } from "../init";
-import { createCoolText, overlay, tweenFunc, createTiledBackground, createNormalText, createTutorialRect } from "../utils";
+import { createCoolText, overlay, tweenFunc, createTiledBackground, createNormalText, createTutorialRect, createMuteButton } from "../utils";
 import { createButterflyScene } from "./butterfly";
 
 export const startPos = k.vec2(k.width() / 2, k.height() - 77.5);
@@ -18,6 +18,19 @@ export function createRatScene() {
 		let opponentP = null;
 		k.setBackground(rgb(78, 24, 124));
 		k.setGravity(1750);
+		let muteButton;
+
+		k.onClick("mute", () => {
+			if (ratSound.paused === false) {
+				ratSound.paused = true;
+				muteButton.use(k.color(k.RED));
+			} else {
+				ratSound.paused = false;
+				muteButton.unuse("color");
+			}
+		});
+
+		muteButton = createMuteButton();
 
 		function ratKeyBackground() {
 			const ratMoveRect = createTutorialRect(k.width() * 0.8, k.height() * 0.25, k.width() * 0.28, k.height() * 0.27, rgb(144, 129, 214), rgb(89, 47, 146), rgb(100, 72, 169), rgb(118, 100, 192));
