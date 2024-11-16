@@ -67,7 +67,7 @@ export function createRatScene() {
 			});
 
 			k.loop(2, async () => {
-				await tweenFunc(dummyRat, "pos", k.vec2(-ratObstacleRectangle.width / 4 - 20, recratObstacleRectangletangle.height / 4 - 25), k.vec2(-ratObstacleRectangle.width / 4 + 120, ratObstacleRectangle.height / 4 - 25), 0.25, 1);
+				await tweenFunc(dummyRat, "pos", k.vec2(-ratObstacleRectangle.width / 4 - 20, ratObstacleRectangle.height / 4 - 25), k.vec2(-ratObstacleRectangle.width / 4 + 120, ratObstacleRectangle.height / 4 - 25), 0.25, 1);
 				tweenFunc(obstacleExample, "scale", k.vec2(1.5, 1.5), k.vec2(0, 0), 0.25, 1);
 				tweenFunc(dummyRat, "pos", k.vec2(-ratObstacleRectangle.width / 4 + 120, ratObstacleRectangle.height / 4 - 25), k.vec2(-ratObstacleRectangle.width / 4 - 20, ratObstacleRectangle.height / 4 - 25), 0.25, 1);
 				await tweenFunc(dummyRat, "opacity", 1, 0, 0.25, 1);
