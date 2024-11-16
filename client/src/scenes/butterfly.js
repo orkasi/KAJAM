@@ -16,30 +16,79 @@ export function createButterflyScene() {
 
 		function butterflyKeyBackground() {
 			const butterflyMoveRect = createTutorialRect(k.width() * 0.8, k.height() * 0.25, k.width() * 0.28, k.height() * 0.23, rgb(165, 225, 183), rgb(104, 178, 129), rgb(117, 190, 141), rgb(137, 204, 158));
-			const dummyButterfly = butterflyMoveRect.add([k.sprite("butterfly"), k.pos(-butterflyMoveRect.width / 4, butterflyMoveRect.height / 3), k.scale(1.2), k.animate(), k.timer(), k.rotate(), k.state("jump", ["jump", "idle"]), k.anchor("center"), "backgroundRect"]);
-
-			const butterflykeyUpUI = butterflyMoveRect.add([k.sprite("upKey"), k.pos(butterflyMoveRect.width / 8, -butterflyMoveRect.height * 0.23), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
-			const butterflykeyDownUI = butterflyMoveRect.add([k.sprite("downKey"), k.pos(butterflyMoveRect.width / 8, butterflyMoveRect.height * 0.23), k.opacity(), k.animate(), k.anchor("center"), "backgroundRect"]);
+			const dummyButterfly = butterflyMoveRect.add([k.sprite("butterfly"), k.pos(-butterflyMoveRect.width / 4, butterflyMoveRect.height / 3), k.scale(1.2), k.animate(), k.timer(), k.rotate(), k.anchor("center"), "backgroundRect"]);
+			const butterflykeyUpUI = butterflyMoveRect.add([k.sprite("upKey"), k.pos(butterflyMoveRect.width / 8, 0), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
 			const butterflymouseLeftandRightUI = butterflyMoveRect.add([k.sprite("mouseLeftandRight"), k.pos(butterflyMoveRect.width * 0.35, -butterflyMoveRect.height * 0.27), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
 			const butterflygamepadUpandDownUI = butterflyMoveRect.add([k.sprite("gamepadUpandDown"), k.pos(butterflyMoveRect.width * 0.35, butterflyMoveRect.height * 0.27), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
 
-			k.loop(1.5, async () => {
+			k.loop(2, async () => {
+
 				butterflykeyUpUI.play("upKeyPressed");
-				butterflymouseLeftandRightUI.play("mouseRightPressed");
-				butterflykeyDownUI.play("downKeyPressed");
-				butterflygamepadUpandDownUI.play("upKeyPressed");
+				butterflymouseLeftandRightUI.play("mouseLeftPressed");
+				butterflygamepadUpandDownUI.play("gamepadDown");
+	
+				await k.wait(0.1);
+				butterflymouseLeftandRightUI.play("emptyMouse");
+				butterflygamepadUpandDownUI.play("emptyGamepad");
+				butterflykeyUpUI.play("upKey");
+
+				
+
+
+				 tweenFunc(dummyButterfly, "angle",-5 ,175 , 0.6, 1);
+
 				await tweenFunc(dummyButterfly, "pos", k.vec2(-butterflyMoveRect.width / 4, butterflyMoveRect.height / 3), k.vec2(-butterflyMoveRect.width / 4, -butterflyMoveRect.height * 0.35), 0.6, 1);
+	
 				butterflykeyUpUI.play("upKeyPressed");
-				butterflymouseLeftandRightUI.play("mouseRightPressed");
-				butterflykeyDownUI.play("downKeyPressed");
-				butterflygamepadUpandDownUI.play("upKeyPressed");
-				await tweenFunc(dummyRat, "pos", k.vec2(-butterflyMoveRect.width / 4, -butterflyMoveRect.height * 0.35), k.vec2(-butterflyMoveRect.width / 4, butterflyMoveRect.height / 3), 0.6, 1);
+				butterflymouseLeftandRightUI.play("mouseLeftPressed");
+				butterflygamepadUpandDownUI.play("gamepadDown");
+	
+				await k.wait(0.1);
+				butterflymouseLeftandRightUI.play("emptyMouse");
+				butterflygamepadUpandDownUI.play("emptyGamepad");
+				butterflykeyUpUI.play("upKey");
+
+				
+
+				 tweenFunc(dummyButterfly, "angle",175,-5  , 0.6, 1);
+
+				await tweenFunc(dummyButterfly, "pos", k.vec2(-butterflyMoveRect.width / 4, -butterflyMoveRect.height * 0.35), k.vec2(-butterflyMoveRect.width / 4, butterflyMoveRect.height / 3), 0.6, 1);
+	
 			});
 		}
 		butterflyKeyBackground();
 
 		function butterflyTutorialBackground() {
-			const butterflyObstacleRectangle = createTutorialRect(k.width() * 0.8, k.height() * 0.74, k.width() * 0.28, k.height() * 0.23, rgb(165, 225, 183), rgb(104, 178, 129), rgb(117, 190, 141), rgb(137, 204, 158));
+		const butterflyObstacleRectangle = createTutorialRect(k.width() * 0.8, k.height() * 0.74, k.width() * 0.28, k.height() * 0.23, rgb(165, 225, 183), rgb(104, 178, 129), rgb(117, 190, 141), rgb(137, 204, 158));
+		const dummyTutorialButterfly = butterflyObstacleRectangle.add([k.sprite("butterfly"), k.pos(-butterflyObstacleRectangle.width / 4, butterflyObstacleRectangle.height / 3), k.scale(1.2), k.animate(), k.timer(), k.rotate(), k.anchor("center"), "backgroundRect"]);
+		dummyTutorialButterfly.animate("angle", [10, -10], {
+			duration: 0.2,
+			direction: "ping-pong",
+		});
+		const obstacleButterflyExample = butterflyObstacleRectangle.add([
+			k.sprite("ghosty"),
+			k.animate(),
+			k.pos(butterflyObstacleRectangle.width / 4 + 30, butterflyObstacleRectangle.height / 4 - 25),
+			k.anchor("center"),
+			k.rotate(),
+			k.timer(),
+			k.scale(1.5),
+			"boboExample",
+		]);
+		obstacleButterflyExample.animate("angle", [-5, 5], {
+			duration: 0.2,
+			direction: "ping-pong",
+		});
+		k.loop(2, async () => {
+			await tweenFunc(dummyTutorialButterfly, "pos", k.vec2(-butterflyObstacleRectangle.width / 4 - 20, butterflyObstacleRectangle.height / 4 - 25), k.vec2(-butterflyObstacleRectangle.width / 4 + 120, butterflyObstacleRectangle.height / 4 - 25), 0.25, 1);
+			tweenFunc(obstacleButterflyExample, "scale", k.vec2(1.5, 1.5), k.vec2(0, 0), 0.25, 1);
+			tweenFunc(dummyTutorialButterfly, "pos", k.vec2(-butterflyObstacleRectangle.width / 4 + 120, butterflyObstacleRectangle.height / 4 - 25), k.vec2(-butterflyObstacleRectangle.width / 4 - 20, butterflyObstacleRectangle.height / 4 - 25), 0.25, 1);
+			await tweenFunc(dummyTutorialButterfly, "opacity", 1, 0, 0.25, 1);
+			tweenFunc(dummyTutorialButterfly, "opacity", 0, 1, 0.25, 3);
+			tweenFunc(obstacleButterflyExample, "scale", k.vec2(0, 0), k.vec2(1.5, 1.5), 0.25, 1);
+		});
+
+
 		}
 		butterflyTutorialBackground();
 
@@ -281,6 +330,7 @@ export function createButterflyScene() {
 		const readyText = createCoolText(k, "Press space to get ready", k.width() * 0.85, k.height() / 2, 50);
 
 		const readyKey = k.onKeyPress("space", () => {
+			k.destroyAll("backgroundRect");
 			readyKey.cancel();
 			readyText.text = "Ready";
 			room.send("readyButterfly");
