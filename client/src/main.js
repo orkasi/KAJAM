@@ -273,8 +273,8 @@ async function main(name, roomCode = "nocode") {
 function titleScreen() {
 	const tiledBackground = createTiledBackground("#000000", "#686767");
 
-	const hText = createNormalText(k, "Made by Orkun Kaan Şimşek & -REDACTED-", k.width() / 2, k.height() * 0.05, 16, "title");
-	hText.letterSpacing = 4;
+	const hText = createNormalText(k, "made by orkun kaan şimşek & irem ünlü", k.width() / 2, k.height() * 0.05, 16, "title");
+	hText.letterSpacing = 2;
 
 	const sText = createCoolText(k, "Reincarnation Racing", k.width() / 2, k.height() * 0.2, 80, "title");
 
