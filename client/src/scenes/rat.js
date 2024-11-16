@@ -158,7 +158,7 @@ export function createRatScene() {
 				if (opponent === null) {
 					if (sessionId !== room.sessionId) {
 						opponentP = player;
-						opponent = k.add([k.sprite("karat"), k.pos(startPos), k.opacity(1), k.anchor("center"), k.rotate(), k.timer(), k.state("start", ["start", "stun", "move"]), overlay(rgb(78, 24, 124), 0.4), k.z(2), { stuntime: 0 }, "player"]);
+						opponent = k.add([k.sprite("karat"), k.pos(startPos), k.opacity(1), k.anchor("center"), k.rotate(), k.timer(), k.state("start", ["start", "stun", "move"]), overlay(rgb(78, 24, 124), 0.4), k.z(2), { stunTime: 0 }, "player"]);
 
 						createCoolText(opponent, player.name, 0, opponent.height, 15);
 
@@ -359,6 +359,8 @@ export function createRatScene() {
 			room.onMessage("opponentCollided", (message) => {
 				if (message.sessionId !== room.sessionId) {
 					opponent.enterState("stun");
+					opponent.stunTime += 1;
+
 					hurtSound.play();
 					k.wait(0.5, () => {
 						hurtSound.stop();
@@ -380,6 +382,7 @@ export function createRatScene() {
 		k.onCollide("obstacle", "player", (collidedObstacle) => {
 			if (cPlayer.state !== "stun") {
 				cPlayer.enterState("stun");
+				cPlayer.stunTime += 1;
 				room.send("collide", collidedObstacle.obstacleID);
 				tweenFunc(collidedObstacle, "scale", collidedObstacle.scale, k.vec2(0, 0), 0.5, 1);
 				hurtSound.play();
@@ -467,8 +470,8 @@ export function createRatScene() {
 		);
 
 		k.onCollide("finish", "player", () => {
+			console.log(cPlayer.stunTime, opponent.stunTime);
 			if (cPlayer.stunTime === opponent.stunTime) {
-				// cloudLoop.cancel();
 				const me = room.state.players.get(room.sessionId);
 				const opponent = opponentP;
 				k.scene("DRAW", async () => {
