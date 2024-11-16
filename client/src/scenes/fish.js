@@ -7,6 +7,11 @@ const FISHSPEED = 50;
 
 export function createFishScene() {
 	k.scene("fish", (room, playerName) => {
+		const fishSound = k.play("fishScene",{
+			loop: false,
+			paused: false,
+			volume: 0.05,
+		});
 		k.setBackground(rgb(90, 108, 230));
 		const players = {};
 		const killRoom = [];
@@ -251,19 +256,20 @@ export function createFishScene() {
 		const loseMusic = k.play("loseSound", {
 			loop: false,
 			paused: true,
-			volume: 0.3,
+			volume: 0.5,
 		});
 
 		const wonMusic = k.play("wonSound", {
 			loop: false,
 			paused: true,
-			volume: 0.3,
+			volume: 0.2,
 		});
 
 		killRoom.push(
 			room.onMessage("won", (message) => {
 				createRatScene();
 				if (message.winner.sessionId !== room.sessionId) {
+					fishSound.stop();
 					loseMusic.paused = false;
 
 					k.scene("lost", async () => {
@@ -298,6 +304,7 @@ export function createFishScene() {
 				} else {
 					k.scene("won", async () => {
 						const tiledBackground = createTiledBackground("#6FCF97", "#4CAF71");
+						fishSound.stop();
 						wonMusic.paused = false;
 						const mText = createCoolText(k, "You've won!", k.width() / 2, k.height() * 0.15, 72);
 						mText.letterSpacing = 15;
@@ -344,6 +351,7 @@ export function createFishScene() {
 					const tiledBackground = createTiledBackground("#89C3E0", "#6FAFD4");
 
 					drawSound.paused = false;
+					fishSound.stop();
 
 					const mText = createCoolText(k, "It's a draw!", k.width() / 2, k.height() * 0.15, 72);
 					mText.letterSpacing = 15;
