@@ -48,7 +48,7 @@ async function loadStuff() {
 	await k.loadSprite("colyseus", "sprites/icons/colyseus.png");
 
 	//Sounds
-	await k.loadSound("loseSound", "sounds/synth.ogg");
+	await k.loadSound("loseSound", "sounds/lost.ogg");
 	await k.loadSound("hitHurt", "sounds/hitHurt.ogg");
 	await k.loadSound("wonSound", "sounds/won.ogg");
 	await k.loadSound("drawSound", "sounds/draw.ogg");
@@ -150,13 +150,13 @@ createFishScene();
 
 const tiledBackground = createTiledBackground("#9982e8", "#8465ec");
 
-const lobbySound = k.play("lobbySound",{
+const lobbySound = k.play("lobbySound", {
 	loop: true,
 	paused: true,
 	volume: 0.05,
 });
 
-const playOnClick = k.onClick(() => lobbySound.paused = false);
+const playOnClick = k.onClick(() => (lobbySound.paused = false));
 
 function isAlphanumeric(str) {
 	const regex = /^[a-z0-9]+$/i;
