@@ -105,11 +105,11 @@ export class MyRoom extends Room {
 		const delayedInterval = this.clock.setInterval(() => {
 			id++;
 			this.broadcast("spawnObstacle", { data: Math.random() * 9999, obstacleID: id });
-		}, 200);
+		}, 100);
 		this.clock.setTimeout(() => {
 			delayedInterval.clear();
 			this.broadcast("end");
-		}, 3000);
+		}, 5000);
 	}
 
 	gameLoop() {
