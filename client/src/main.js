@@ -57,8 +57,6 @@ async function loadStuff() {
 	await k.loadSound("ratHurt", "sounds/ratHurt.ogg");
 
 	//Fonts
-	// await k.loadFont("Iosevka", "fonts/IosevkaNerdFontPropo-Regular.woff2", { outline: 1, filter: "linear" });
-	// await k.loadFont("Iosevka-Heavy", "fonts/IosevkaNerdFontPropo-Heavy.woff2", { outline: 3, filter: "linear" });
 	await k.loadFont("Iosevka", "fonts/Iosevka-Regular.woff2", { outline: 1, filter: "linear" });
 	await k.loadFont("Iosevka-Heavy", "fonts/Iosevka-Heavy.woff2", { outline: 3, filter: "linear" });
 
@@ -219,7 +217,7 @@ async function main(name, roomCode = "nocode") {
 
 			k.wait(1, async () => {
 				k.destroy(tiledBackground);
-				k.go("fish", room);
+				k.go("fish", room, name);
 			});
 		})
 		.catch((e) => {
@@ -227,7 +225,7 @@ async function main(name, roomCode = "nocode") {
 			console.log(e);
 			k.wait(5, async () => {
 				await k.destroy(lobbyText);
-				main();
+				main(name, roomCode);
 			});
 		});
 }
@@ -238,8 +236,8 @@ function titleScreen() {
 	const sText = createCoolText(k, "Reincarnation Racing", k.width() / 2, k.height() * 0.2, 80, "title");
 
 	sText.font = "Iosevka-Heavy";
-	const hText = createNormalText(k, "made by orkun kaan şimşek & irem ünlü  ", k.width() / 2, k.height() * 0.05, 16, "title");
-	hText.letterSpacing = 2;
+	const hText = createNormalText(k, "Made by Orkun Kaan Şimşek & -REDACTED-", k.width() / 2, k.height() * 0.05, 16, "title");
+	hText.letterSpacing = 4;
 
 	const rText = createNormalText(k, "A race where you reincarnate continuously", k.width() / 2, k.height() * 0.85, 32, "title");
 	rText.letterSpacing = 0;

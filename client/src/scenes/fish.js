@@ -6,7 +6,7 @@ export const startPos = k.vec2(k.width() / 2, k.height() / 2);
 const FISHSPEED = 50;
 
 export function createFishScene() {
-	k.scene("fish", (room) => {
+	k.scene("fish", (room, playerName) => {
 		k.setBackground(rgb(90, 108, 230));
 		const players = {};
 		const killRoom = [];
@@ -109,7 +109,7 @@ export function createFishScene() {
 
 		const cPlayer = k.add([k.sprite("sukomi"), k.pos(startPos), k.body(), k.anchor("center"), k.rotate(), k.z(2), k.area(), k.timer(), k.opacity(1), "player"]);
 
-		createCoolText(cPlayer, room.state.players.get(room.sessionId).name, 0, -cPlayer.height, 15);
+		createCoolText(cPlayer, playerName, 0, -cPlayer.height, 15);
 
 		let upPressed = false;
 		let downPressed = false;
