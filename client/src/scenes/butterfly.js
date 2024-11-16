@@ -1,5 +1,5 @@
 import { k } from "../init";
-import { createCoolText, overlay, tweenFunc, createTiledBackground, createNormalText, createTutorialRect } from "../utils";
+import { createCoolText, overlay, tweenFunc, createTiledBackground, createNormalText, createTutorialRect, createMuteButton } from "../utils";
 import { createEndScene } from "./end";
 
 export const startPos = k.vec2(k.width() / 2, k.height() - 120);
@@ -8,7 +8,7 @@ const BUTTERFLYSPEED = 75;
 
 export function createButterflyScene() {
 	k.scene("butterfly", (room) => {
-		const butterflySound = k.play("butterflyScene",{
+		const butterflySound = k.play("butterflyScene", {
 			loop: false,
 			paused: false,
 			volume: 0.05,
@@ -18,6 +18,20 @@ export function createButterflyScene() {
 		let opponent = null;
 		let opponentP = null;
 		k.setBackground(rgb(91, 166, 117));
+
+		let muteButton;
+
+		k.onClick("mute", () => {
+			if (butterflySound.paused === false) {
+				butterflySound.paused = true;
+				muteButton.use(k.color(k.RED));
+			} else {
+				butterflySound.paused = false;
+				muteButton.unuse("color");
+			}
+		});
+
+		muteButton = createMuteButton();
 
 		function butterflyKeyBackground() {
 			const butterflyMoveRect = createTutorialRect(k.width() * 0.8, k.height() * 0.25, k.width() * 0.28, k.height() * 0.23, rgb(165, 225, 183), rgb(104, 178, 129), rgb(117, 190, 141), rgb(137, 204, 158));
@@ -427,7 +441,7 @@ export function createButterflyScene() {
 				if (message.sessionId !== room.sessionId) {
 					opponent.stunTime += 1;
 					opponent.enterState("stun");
-					k.play("butterflyHit", { volume: 0.3 });					
+					k.play("butterflyHit", { volume: 0.3 });
 					const target = obstacles.find((obj) => obj.obstacleID === message.collideID);
 
 					if (target) {
