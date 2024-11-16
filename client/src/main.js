@@ -223,7 +223,7 @@ async function main(name, roomCode = "nocode") {
 			console.log(e);
 			k.wait(5, async () => {
 				await k.destroy(lobbyText);
-				main();
+				main(name, roomCode);
 			});
 		});
 }
