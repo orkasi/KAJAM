@@ -7,7 +7,7 @@ const FISHSPEED = 50;
 
 export function createFishScene() {
 	k.scene("fish", (room, playerName) => {
-		const fishSound = k.play("fishScene",{
+		const fishSound = k.play("fishScene", {
 			loop: false,
 			paused: false,
 			volume: 0.01,
@@ -390,24 +390,19 @@ export function createFishScene() {
 		let stunTimerP = false;
 		let stunTimerO = false;
 
-		const hurtSound = k.play("fishHit", {
-			loop: false,
-			paused: true,
-			volume: 0.3,
-		});
-
 		killRoom.push(
 			room.onMessage("opponentCollided", (message) => {
 				if (message.sessionId !== room.sessionId) {
 					if (!stunTimerO) {
 						opponentStunTime += 1;
-						hurtSound.play();
+						k.play("fishHit", {
+							volume: 0.3,
+						});
 						startO = false;
 						stunTimerO = true;
 						k.wait(1, () => {
 							stunTimerO = false;
 							startO = true;
-							hurtSound.stop();
 						});
 						tweenFunc(players[0], "angle", 360, 0, 0.25, 1);
 						tweenFunc(players[0], "opacity", 0, 1, 0.25, 4);
@@ -429,13 +424,12 @@ export function createFishScene() {
 		k.onCollide("obstacle", "player", (collidedObstacle) => {
 			if (!stunTimerP) {
 				stunTime += 1;
-				hurtSound.play();
+				k.play("fishHit", {});
 				startP = false;
 				stunTimerP = true;
 				k.wait(1, () => {
 					stunTimerP = false;
 					startP = true;
-					hurtSound.stop();
 				});
 				tweenFunc(cPlayer, "angle", 360, 0, 0.25, 1);
 				tweenFunc(cPlayer, "opacity", 0, 1, 0.25, 4);
