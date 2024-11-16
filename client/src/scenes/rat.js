@@ -11,7 +11,7 @@ export function createRatScene() {
 		const ratSound = k.play("ratScene", {
 			loop: false,
 			paused: false,
-			volume: 0.05,
+			volume: 0.01,
 		});
 		const killRoom = [];
 		let opponent = null;
