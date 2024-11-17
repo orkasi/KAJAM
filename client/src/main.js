@@ -13,64 +13,64 @@ window.addEventListener("keydown", (e) => {
 const client = new Colyseus.Client("https://de-fra-1cb3f4c6.colyseus.cloud/");
 
 async function loadStuff() {
-	k.loadRoot("/");
+	k.loadRoot(".");
 
 	//Shaders
-	await k.loadShaderURL("tiledPattern", null, "shaders/tiledPattern.frag");
+	await k.loadShaderURL("tiledPattern", null, "/shaders/tiledPattern.frag");
 
 	//Fish Game Sprites
-	k.loadSprite("sukomi", "sprites/sukomi.png");
-	k.loadSprite("bobo", "sprites/bobo.png");
-	k.loadSprite("bubble", "sprites/particles/bubble.png");
+	k.loadSprite("sukomi", "/sprites/sukomi.png");
+	k.loadSprite("bobo", "/sprites/bobo.png");
+	k.loadSprite("bubble", "/sprites/particles/bubble.png");
 
 	//Sounds
-	k.loadSound("loseSound", "sounds/lost.ogg");
-	k.loadSound("fishHit", "sounds/fishHit.ogg");
-	k.loadSound("wonSound", "sounds/won.ogg");
-	k.loadSound("drawSound", "sounds/draw.ogg");
-	await k.loadSound("wrongName", "sounds/wrongName.ogg");
-	await k.loadSound("count", "sounds/count.ogg");
-	await k.loadSound("go", "sounds/go.ogg");
-	k.loadSound("ratHurt", "sounds/ratHurt.ogg");
-	await k.loadSound("lobbyScene", "sounds/lobbyScene.ogg");
-	k.loadSound("fishScene", "sounds/fishScene.ogg");
-	k.loadSound("ratScene", "sounds/ratScene.ogg");
-	k.loadSound("butterflyScene", "sounds/butterflyScene.ogg");
-	k.loadSound("butterflyHit", "sounds/butterflyHit.ogg");
+	k.loadSound("loseSound", "/sounds/lost.ogg");
+	k.loadSound("fishHit", "/sounds/fishHit.ogg");
+	k.loadSound("wonSound", "/sounds/won.ogg");
+	k.loadSound("drawSound", "/sounds/draw.ogg");
+	await k.loadSound("wrongName", "/sounds/wrongName.ogg");
+	await k.loadSound("count", "/sounds/count.ogg");
+	await k.loadSound("go", "/sounds/go.ogg");
+	k.loadSound("ratHurt", "/sounds/ratHurt.ogg");
+	await k.loadSound("lobbyScene", "/sounds/lobbyScene.ogg");
+	k.loadSound("fishScene", "/sounds/fishScene.ogg");
+	k.loadSound("ratScene", "/sounds/ratScene.ogg");
+	k.loadSound("butterflyScene", "/sounds/butterflyScene.ogg");
+	k.loadSound("butterflyHit", "/sounds/butterflyHit.ogg");
 
 	//Butterfly Game Sprites
-	k.loadSprite("butterfly", "sprites/butterfly.png");
-	k.loadSprite("goldfly", "sprites/goldfly.png");
-	k.loadSprite("ghosty", "sprites/ghosty.png");
-	k.loadSprite("white", "sprites/particles/white.png");
-	k.loadSprite("heart", "sprites/particles/heart.png");
+	k.loadSprite("butterfly", "/sprites/butterfly.png");
+	k.loadSprite("goldfly", "/sprites/goldfly.png");
+	k.loadSprite("ghosty", "/sprites/ghosty.png");
+	k.loadSprite("white", "/sprites/particles/white.png");
+	k.loadSprite("heart", "/sprites/particles/heart.png");
 
 	//Rat Game Sprites
-	k.loadSprite("gigagantrum", "sprites/gigagantrum.png");
-	k.loadSprite("karat", "sprites/karat.png");
-	k.loadSprite("bag", "sprites/bag.png");
-	k.loadSprite("money_bag", "sprites/money_bag.png");
-	k.loadSprite("grass", "sprites/grass.png");
-	k.loadSprite("portal", "sprites/portal.png");
-	k.loadSprite("moon", "sprites/moon.png");
-	k.loadSprite("cloud", "sprites/cloud.png");
-	k.loadSprite("green", "sprites/particles/green.png");
+	k.loadSprite("gigagantrum", "/sprites/gigagantrum.png");
+	k.loadSprite("karat", "/sprites/karat.png");
+	k.loadSprite("bag", "/sprites/bag.png");
+	k.loadSprite("money_bag", "/sprites/money_bag.png");
+	k.loadSprite("grass", "/sprites/grass.png");
+	k.loadSprite("portal", "/sprites/portal.png");
+	k.loadSprite("moon", "/sprites/moon.png");
+	k.loadSprite("cloud", "/sprites/cloud.png");
+	k.loadSprite("green", "/sprites/particles/green.png");
 
 	//Icons
-	await k.loadSprite("play-o", "sprites/icons/play-o.png");
-	await k.loadSprite("kaplay", "sprites/icons/kaplay.png");
-	await k.loadSprite("kajam", "sprites/icons/kajam.png");
-	await k.loadSprite("colyseus", "sprites/icons/colyseus.png");
-	await k.loadSprite("mute", "sprites/icons/mute.png");
-	await k.loadSprite("enterButton", "sprites/icons/enterButton.png");
-	await k.loadSprite("space", "sprites/icons/spaceKey.png");
+	await k.loadSprite("play-o", "/sprites/icons/play-o.png");
+	await k.loadSprite("kaplay", "/sprites/icons/kaplay.png");
+	await k.loadSprite("kajam", "/sprites/icons/kajam.png");
+	await k.loadSprite("colyseus", "/sprites/icons/colyseus.png");
+	await k.loadSprite("mute", "/sprites/icons/mute.png");
+	await k.loadSprite("enterButton", "/sprites/icons/enterButton.png");
+	await k.loadSprite("space", "/sprites/icons/spaceKey.png");
 
 	//Fonts
-	await k.loadFont("Iosevka", "fonts/Iosevka-Regular.woff2", { outline: 1, filter: "linear" });
-	await k.loadFont("Iosevka-Heavy", "fonts/Iosevka-Heavy.woff2", { outline: 3, filter: "linear" });
+	await k.loadFont("Iosevka", "/fonts/Iosevka-Regular.woff2", { outline: 1, filter: "linear" });
+	await k.loadFont("Iosevka-Heavy", "/fonts/Iosevka-Heavy.woff2", { outline: 3, filter: "linear" });
 
 	//Key sprites
-	await k.loadSprite("gamepadUpandDown", "sprites/icons/gamepadUpandDown.png", {
+	await k.loadSprite("gamepadUpandDown", "/sprites/icons/gamepadUpandDown.png", {
 		sliceX: 3,
 		anims: {
 			emptyGamepad: {
@@ -91,7 +91,7 @@ async function loadStuff() {
 		},
 	});
 
-	await k.loadSprite("mouseLeftandRight", "sprites/icons/mouseLeftandRight.png", {
+	await k.loadSprite("mouseLeftandRight", "/sprites/icons/mouseLeftandRight.png", {
 		sliceX: 3,
 		anims: {
 			emptyMouse: {
@@ -114,7 +114,7 @@ async function loadStuff() {
 		},
 	});
 
-	await k.loadSprite("upKey", "sprites/icons/upKey.png", {
+	await k.loadSprite("upKey", "/sprites/icons/upKey.png", {
 		sliceX: 2,
 		anims: {
 			upKey: {
@@ -131,7 +131,7 @@ async function loadStuff() {
 		},
 	});
 
-	await k.loadSprite("downKey", "sprites/icons/downKey.png", {
+	await k.loadSprite("downKey", "/sprites/icons/downKey.png", {
 		sliceX: 2,
 		anims: {
 			downKey: {
@@ -148,31 +148,10 @@ async function loadStuff() {
 		},
 	});
 }
-await loadStuff();
-createFishScene();
-
-const lobbySound = k.play("lobbyScene", {
-	loop: true,
-	paused: true,
-	volume: 0.05,
-});
-
-const playOnClick = k.onClick(() => {
-	lobbySound.paused = false;
-	playOnClick.cancel();
-});
+loadStuff();
 
 let muteButton;
-
-k.onClick("mute", () => {
-	if (lobbySound.paused === false) {
-		lobbySound.paused = true;
-		muteButton.use(k.color(k.RED));
-	} else {
-		lobbySound.paused = false;
-		muteButton.unuse("color");
-	}
-});
+let lobbySound;
 
 function isAlphanumeric(str) {
 	const regex = /^[a-z0-9]+$/i;
@@ -307,7 +286,26 @@ async function main(name, roomCode = "nocode") {
 
 export function titleScreen() {
 	const tiledBackground = createTiledBackground("#000000", "#686767");
+	lobbySound = k.play("lobbyScene", {
+		loop: true,
+		paused: true,
+		volume: 0.05,
+	});
 	muteButton = createMuteButton();
+	k.onClick("mute", () => {
+		if (lobbySound.paused === false) {
+			lobbySound.paused = true;
+			muteButton.use(k.color(k.RED));
+		} else {
+			lobbySound.paused = false;
+			muteButton.unuse("color");
+		}
+	});
+
+	const playOnClick = k.onClick(() => {
+		lobbySound.paused = false;
+		playOnClick.cancel();
+	});
 
 	const hText = createNormalText(k, "Made by Orkun Kaan & Irem", k.width() / 2, k.height() * 0.05, 16, "title");
 	hText.letterSpacing = 2;
@@ -342,4 +340,7 @@ export function titleScreen() {
 	});
 }
 
-titleScreen();
+k.onLoad(() => {
+	createFishScene();
+	titleScreen();
+});
