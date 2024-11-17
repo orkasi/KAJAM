@@ -144,6 +144,7 @@ export function createFishScene() {
 		k.onKeyRelease(["down", "s"], () => (downPressed = false));
 
 		const readyText = createCoolText(k, "Press space to get ready", k.width() * 0.85, k.height() / 2, 50);
+		
 
 		const readyKey = k.onKeyPress("space", () => {
 			readyKey.cancel();
@@ -156,10 +157,10 @@ export function createFishScene() {
 
 					for (let i = 3; i > 0; i--) {
 						readyText.text = i;
-						k.play("count");
+						k.play("count", { volume: 0.08 });
 						await k.wait(1);
 					}
-					k.play("go");
+					k.play("go", {volume: 0.1} );
 					readyText.text = "Go";
 					readyText.textSize = 128;
 					readyText.pos = k.vec2(k.width() * 1.2, k.height() / 2, 50);
@@ -297,16 +298,16 @@ export function createFishScene() {
 						next.letterSpacing = 0;
 						const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.85, 56);
 						timer.font = "Iosevka-Heavy";
-						k.play("count");
+						k.play("count", {volume: 0.08} );
 
 						for (let t = 4; t > 0; t--) {
 							await k.wait(1);
-							k.play("count");
+							k.play("count", {volume: 0.08});
 							timer.text = t;
 						}
 
 						k.wait(1, () => {
-							k.play("go");
+							k.play("go", {volume: 0.1});
 							k.destroy(tiledBackground);
 							k.go("rat", room);
 						});
@@ -328,16 +329,16 @@ export function createFishScene() {
 						next.letterSpacing = 0;
 						const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.85, 56);
 						timer.font = "Iosevka-Heavy";
-						k.play("count");
+						k.play("count", {volume: 0.08});
 
 						for (let t = 4; t > 0; t--) {
 							await k.wait(1);
-							k.play("count");
+							k.play("count", {volume: 0.08});
 							timer.text = t;
 						}
 
 						k.wait(1, () => {
-							k.play("go");
+							k.play("go", {volume: 0.1} );
 							k.destroy(tiledBackground);
 
 							k.go("rat", room);
@@ -376,15 +377,15 @@ export function createFishScene() {
 					next.letterSpacing = 0;
 					const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.85, 56);
 					timer.font = "Iosevka-Heavy";
-					k.play("count");
+					k.play("count", {volume: 0.08});
 
 					for (let t = 4; t > 0; t--) {
 						await k.wait(1);
-						k.play("count");
+						k.play("count", {volume: 0.08});
 						timer.text = t;
 					}
 					k.wait(1, () => {
-						k.play("go");
+						k.play("go", {volume: 0.1} );
 						k.destroy(tiledBackground);
 
 						k.go("rat", room);
@@ -408,7 +409,7 @@ export function createFishScene() {
 					if (!stunTimerO) {
 						opponentStunTime += 1;
 						k.play("fishHit", {
-							volume: 0.3,
+							volume: 0.08,
 						});
 						startO = false;
 						stunTimerO = true;
@@ -436,7 +437,7 @@ export function createFishScene() {
 		k.onCollide("obstacle", "player", (collidedObstacle) => {
 			if (!stunTimerP) {
 				stunTime += 1;
-				k.play("fishHit", {});
+				k.play("fishHit", { volume: 0.09 });
 				startP = false;
 				stunTimerP = true;
 				k.wait(1, () => {

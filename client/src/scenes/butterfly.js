@@ -364,10 +364,10 @@ export function createButterflyScene() {
 
 				for (let i = 3; i > 0; i--) {
 					readyText.text = i;
-					k.play("count");
+					k.play("count", {volume: 0.08});
 					await k.wait(1);
 				}
-				k.play("go");
+				k.play("go", {volume: 0.1} );
 
 				readyText.text = "Go";
 				readyText.textSize = 128;
@@ -439,7 +439,7 @@ export function createButterflyScene() {
 				if (message.sessionId !== room.sessionId) {
 					opponent.stunTime += 1;
 					opponent.enterState("stun");
-					k.play("butterflyHit", { volume: 0.3 });
+					k.play("butterflyHit", { volume: 0.08 });
 					const target = obstacles.find((obj) => obj.obstacleID === message.collideID);
 
 					if (target) {
@@ -460,7 +460,7 @@ export function createButterflyScene() {
 				cPlayer.enterState("stun");
 				room.send("collide", collidedObstacle.obstacleID);
 				tweenFunc(collidedObstacle, "scale", collidedObstacle.scale, k.vec2(0, 0), 0.5, 1);
-				k.play("butterflyHit");
+				k.play("butterflyHit", { volume: 0.08 });
 				k.wait(0.5, () => {
 					if (collidedObstacle) {
 						k.destroy(collidedObstacle);
@@ -489,16 +489,16 @@ export function createButterflyScene() {
 						next.letterSpacing = 0;
 						const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.85, 56);
 						timer.font = "Iosevka-Heavy";
-						k.play("count");
+						k.play("count", {volume: 0.08});
 
 						for (let t = 4; t > 0; t--) {
 							await k.wait(1);
-							k.play("count");
+							k.play("count", {volume: 0.08});
 							timer.text = t;
 						}
 
 						k.wait(1, () => {
-							k.play("go");
+							k.play("go", {volume: 0.1} );
 							k.destroy(tiledBackground);
 							k.go("end", message.loser, message.winner, room);
 						});
@@ -521,16 +521,16 @@ export function createButterflyScene() {
 						next.letterSpacing = 0;
 						const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.85, 56);
 						timer.font = "Iosevka-Heavy";
-						k.play("count");
+						k.play("count", {volume: 0.08});
 
 						for (let t = 4; t > 0; t--) {
 							await k.wait(1);
-							k.play("count");
+							k.play("count", {volume: 0.08});
 							timer.text = t;
 						}
 
 						k.wait(1, () => {
-							k.play("go");
+							k.play("go", {volume: 0.1} );
 							k.destroy(tiledBackground);
 							k.go("end", message.winner, message.loser, room);
 						});
@@ -561,15 +561,15 @@ export function createButterflyScene() {
 					next.letterSpacing = 0;
 					const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.85, 56);
 					timer.font = "Iosevka-Heavy";
-					k.play("count");
+					k.play("count", {volume: 0.08});
 
 					for (let t = 4; t > 0; t--) {
 						await k.wait(1);
-						k.play("count");
+						k.play("count", {volume: 0.08});
 						timer.text = t;
 					}
 					k.wait(1, () => {
-						k.play("go");
+						k.play("go", {volume: 0.1} );
 						k.destroy(tiledBackground);
 						k.go("end", me, opponent, room);
 					});

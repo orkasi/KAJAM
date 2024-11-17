@@ -62,6 +62,8 @@ async function loadStuff() {
 	await k.loadSprite("kajam", "sprites/icons/kajam.png");
 	await k.loadSprite("colyseus", "sprites/icons/colyseus.png");
 	await k.loadSprite("mute", "sprites/icons/mute.png");
+	await k.loadSprite("enterButton", "sprites/icons/enterButton.png");
+	await k.loadSprite("space", "sprites/icons/spaceKey.png");
 
 	//Fonts
 	await k.loadFont("Iosevka", "fonts/Iosevka-Regular.woff2", { outline: 1, filter: "linear" });
@@ -180,6 +182,7 @@ async function name() {
 	const askName = createCoolText(k, "Please enter your name", k.width() / 2, k.height() * 0.2, 48, "destroyN", k.timer(), k.rotate());
 	askName.font = "Iosevka-Heavy";
 	const name = createCoolText(k, "", k.width() / 2, k.height() / 2, 48, "destroyN");
+	const enterButton = name.add([k.sprite("enterButton"), k.anchor("center"), k.pos(name.width * 0.2, 0), k.scale(1)]);
 	const kInput = k.onCharInput(async (ch) => {
 		if (ch === "\\") {
 			return;
@@ -226,6 +229,7 @@ async function roomName(nameT) {
 	const askCode = createCoolText(k, "You can optionally enter a room code", k.width() / 2, k.height() * 0.2, 48, "destroyR", k.timer(), k.rotate());
 	askCode.font = "Iosevka-Heavy";
 	const roomCode = createCoolText(k, "", k.width() / 2, k.height() / 2, 48, "destroyR");
+	const enterButton = roomCode.add([k.sprite("enterButton"), k.anchor("center"), k.pos(roomCode.width * 0.2, 0), k.scale(1)])
 
 	const kInput = k.onCharInput(async (ch) => {
 		if (ch === "\\") {
