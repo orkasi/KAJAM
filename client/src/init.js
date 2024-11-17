@@ -6,4 +6,5 @@ export const k = kaplay({
 	texFilter: "nearest",
 	maxFPS: 60,
 	pixelDensity: devicePixelRatio,
+	debug: false,
 });
