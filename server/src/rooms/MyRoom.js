@@ -11,7 +11,6 @@ export class MyRoom extends Room {
 		this.setState(new MyRoomState());
 		this.winner = null;
 		this.clock.start();
-		this.autoDispose = false;
 
 		this.onMessage("move", (client, message) => {
 			const player = this.state.players.get(client.sessionId);
