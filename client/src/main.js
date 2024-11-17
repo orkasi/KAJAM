@@ -159,7 +159,10 @@ const lobbySound = k.play("lobbyScene", {
 	volume: 0.05,
 });
 
-const playOnClick = k.onClick(() => ((lobbySound.paused = false), playOnClick.cancel()));
+const playOnClick = k.onClick(() => {
+	lobbySound.paused = false;
+	playOnClick.cancel();
+});
 
 let muteButton;
 
