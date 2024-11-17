@@ -1,6 +1,7 @@
 import { k } from "../init";
 import { createCoolText, overlay, tweenFunc, createTiledBackground, createNormalText, createTutorialRect, createMuteButton } from "../utils";
 import { createEndScene } from "./end";
+import { createLeaveScene } from "./leave";
 
 export const startPos = k.vec2(k.width() / 2, k.height() - 120);
 
@@ -236,9 +237,12 @@ export function createButterflyScene() {
 
 		killRoom.push(
 			room.state.players.onRemove((player, sessionId) => {
+				createLeaveScene();
+				butterflySound.stop();
 				if (opponent) {
 					k.destroy(opponent);
 				}
+				k.go("leave");
 			}),
 		);
 

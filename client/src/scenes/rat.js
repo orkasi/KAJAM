@@ -223,9 +223,12 @@ export function createRatScene() {
 
 		killRoom.push(
 			room.state.players.onRemove((player, sessionId) => {
+				createLeaveScene();
+				ratSound.stop();
 				if (opponent) {
 					k.destroy(opponent);
 				}
+				k.go("leave");
 			}),
 		);
 

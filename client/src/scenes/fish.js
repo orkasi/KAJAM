@@ -1,6 +1,7 @@
 import { k } from "../init";
 import { createRatScene } from "./rat";
 import { tweenFunc, overlay, createCoolText, createTiledBackground, createTutorialRect, createNormalText, createMuteButton } from "../utils";
+import { createLeaveScene } from "./leave";
 
 export const startPos = k.vec2(k.width() / 2, k.height() / 2);
 const FISHSPEED = 50;
@@ -118,9 +119,12 @@ export function createFishScene() {
 
 		killRoom.push(
 			room.state.players.onRemove((player, sessionId) => {
+				createLeaveScene();
+				fishSound.stop();
 				if (players[0]) {
 					k.destroy(players[0]);
 				}
+				k.go("leave");
 			}),
 		);
 
