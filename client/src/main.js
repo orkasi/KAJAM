@@ -151,8 +151,6 @@ async function loadStuff() {
 await loadStuff();
 createFishScene();
 
-const tiledBackground = createTiledBackground("#9982e8", "#8465ec");
-
 const lobbySound = k.play("lobbyScene", {
 	loop: true,
 	paused: true,
@@ -180,8 +178,10 @@ function isAlphanumeric(str) {
 	const regex = /^[a-z0-9]+$/i;
 	return regex.test(str);
 }
-
+let tiledBackgroundN;
 async function name() {
+	tiledBackgroundN = createTiledBackground("#9982e8", "#8465ec");
+
 	const askName = createCoolText(k, "Please enter your name", k.width() / 2, k.height() * 0.2, 48, "destroyN", k.timer(), k.rotate());
 	askName.font = "Iosevka-Heavy";
 	const name = createCoolText(k, "", k.width() / 2, k.height() / 2, 48, "destroyN");
@@ -289,10 +289,9 @@ async function main(name, roomCode = "nocode") {
 			lobbyText.text = "Connected!";
 
 			k.wait(1, async () => {
-				k.destroy(tiledBackground);
+				k.destroy(tiledBackgroundN);
 				lobbySound.stop();
 				destroy(muteButton);
-
 				k.go("fish", room);
 			});
 		})

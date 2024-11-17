@@ -228,7 +228,7 @@ export function createRatScene() {
 				if (opponent) {
 					k.destroy(opponent);
 				}
-				k.go("leave");
+				k.go("leave", room);
 			}),
 		);
 

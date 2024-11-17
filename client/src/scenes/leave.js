@@ -3,7 +3,7 @@ import { createNormalText, createCoolText, createTiledBackground } from "../util
 import { titleScreen } from "../main";
 
 export function createLeaveScene() {
-	k.scene("leave", () => {
+	k.scene("leave", (room) => {
 		const tiledBackground = createTiledBackground("#000000", "#686767");
 
 		const sText = createCoolText(k, "Your opponent has left the game!", k.width() / 2, k.height() * 0.3, 80, "leave");
@@ -22,7 +22,7 @@ export function createLeaveScene() {
 		k.onClick("replay", async () => {
 			destroy(tiledBackground);
 			destroyAll("leave");
-
+			room.leave();
 			k.camFlash(k.BLACK, 1);
 
 			titleScreen();

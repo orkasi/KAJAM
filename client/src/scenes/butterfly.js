@@ -242,7 +242,7 @@ export function createButterflyScene() {
 				if (opponent) {
 					k.destroy(opponent);
 				}
-				k.go("leave");
+				k.go("leave", room);
 			}),
 		);
 
@@ -368,10 +368,10 @@ export function createButterflyScene() {
 
 				for (let i = 3; i > 0; i--) {
 					readyText.text = i;
-					k.play("count", {volume: 0.08});
+					k.play("count", { volume: 0.08 });
 					await k.wait(1);
 				}
-				k.play("go", {volume: 0.1} );
+				k.play("go", { volume: 0.1 });
 
 				readyText.text = "Go";
 				readyText.textSize = 128;
@@ -493,16 +493,16 @@ export function createButterflyScene() {
 						next.letterSpacing = 0;
 						const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.85, 56);
 						timer.font = "Iosevka-Heavy";
-						k.play("count", {volume: 0.08});
+						k.play("count", { volume: 0.08 });
 
 						for (let t = 4; t > 0; t--) {
 							await k.wait(1);
-							k.play("count", {volume: 0.08});
+							k.play("count", { volume: 0.08 });
 							timer.text = t;
 						}
 
 						k.wait(1, () => {
-							k.play("go", {volume: 0.1} );
+							k.play("go", { volume: 0.1 });
 							k.destroy(tiledBackground);
 							k.go("end", message.loser, message.winner, room);
 						});
@@ -525,16 +525,16 @@ export function createButterflyScene() {
 						next.letterSpacing = 0;
 						const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.85, 56);
 						timer.font = "Iosevka-Heavy";
-						k.play("count", {volume: 0.08});
+						k.play("count", { volume: 0.08 });
 
 						for (let t = 4; t > 0; t--) {
 							await k.wait(1);
-							k.play("count", {volume: 0.08});
+							k.play("count", { volume: 0.08 });
 							timer.text = t;
 						}
 
 						k.wait(1, () => {
-							k.play("go", {volume: 0.1} );
+							k.play("go", { volume: 0.1 });
 							k.destroy(tiledBackground);
 							k.go("end", message.winner, message.loser, room);
 						});
@@ -565,15 +565,15 @@ export function createButterflyScene() {
 					next.letterSpacing = 0;
 					const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.85, 56);
 					timer.font = "Iosevka-Heavy";
-					k.play("count", {volume: 0.08});
+					k.play("count", { volume: 0.08 });
 
 					for (let t = 4; t > 0; t--) {
 						await k.wait(1);
-						k.play("count", {volume: 0.08});
+						k.play("count", { volume: 0.08 });
 						timer.text = t;
 					}
 					k.wait(1, () => {
-						k.play("go", {volume: 0.1} );
+						k.play("go", { volume: 0.1 });
 						k.destroy(tiledBackground);
 						k.go("end", me, opponent, room);
 					});
