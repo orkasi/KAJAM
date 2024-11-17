@@ -11,6 +11,7 @@ export class MyRoom extends Room {
 		this.setState(new MyRoomState());
 		this.winner = null;
 		this.clock.start();
+		this.autoDispose = false;
 
 		this.onMessage("move", (client, message) => {
 			const player = this.state.players.get(client.sessionId);
@@ -140,6 +141,9 @@ export class MyRoom extends Room {
 		const playerName = this.state.players.get(client.sessionId).name;
 		console.log(`${playerName} left!\nsessionId: ${client.sessionId}`);
 		this.state.players.delete(client.sessionId);
+		if (this.state.players.size === 0) {
+			this.disconnect();
+		}
 	}
 
 	onDispose() {

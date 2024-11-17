@@ -6,7 +6,7 @@ export function createLeaveScene() {
 	k.scene("leave", () => {
 		const tiledBackground = createTiledBackground("#000000", "#686767");
 
-		const sText = createCoolText(k, "Your Opponent has left!", k.width() / 2, k.height() * 0.3, 80, "leave");
+		const sText = createCoolText(k, "Your opponent has left the game!", k.width() / 2, k.height() * 0.3, 80, "leave");
 
 		sText.font = "Iosevka-Heavy";
 

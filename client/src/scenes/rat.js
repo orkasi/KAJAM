@@ -317,7 +317,7 @@ export function createRatScene() {
 				opponent.enterState("move");
 				cPlayer.enterState("move");
 
-				k.play("go", {volume: 0.1});
+				k.play("go", { volume: 0.1 });
 
 				readyText.text = "Go";
 				readyText.textSize = 128;
@@ -395,7 +395,7 @@ export function createRatScene() {
 				cPlayer.stunTime += 1;
 				room.send("collide", collidedObstacle.obstacleID);
 				tweenFunc(collidedObstacle, "scale", collidedObstacle.scale, k.vec2(0, 0), 0.5, 1);
-				k.play("ratHurt", {volume: 0.08});
+				k.play("ratHurt", { volume: 0.08 });
 				k.wait(0.5, () => {
 					if (collidedObstacle) {
 						k.destroy(collidedObstacle);
@@ -425,17 +425,17 @@ export function createRatScene() {
 						next.letterSpacing = 0;
 						const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.85, 56);
 						timer.font = "Iosevka-Heavy";
-						k.play("count", {volume: 0.08});
+						k.play("count", { volume: 0.08 });
 
 						for (let t = 4; t > 0; t--) {
 							await k.wait(1);
-							k.play("count", {volume: 0.08});
+							k.play("count", { volume: 0.08 });
 							timer.text = t;
 						}
 
 						createButterflyScene();
 						k.wait(1, () => {
-							k.play("go", {volume: 0.1});
+							k.play("go", { volume: 0.1 });
 							k.destroy(tiledBackground);
 							k.go("butterfly", room);
 						});
@@ -459,16 +459,16 @@ export function createRatScene() {
 						next.letterSpacing = 0;
 						const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.85, 56);
 						timer.font = "Iosevka-Heavy";
-						k.play("count", {volume: 0.08});
+						k.play("count", { volume: 0.08 });
 
 						for (let t = 4; t > 0; t--) {
 							await k.wait(1);
-							k.play("count", {volume: 0.08});
+							k.play("count", { volume: 0.08 });
 							timer.text = t;
 						}
 						createButterflyScene();
 						k.wait(1, () => {
-							k.play("go", {volume: 0.1});
+							k.play("go", { volume: 0.1 });
 							k.destroy(tiledBackground);
 							k.go("butterfly", room);
 						});
@@ -500,16 +500,16 @@ export function createRatScene() {
 					next.letterSpacing = 0;
 					const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.85, 56);
 					timer.font = "Iosevka-Heavy";
-					k.play("count", {volume: 0.08});
+					k.play("count", { volume: 0.08 });
 
 					for (let t = 4; t > 0; t--) {
 						await k.wait(1);
-						k.play("count", {volume: 0.08});
+						k.play("count", { volume: 0.08 });
 						timer.text = t;
 					}
 					createButterflyScene();
 					k.wait(1, () => {
-						k.play("go", {volume: 0.1});
+						k.play("go", { volume: 0.1 });
 						k.destroy(tiledBackground);
 						k.go("butterfly", room);
 					});
