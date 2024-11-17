@@ -525,7 +525,7 @@ export function createRatScene() {
 		killRoom.push(
 			room.onMessage("end", (message) => {
 				isEnding = true;
-				k.add([k.sprite("portal"), k.pos(lastPos + k.width(), k.height() - 55), k.area(), k.anchor("bot"), k.z(3), k.scale(k.vec2(3, 3)), "finish"]);
+				k.add([k.sprite("portal"), k.pos(lastPos + k.width(), k.height() - 55), k.area(), k.anchor("bot"), k.z(3), k.area({ scale: k.vec2(1, 3) }), k.scale(k.vec2(3, 3)), "finish"]);
 			}),
 		);
 		k.onSceneLeave(() => {
