@@ -229,7 +229,7 @@ async function roomName(nameT) {
 	const askCode = createCoolText(k, "You can optionally enter a room code", k.width() / 2, k.height() * 0.2, 48, "destroyR", k.timer(), k.rotate());
 	askCode.font = "Iosevka-Heavy";
 	const roomCode = createCoolText(k, "", k.width() / 2, k.height() / 2, 48, "destroyR");
-	const enterButton = roomCode.add([k.sprite("enterButton"), k.anchor("center"), k.pos(roomCode.width * 0.2, 0), k.scale(1)])
+	const enterButton = roomCode.add([k.sprite("enterButton"), k.anchor("center"), k.pos(roomCode.width * 0.2, 0), k.scale(1)]);
 
 	const kInput = k.onCharInput(async (ch) => {
 		if (ch === "\\") {
@@ -287,7 +287,6 @@ async function main(name, roomCode = "nocode") {
 
 			k.wait(1, async () => {
 				k.destroy(tiledBackground);
-				lobbySound.paused = true;
 				lobbySound.stop();
 				destroy(muteButton);
 
