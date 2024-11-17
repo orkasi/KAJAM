@@ -283,8 +283,10 @@ async function main(name, roomCode = "nocode") {
 
 			k.wait(1, async () => {
 				k.destroy(tiledBackground);
+				lobbySound.paused = true;
 				lobbySound.stop();
 				destroy(muteButton);
+
 				k.go("fish", room);
 			});
 		})
@@ -298,7 +300,7 @@ async function main(name, roomCode = "nocode") {
 		});
 }
 
-function titleScreen() {
+export function titleScreen() {
 	const tiledBackground = createTiledBackground("#000000", "#686767");
 	muteButton = createMuteButton();
 
