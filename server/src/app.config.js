@@ -48,13 +48,7 @@ export default config.default({
 			// credentials in
 			challenge: true,
 		});
-		app.use(
-			"/colyseus",
-			basicAuthMiddleware,
-			monitor({
-				columns: ["roomId", "name", "clients", { metadata: "players" }, "locked", "elapsedTime"],
-			}),
-		);
+		app.use("/colyseus", basicAuthMiddleware, monitor());
 	},
 
 	beforeListen: () => {
