@@ -479,7 +479,6 @@ export function createRatScene() {
 		);
 
 		k.onCollide("finish", "player", () => {
-			console.log(cPlayer.stunTime, opponent.stunTime);
 			if (cPlayer.stunTime === opponent.stunTime) {
 				const me = room.state.players.get(room.sessionId);
 				const opponent = opponentP;
