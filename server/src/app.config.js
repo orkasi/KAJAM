@@ -1,6 +1,7 @@
 import config from "@colyseus/tools";
 import { monitor } from "@colyseus/monitor";
 import { playground } from "@colyseus/playground";
+import basicAuth from "express-basic-auth";
 
 /**
  * Import your Room files
@@ -36,8 +37,24 @@ export default config.default({
 		 * Bind @colyseus/monitor
 		 * It is recommended to protect this route with a password.
 		 * Read more: https://docs.colyseus.io/colyseus/tools/monitor/#restrict-access-to-the-panel-using-a-password
+		 *
 		 */
-		app.use("/colyseus", monitor());
+		const basicAuthMiddleware = basicAuth({
+			// list of users and passwords
+			users: {
+				nomure: "rattpuap077",
+			},
+			// sends WWW-Authenticate header, which will prompt the user to fill
+			// credentials in
+			challenge: true,
+		});
+		app.use(
+			"/colyseus",
+			basicAuthMiddleware,
+			monitor({
+				columns: ["roomId", "name", "clients", { metadata: "players" }, "locked", "elapsedTime"],
+			}),
+		);
 	},
 
 	beforeListen: () => {
