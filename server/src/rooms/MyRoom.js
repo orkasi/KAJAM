@@ -1,6 +1,7 @@
 import { Room } from "@colyseus/core";
 import { MyRoomState, Player } from "./schema/MyRoomState.js";
 
+const playersArray = [];
 export class MyRoom extends Room {
 	maxClients = 2;
 
@@ -135,6 +136,8 @@ export class MyRoom extends Room {
 		player.angle = 0;
 		player.ready = false;
 		this.state.players.set(client.sessionId, player);
+		playersArray.push = player.name;
+		this.setMetadata({ players: playersArray });
 	}
 
 	onLeave(client, options) {
