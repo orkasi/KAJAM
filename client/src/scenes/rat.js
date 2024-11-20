@@ -308,9 +308,7 @@ export function createRatScene() {
 
 		const readyKey = k.onKeyPress("space", () => {
 			k.destroyAll("backgroundRect");
-			for (loop in rectLoop) {
-				loop.cancel();
-			}
+			rectLoop.forEach((loop) => loop.cancel());
 			readyKey.cancel();
 			readyText.text = "Ready";
 			room.send("readyRat");
