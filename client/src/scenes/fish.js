@@ -28,6 +28,7 @@ export function createFishScene() {
 
 		const players = {};
 		const killRoom = [];
+		let rectLoop;
 		let startP = false;
 		let startO = false;
 
@@ -71,14 +72,14 @@ export function createFishScene() {
 
 		function fishTutorialBackground() {
 			const fishObstacleRect = createTutorialRect(k.width() * 0.8, k.height() * 0.78, k.width() * 0.28, k.height() * 0.17, rgb(174, 226, 255), rgb(110, 144, 251), rgb(124, 169, 253), rgb(141, 197, 255));
-			const boboExample = fishObstacleRect.add([k.sprite("bobo", { flipX: true }), k.animate(), k.pos(fishObstacleRect.width / 3.6, 0), k.anchor("center"), k.rotate(), k.timer(), k.scale(1.5), "boboExample"]);
-			const fishExample = fishObstacleRect.add([k.sprite("sukomi"), k.pos(-fishObstacleRect.width / 3.5, 0), k.scale(1.5), k.animate(), k.anchor("center"), k.body(), k.area(), k.rotate(), k.timer(), "fishExample"]);
+			const boboExample = fishObstacleRect.add([k.sprite("bobo", { flipX: true }), k.animate(), k.pos(fishObstacleRect.width / 3.6, 0), k.anchor("center"), k.rotate(), k.timer(), k.scale(1.5), "backgroundRect"]);
+			const fishExample = fishObstacleRect.add([k.sprite("sukomi"), k.pos(-fishObstacleRect.width / 3.5, 0), k.scale(1.5), k.animate(), k.anchor("center"), k.body(), k.area(), k.rotate(), k.timer(), "backgroundRect"]);
 			boboExample.animate("angle", [340, 350], {
 				duration: 0.5,
 				direction: "ping-pong",
 			});
 
-			k.loop(2, async () => {
+			rectLoop = k.loop(2, async () => {
 				await tweenFunc(fishExample, "pos", k.vec2(-fishObstacleRect.width / 3.5, 0), k.vec2(fishObstacleRect.width * 0.1, 0), 0.5, 1);
 				tweenFunc(boboExample, "scale", k.vec2(1.5, 1.5), k.vec2(0, 0), 0.5, 1);
 				tweenFunc(fishExample, "angle", 0, 360, 0.5, 1);
@@ -154,6 +155,7 @@ export function createFishScene() {
 			readyText.text = "Ready";
 			room.send("ready");
 			k.destroyAll("backgroundRect");
+			rectLoop.cancel();
 			killRoom.push(
 				room.onMessage("start", async () => {
 					readyText.font = "Iosevka-Heavy";
@@ -177,7 +179,7 @@ export function createFishScene() {
 			);
 		});
 
-		k.loop(0.05, () => {
+		k.loop(0.1, () => {
 			if (startP) {
 				k.add([
 					k.sprite("bubble"),
