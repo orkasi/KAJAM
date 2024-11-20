@@ -200,7 +200,7 @@ export function createButterflyScene() {
 							k.state("start", ["start", "stun", "move"]),
 							overlay(rgb(252, 239, 141), 0.4),
 							k.z(2),
-							{ stuntime: 0 },
+							{ stunTime: 0 },
 							"player",
 						]);
 
