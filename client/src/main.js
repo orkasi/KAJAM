@@ -422,30 +422,54 @@ async function main(name, roomCode = "nocode", difficulty = "casual") {
 			lobbyText.text = "Connected!";
 
 			k.wait(1, async () => {
+				let entered = false;
+				let addHandler = null;
+
 				const enterRoom = () => {
+					if (entered) return;
+					entered = true;
 					currentRoomCode = roomCode;
 					currentDifficulty = normalizeDifficulty(room.state?.difficulty || difficulty);
 					setMatchContext({ roomCode, difficulty: currentDifficulty });
 					setReconnectEnabled(true);
 					attachRoomHandlers(room);
+					k.destroy(lobbyText);
 					k.destroy(tiledBackgroundN);
 					if (lobbySound) lobbySound.stop();
 					if (muteButton) destroy(muteButton);
 					moveToSceneForRoom(room);
 				};
 
-				if (room.state?.players) {
+				const tryEnter = () => {
+					const players = room.state?.players;
+					if (!players) return false;
+					if (!players.get(room.sessionId)) return false;
 					enterRoom();
+					return true;
+				};
+
+				if (tryEnter()) {
 					return;
 				}
 
 				const fallback = setTimeout(() => {
 					enterRoom();
-				}, 1500);
+				}, 2000);
 
 				room.onStateChange.once(() => {
-					clearTimeout(fallback);
-					enterRoom();
+					if (tryEnter()) {
+						clearTimeout(fallback);
+						if (addHandler) addHandler();
+						return;
+					}
+					const players = room.state?.players;
+					if (!players) return;
+					addHandler = players.onAdd((player, sessionId) => {
+						if (sessionId !== room.sessionId) return;
+						clearTimeout(fallback);
+						enterRoom();
+						if (addHandler) addHandler();
+					});
 				});
 			});
 		})
