@@ -1,6 +1,6 @@
 import * as Colyseus from "colyseus.js";
 import { k } from "./init";
-import { createCoolText, createMuteButton, createNormalText, createTiledBackground, getReconnectEnabled, goScene, playSound, registerLoopSound, setMatchContext, setReconnectEnabled } from "./utils";
+import { createCoolText, createMuteButton, createNormalText, createTiledBackground, getReconnectEnabled, goScene, hasPlayersState, playSound, registerLoopSound, setMatchContext, setReconnectEnabled } from "./utils";
 
 import { createFishScene, startPos } from "./scenes/fish";
 
@@ -60,6 +60,7 @@ let currentDifficulty = "casual";
 let reconnecting = false;
 let reconnectOverlay = null;
 let enteredScene = false;
+let stateOverlay = null;
 
 function normalizeDifficulty(value) {
 	if (value === "competitive" || value === "casual") return value;
@@ -242,6 +243,23 @@ function showFatalOverlay(text) {
 	const overlayText = createNormalText(k, text, k.width() / 2, k.height() / 2, 24, "fatalOverlay", k.fixed(), k.z(200));
 	overlayText.font = "Iosevka-Heavy";
 }
+
+function showStateOverlay(text) {
+	if (stateOverlay) {
+		k.destroy(stateOverlay);
+		stateOverlay = null;
+	}
+	stateOverlay = createNormalText(k, text, k.width() / 2, k.height() * 0.2, 24, "stateOverlay", k.fixed(), k.z(150));
+	stateOverlay.font = "Iosevka-Heavy";
+}
+
+function hideStateOverlay() {
+	if (stateOverlay) {
+		k.destroy(stateOverlay);
+		stateOverlay = null;
+	}
+	k.destroyAll("stateOverlay");
+}
 async function name() {
 	tiledBackgroundN = createTiledBackground("#9982e8", "#8465ec");
 
@@ -367,6 +385,17 @@ async function selectDifficulty(nameT, roomCode) {
 }
 
 function moveToSceneForRoom(room) {
+	if (!hasPlayersState(room)) {
+		showStateOverlay("Syncing state...");
+		if (typeof room?.onStateChange === "function") {
+			room.onStateChange.once(() => {
+				hideStateOverlay();
+				moveToSceneForRoom(room);
+			});
+		}
+		return;
+	}
+	hideStateOverlay();
 	const mode = room.state?.mode;
 	if (mode === "rat") {
 		goScene("rat", room);

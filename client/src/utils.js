@@ -318,10 +318,17 @@ export function bindPlayers(room, { onAdd, onRemove }) {
 	};
 
 	diff();
+	if (typeof room?.onStateChange !== "function") {
+		return () => {};
+	}
 	const off = room.onStateChange(diff);
 	return () => {
 		if (typeof off === "function") off();
 	};
+}
+
+export function hasPlayersState(room) {
+	return Boolean(room?.state?.players);
 }
 
 export function setMatchContext({ roomCode = "nocode", difficulty = "casual" } = {}) {

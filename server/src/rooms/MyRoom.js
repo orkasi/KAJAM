@@ -35,12 +35,13 @@ export class MyRoom extends Room {
 		this.setState(new MyRoomState());
 		this.winner = null;
 		this.clock.start();
-		this.autoDispose = false;
+		this.autoDispose = true;
 		this.difficulty = resolveDifficulty(options?.difficulty);
 		this.state.difficulty = this.difficulty;
 		this.state.phase = "lobby";
 		this.state.mode = "";
 		this.state.startAt = 0;
+		this.emptyRoomTimeout = null;
 		this.round = {
 			state: "idle",
 			mode: null,
@@ -82,20 +83,36 @@ export class MyRoom extends Room {
 		});
 
 		this.onMessage("ended", (client) => {
+			if (this.round.state !== "ended" && this.winner === null) return;
 			this.resetRound();
 		});
 
 		this.onMessage("won", (client) => {
-			if (this.winner === null) {
-				const victor = this.state.players.get(client.sessionId);
-				if (!victor) return;
-				const loser = Array.from(this.state.players.values()).find((player) => player.sessionId !== client.sessionId);
-				if (!loser) return;
-				victor.score += 1;
-				this.winner = client;
-				console.log(`${victor.name} won! They are now at ${victor.score} points! ${loser.name} is still at ${loser.score} points!`);
-				this.broadcast("won", { winner: victor, loser });
+			if (this.round.state !== "running" && this.round.state !== "ended") return;
+			if (this.winner !== null) return;
+			const victor = this.state.players.get(client.sessionId);
+			if (!victor) return;
+			const loser = Array.from(this.state.players.values()).find((player) => player.sessionId !== client.sessionId);
+			if (!loser) return;
+			victor.score += 1;
+			this.winner = client;
+			this.round.state = "ended";
+			this.state.phase = "ended";
+			this.state.startAt = 0;
+			if (this.round.startTimeout) {
+				this.round.startTimeout.clear();
+				this.round.startTimeout = null;
 			}
+			if (this.round.obstacleInterval) {
+				this.round.obstacleInterval.clear();
+				this.round.obstacleInterval = null;
+			}
+			if (this.round.endTimeout) {
+				this.round.endTimeout.clear();
+				this.round.endTimeout = null;
+			}
+			console.log(`${victor.name} won! They are now at ${victor.score} points! ${loser.name} is still at ${loser.score} points!`);
+			this.broadcast("won", { winner: victor, loser });
 		});
 	}
 
@@ -180,6 +197,10 @@ export class MyRoom extends Room {
 
 	onJoin(client, options) {
 		console.log(client.sessionId, "joined!");
+		if (this.emptyRoomTimeout) {
+			this.emptyRoomTimeout.clear();
+			this.emptyRoomTimeout = null;
+		}
 		const existing = this.state.players.get(client.sessionId);
 		if (existing) {
 			if (typeof options?.playerName === "string") {
@@ -222,7 +243,9 @@ export class MyRoom extends Room {
 		this.state.players.delete(client.sessionId);
 		this.resetRound();
 		if (this.state.players.size === 0) {
-			this.disconnect();
+			this.emptyRoomTimeout = this.clock.setTimeout(() => {
+				this.disconnect();
+			}, 30000);
 		}
 	}
 
