@@ -184,10 +184,9 @@ export function createMatchHud(room, { roomCode = "nocode", difficulty = "casual
 	const copyStatus = container.add([k.text("", { size: 14, font: "Iosevka" }), k.pos(60, 24), k.anchor("topleft")]);
 
 	const formatDifficulty = (value) => {
-		const normalized = value === "sweaty" ? "competitive" : value;
-		if (normalized === "casual") return "Casual";
-		if (normalized === "competitive") return "Competitive";
-		return normalized || "Casual";
+		if (value === "casual") return "Casual";
+		if (value === "competitive") return "Competitive";
+		return "Casual";
 	};
 
 	let lastDifficulty = difficulty;
@@ -217,6 +216,7 @@ export function createMatchHud(room, { roomCode = "nocode", difficulty = "casual
 	});
 
 	const updateLoop = k.loop(0.2, () => {
+		if (!room?.state?.players) return;
 		const effectiveDifficulty = room?.state?.difficulty || lastDifficulty;
 		if (effectiveDifficulty !== lastDifficulty) {
 			lastDifficulty = effectiveDifficulty;
@@ -252,8 +252,7 @@ export function createMatchHud(room, { roomCode = "nocode", difficulty = "casual
 }
 
 export function setMatchContext({ roomCode = "nocode", difficulty = "casual" } = {}) {
-	const normalizedDifficulty = difficulty === "sweaty" ? "competitive" : difficulty;
-	matchContext = { roomCode, difficulty: normalizedDifficulty };
+	matchContext = { roomCode, difficulty: difficulty === "competitive" ? "competitive" : "casual" };
 }
 
 export function getMatchContext() {

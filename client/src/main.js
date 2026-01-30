@@ -61,9 +61,8 @@ let reconnecting = false;
 let reconnectOverlay = null;
 
 function normalizeDifficulty(value) {
-	if (value === "sweaty") return "competitive";
 	if (value === "competitive" || value === "casual") return value;
-	return value || "casual";
+	return "casual";
 }
 
 async function loadAssets() {
@@ -423,15 +422,31 @@ async function main(name, roomCode = "nocode", difficulty = "casual") {
 			lobbyText.text = "Connected!";
 
 			k.wait(1, async () => {
-				currentRoomCode = roomCode;
-				currentDifficulty = normalizeDifficulty(room.state?.difficulty || difficulty);
-				setMatchContext({ roomCode, difficulty: currentDifficulty });
-				setReconnectEnabled(true);
-				attachRoomHandlers(room);
-				k.destroy(tiledBackgroundN);
-				if (lobbySound) lobbySound.stop();
-				if (muteButton) destroy(muteButton);
-				moveToSceneForRoom(room);
+				const enterRoom = () => {
+					currentRoomCode = roomCode;
+					currentDifficulty = normalizeDifficulty(room.state?.difficulty || difficulty);
+					setMatchContext({ roomCode, difficulty: currentDifficulty });
+					setReconnectEnabled(true);
+					attachRoomHandlers(room);
+					k.destroy(tiledBackgroundN);
+					if (lobbySound) lobbySound.stop();
+					if (muteButton) destroy(muteButton);
+					moveToSceneForRoom(room);
+				};
+
+				if (room.state?.players) {
+					enterRoom();
+					return;
+				}
+
+				const fallback = setTimeout(() => {
+					enterRoom();
+				}, 1500);
+
+				room.onStateChange.once(() => {
+					clearTimeout(fallback);
+					enterRoom();
+				});
 			});
 		})
 		.catch((e) => {
