@@ -569,29 +569,32 @@ function isSafariBrowser() {
 
 function showSafariWarning() {
 	const overlay = k.add([k.rect(k.width(), k.height()), k.color(0, 0, 0), k.opacity(0.7), k.fixed(), k.z(300)]);
-	const panel = k.add([k.rect(760, 320, { radius: 16 }), k.pos(k.width() / 2, k.height() / 2), k.anchor("center"), k.color(18, 18, 22), k.fixed(), k.z(310), "safariWarning"]);
-	panel.add([k.outline(2, k.rgb(80, 80, 90))]);
+	const panel = k.add([k.rect(820, 360, { radius: 18 }), k.pos(k.width() / 2, k.height() / 2), k.anchor("center"), k.color(22, 22, 28), k.fixed(), k.z(310), "safariWarning"]);
+	panel.add([k.outline(2, k.rgb(90, 90, 105))]);
 
-	const headline = createCoolText(k, "Looks like you are using Safari.", panel.pos.x, panel.pos.y - 90, 28, "safariWarning", k.fixed(), k.z(311));
+	const headline = createCoolText(k, "Looks like you are using Safari.", panel.pos.x, panel.pos.y - 110, 30, "safariWarning", k.fixed(), k.z(311));
 	headline.font = "Iosevka-Heavy";
 	headline.color = k.rgb(255, 255, 255);
 
 	const body = createNormalText(
 		k,
-		"The game engine used in this game is not recommended to be used with Safari.\nFor the best experience, please use Chromium browsers like Edge and Chrome or Firefox.",
+		"The game engine used in this game is not recommended\n" +
+			"to be used with Safari.\n" +
+			"For the best experience, please use Chromium browsers\n" +
+			"like Edge and Chrome or Firefox.",
 		panel.pos.x,
 		panel.pos.y - 20,
-		16,
+		18,
 		"safariWarning",
 		k.fixed(),
 		k.z(311),
 	);
 	body.font = "Iosevka-Heavy";
-	body.color = k.rgb(230, 230, 235);
+	body.color = k.rgb(240, 240, 245);
 	body.align = "center";
 
-	const close = k.add([k.rect(180, 48, { radius: 10 }), k.pos(panel.pos.x, panel.pos.y + 85), k.anchor("center"), k.area(), k.color(60, 60, 60), k.fixed(), k.z(312), "safariWarning"]);
-	const closeText = createNormalText(k, "OK", close.pos.x, close.pos.y, 20, "safariWarning", k.fixed(), k.z(313));
+	const close = k.add([k.rect(200, 52, { radius: 12 }), k.pos(panel.pos.x, panel.pos.y + 115), k.anchor("center"), k.area(), k.color(70, 70, 75), k.fixed(), k.z(312), "safariWarning"]);
+	const closeText = createNormalText(k, "OK", close.pos.x, close.pos.y, 22, "safariWarning", k.fixed(), k.z(313));
 	closeText.font = "Iosevka-Heavy";
 	closeText.color = k.rgb(245, 245, 245);
 	close.onClick(() => {
