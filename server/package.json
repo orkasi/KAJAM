@@ -25,9 +25,13 @@
 		"rimraf": "^5.0.0"
 	},
 	"dependencies": {
+		"@colyseus/auth": "^0.16.6",
 		"@colyseus/core": "^0.16.24",
 		"@colyseus/monitor": "^0.16.7",
+		"@colyseus/redis-driver": "^0.16.1",
+		"@colyseus/redis-presence": "^0.16.4",
 		"@colyseus/schema": "^3.0.76",
+		"@colyseus/uwebsockets-transport": "^0.16.10",
 		"@colyseus/ws-transport": "^0.16.5",
 		"colyseus": "^0.16.5",
 		"express": "^4.18.2",
