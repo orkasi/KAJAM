@@ -1,5 +1,5 @@
 import { k } from "../init";
-import { createCoolText, createMatchHud, createMuteButton, createNormalText, createTiledBackground, createTutorialRect, getMatchContext, goScene, overlay, playSound, registerLoopSound, tweenFunc } from "../utils";
+import { bindPlayers, createCoolText, createMatchHud, createMuteButton, createNormalText, createTiledBackground, createTutorialRect, getMatchContext, getPlayer, goScene, overlay, playSound, registerLoopSound, tweenFunc } from "../utils";
 import { createEndScene } from "./end";
 import { createLeaveScene } from "./leave";
 
@@ -173,76 +173,75 @@ export function createButterflyScene() {
 
 		let nameText = null;
 		killRoom.push(
-			room.state.players.onAdd((player, sessionId) => {
-				if (opponent === null) {
-					if (sessionId !== room.sessionId) {
-						opponentP = player;
-						opponent = k.add([
-							k.sprite("butterfly"),
-							k.pos(startPos),
-							k.opacity(1),
-							k.anchor("center"),
-							k.rotate(),
-							k.timer(),
-							k.animate(),
-							k.state("start", ["start", "stun", "move"]),
-							overlay(rgb(252, 239, 141), 0.4),
-							k.z(2),
-							{ stunTime: 0 },
-							"player",
-						]);
+			bindPlayers(room, {
+				onAdd: (player, sessionId) => {
+					if (opponent === null) {
+						if (sessionId !== room.sessionId) {
+							opponentP = player;
+							opponent = k.add([
+								k.sprite("butterfly"),
+								k.pos(startPos),
+								k.opacity(1),
+								k.anchor("center"),
+								k.rotate(),
+								k.timer(),
+								k.animate(),
+								k.state("start", ["start", "stun", "move"]),
+								overlay(rgb(252, 239, 141), 0.4),
+								k.z(2),
+								{ stunTime: 0 },
+								"player",
+							]);
 
-						createCoolText(opponent, player.name, 0, opponent.height, 15);
+							createCoolText(opponent, player.name, 0, opponent.height, 15);
 
-						opponent.onUpdate(() => {
-							opponent.pos.y += (player.y - opponent.pos.y) * 12 * k.dt();
-							opponent.angle += (player.angle - opponent.angle) * 12 * k.dt();
-						});
-
-						opponent.onStateEnter("stun", () => {
-							tweenFunc(opponent, "opacity", 0, 1, 0.25, 4);
-							k.wait(1, () => {
-								opponent.enterState("move");
+							opponent.onUpdate(() => {
+								opponent.pos.y += (player.y - opponent.pos.y) * 12 * k.dt();
+								opponent.angle += (player.angle - opponent.angle) * 12 * k.dt();
 							});
-						});
 
-						sceneLoops.push(
-							k.loop(0.1, () => {
-								if (opponent.state === "move") {
-									k.add([
-										k.sprite("white"),
-										k.pos(k.rand(opponent.pos.x - opponent.width / 2, opponent.pos.x + opponent.width * 0.4), k.rand(opponent.pos.y - opponent.height * 0.5, opponent.pos.y + opponent.height * 0.5)),
-										k.anchor("center"),
-										k.scale(k.rand(0.01, 0.1)),
-										k.lifespan(0.2, { fade: 0.1 }),
-										k.opacity(k.rand(0.3, 1)),
-										k.move(k.randi(140, 250), k.rand(200, 400)),
-									]);
-								}
-							}),
-						);
+							opponent.onStateEnter("stun", () => {
+								tweenFunc(opponent, "opacity", 0, 1, 0.25, 4);
+								k.wait(1, () => {
+									opponent.enterState("move");
+								});
+							});
 
-						opponent.onStateUpdate("move", () => {
-							opponent.pos.x += (opponent.pos.x + BUTTERFLYSPEED - opponent.pos.x) * 12 * k.dt();
-						});
-					} else if (player?.name && nameText) {
-						nameText.text = player.name;
+							sceneLoops.push(
+								k.loop(0.1, () => {
+									if (opponent.state === "move") {
+										k.add([
+											k.sprite("white"),
+											k.pos(k.rand(opponent.pos.x - opponent.width / 2, opponent.pos.x + opponent.width * 0.4), k.rand(opponent.pos.y - opponent.height * 0.5, opponent.pos.y + opponent.height * 0.5)),
+											k.anchor("center"),
+											k.scale(k.rand(0.01, 0.1)),
+											k.lifespan(0.2, { fade: 0.1 }),
+											k.opacity(k.rand(0.3, 1)),
+											k.move(k.randi(140, 250), k.rand(200, 400)),
+										]);
+									}
+								}),
+							);
+
+							opponent.onStateUpdate("move", () => {
+								opponent.pos.x += (opponent.pos.x + BUTTERFLYSPEED - opponent.pos.x) * 12 * k.dt();
+							});
+						} else if (player?.name && nameText) {
+							nameText.text = player.name;
+						}
 					}
-				}
-				if (sessionId === room.sessionId && waitForSelf) {
-					k.destroy(waitForSelf);
-				}
-			}),
-		);
-
-		killRoom.push(
-			room.state.players.onRemove((player, sessionId) => {
-				createLeaveScene();
-				butterflySound.stop();
-				if (opponent) {
-					k.destroy(opponent);
-				}
-				goScene("leave", room);
+					if (sessionId === room.sessionId && waitForSelf) {
+						k.destroy(waitForSelf);
+					}
+				},
+				onRemove: () => {
+					createLeaveScene();
+					butterflySound.stop();
+					if (opponent) {
+						k.destroy(opponent);
+					}
+					goScene("leave", room);
+				},
 			}),
 		);
 
@@ -261,7 +260,7 @@ export function createButterflyScene() {
 			{ stunTime: 0, onTransition: false, onWhere: "ground" },
 			"player",
 		]);
-		const me = room.state.players.get(room.sessionId);
+		const me = getPlayer(room, room.sessionId);
 		nameText = createCoolText(cPlayer, me?.name || "You", 0, -cPlayer.height, 15);
 		if (me && waitForSelf) {
 			k.destroy(waitForSelf);
@@ -593,7 +592,7 @@ export function createButterflyScene() {
 		k.onCollide("finish", "player", () => {
 			if (cPlayer.stunTime === opponent.stunTime) {
 				createEndScene();
-				const me = room.state.players.get(room.sessionId);
+				const me = getPlayer(room, room.sessionId);
 				if (!me) return;
 				const opponent = opponentP;
 				k.scene("DRAW", async () => {

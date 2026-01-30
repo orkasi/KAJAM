@@ -60,7 +60,9 @@ if (monitorEnabled) {
 		users: { [monitorUser]: monitorPass },
 		challenge: true,
 	});
-	app.use("/colyseus", basicAuthMiddleware, monitor());
+	const monitorApp = monitor();
+	app.use("/colyseus", basicAuthMiddleware, monitorApp);
+	app.use("/monitor", basicAuthMiddleware, monitorApp);
 }
 
 const server = http.createServer(app);

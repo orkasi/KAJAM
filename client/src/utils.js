@@ -216,17 +216,18 @@ export function createMatchHud(room, { roomCode = "nocode", difficulty = "casual
 	});
 
 	const updateLoop = k.loop(0.2, () => {
-		if (!room?.state?.players) return;
+		const playersState = getPlayersSnapshot(room);
+		if (playersState.size === 0) return;
 		const effectiveDifficulty = room?.state?.difficulty || lastDifficulty;
 		if (effectiveDifficulty !== lastDifficulty) {
 			lastDifficulty = effectiveDifficulty;
 			difficultyText.text = `Difficulty: ${formatDifficulty(effectiveDifficulty)}`;
 		}
-		const me = room.state.players.get(room.sessionId);
+		const me = playersState.get(room.sessionId);
 		if (me) {
 			youText.text = `You: ${me.ready ? "Ready" : "Not Ready"}`;
 		}
-		const opponent = Array.from(room.state.players.values()).find((player) => player.sessionId !== room.sessionId);
+		const opponent = Array.from(playersState.values()).find((player) => player.sessionId !== room.sessionId);
 		if (opponent) {
 			oppText.text = `${opponent.name}: ${opponent.ready ? "Ready" : "Not Ready"}`;
 		} else {
@@ -248,6 +249,78 @@ export function createMatchHud(room, { roomCode = "nocode", difficulty = "casual
 			updateLoop.cancel();
 			k.destroy(container);
 		},
+	};
+}
+
+export function getPlayersSnapshot(room) {
+	const map = new Map();
+	const players = room?.state?.players;
+	if (!players) return map;
+	if (typeof players.forEach === "function") {
+		players.forEach((value, key) => {
+			map.set(key, value);
+		});
+		return map;
+	}
+	if (typeof players.values === "function" && typeof players.get === "function") {
+		for (const value of players.values()) {
+			const key = value?.sessionId || `${map.size}`;
+			map.set(key, value);
+		}
+		return map;
+	}
+	if (typeof players === "object") {
+		for (const [key, value] of Object.entries(players)) {
+			map.set(key, value);
+		}
+	}
+	return map;
+}
+
+export function getPlayer(room, sessionId) {
+	if (!sessionId) return null;
+	const players = room?.state?.players;
+	if (!players) return null;
+	if (typeof players.get === "function") {
+		return players.get(sessionId);
+	}
+	if (typeof players === "object" && sessionId in players) {
+		return players[sessionId];
+	}
+	return null;
+}
+
+export function bindPlayers(room, { onAdd, onRemove }) {
+	const players = room?.state?.players;
+	if (players && typeof players.onAdd === "function" && typeof players.onRemove === "function") {
+		const offAdd = players.onAdd(onAdd);
+		const offRemove = players.onRemove(onRemove);
+		return () => {
+			if (typeof offAdd === "function") offAdd();
+			if (typeof offRemove === "function") offRemove();
+		};
+	}
+
+	let previous = new Map();
+	const diff = () => {
+		const next = getPlayersSnapshot(room);
+		for (const [key, value] of next) {
+			if (!previous.has(key)) {
+				onAdd?.(value, key);
+			}
+		}
+		for (const [key, value] of previous) {
+			if (!next.has(key)) {
+				onRemove?.(value, key);
+			}
+		}
+		previous = next;
+	};
+
+	diff();
+	const off = room.onStateChange(diff);
+	return () => {
+		if (typeof off === "function") off();
 	};
 }
 

@@ -1,5 +1,5 @@
 import { k } from "../init";
-import { createCoolText, createMatchHud, createMuteButton, createNormalText, createTiledBackground, createTutorialRect, getMatchContext, goScene, overlay, playSound, registerLoopSound, tweenFunc } from "../utils";
+import { bindPlayers, createCoolText, createMatchHud, createMuteButton, createNormalText, createTiledBackground, createTutorialRect, getMatchContext, getPlayer, goScene, overlay, playSound, registerLoopSound, tweenFunc } from "../utils";
 import { createLeaveScene } from "./leave";
 import { createRatScene } from "./rat";
 
@@ -92,51 +92,50 @@ const MOVE_SEND_HZ = 20;
 
 		let nameText = null;
 		killRoom.push(
-			room.state.players.onAdd((player, sessionId) => {
-				if (!startO) {
-					if (sessionId !== room.sessionId) {
-						players[0] = k.add([k.sprite("sukomi"), k.pos(startPos), k.opacity(1), k.anchor("center"), k.rotate(), k.timer(), overlay(rgb(90, 108, 230), 0.4)]);
-						players[1] = player;
-						createCoolText(players[0], player.name, 0, -players[0].height, 15);
+			bindPlayers(room, {
+				onAdd: (player, sessionId) => {
+					if (!startO) {
+						if (sessionId !== room.sessionId) {
+							players[0] = k.add([k.sprite("sukomi"), k.pos(startPos), k.opacity(1), k.anchor("center"), k.rotate(), k.timer(), overlay(rgb(90, 108, 230), 0.4)]);
+							players[1] = player;
+							createCoolText(players[0], player.name, 0, -players[0].height, 15);
 
-						players[0].onUpdate(() => {
-							if (player.y - 5 > players[0].pos.y) {
-								players[0].pos.y += (player.y - players[0].pos.y) * 12 * k.dt();
-								players[0].angle += (30 - players[0].angle) * 12 * k.dt();
-							} else if (player.y + 5 < players[0].pos.y) {
-								players[0].pos.y += (player.y - players[0].pos.y) * 12 * k.dt();
-								players[0].angle += (-30 - players[0].angle) * 12 * k.dt();
-							} else {
-								players[0].angle += (0 - players[0].angle) * 12 * k.dt();
-							}
-							if (startO) {
-								players[0].pos.x += (players[0].pos.x + FISHSPEED - players[0].pos.x) * 12 * k.dt();
-							}
-						});
-					} else if (player?.name && nameText) {
-						nameText.text = player.name;
+							players[0].onUpdate(() => {
+								if (player.y - 5 > players[0].pos.y) {
+									players[0].pos.y += (player.y - players[0].pos.y) * 12 * k.dt();
+									players[0].angle += (30 - players[0].angle) * 12 * k.dt();
+								} else if (player.y + 5 < players[0].pos.y) {
+									players[0].pos.y += (player.y - players[0].pos.y) * 12 * k.dt();
+									players[0].angle += (-30 - players[0].angle) * 12 * k.dt();
+								} else {
+									players[0].angle += (0 - players[0].angle) * 12 * k.dt();
+								}
+								if (startO) {
+									players[0].pos.x += (players[0].pos.x + FISHSPEED - players[0].pos.x) * 12 * k.dt();
+								}
+							});
+						} else if (player?.name && nameText) {
+							nameText.text = player.name;
+						}
 					}
-				}
-				if (sessionId === room.sessionId && waitForSelf) {
-					k.destroy(waitForSelf);
-				}
-			}),
-		);
-
-		killRoom.push(
-			room.state.players.onRemove((player, sessionId) => {
-				createLeaveScene();
-				fishSound.stop();
-				if (players[0]) {
-					k.destroy(players[0]);
-				}
-				goScene("leave", room);
+					if (sessionId === room.sessionId && waitForSelf) {
+						k.destroy(waitForSelf);
+					}
+				},
+				onRemove: () => {
+					createLeaveScene();
+					fishSound.stop();
+					if (players[0]) {
+						k.destroy(players[0]);
+					}
+					goScene("leave", room);
+				},
 			}),
 		);
 
 		const cPlayer = k.add([k.sprite("sukomi"), k.pos(startPos), k.body(), k.anchor("center"), k.rotate(), k.z(2), k.area(), k.timer(), k.opacity(1), "player"]);
 
-		const me = room.state.players.get(room.sessionId);
+		const me = getPlayer(room, room.sessionId);
 		nameText = createCoolText(cPlayer, me?.name || "You", 0, -cPlayer.height, 15);
 		if (me && waitForSelf) {
 			k.destroy(waitForSelf);
@@ -398,7 +397,7 @@ const MOVE_SEND_HZ = 20;
 		k.onCollide("finish", "player", () => {
 			if (opponentStunTime === stunTime) {
 				createRatScene();
-				const me = room.state.players.get(room.sessionId);
+				const me = getPlayer(room, room.sessionId);
 				if (!me) return;
 				const opponent = players[1];
 				k.scene("DRAW", async () => {
