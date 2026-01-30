@@ -1,6 +1,6 @@
 import { k } from "../init";
-import { createNormalText, createCoolText, createTiledBackground } from "../utils";
 import { titleScreen } from "../main";
+import { createCoolText, createNormalText, createTiledBackground, setReconnectEnabled } from "../utils";
 
 export function createLeaveScene() {
 	k.scene("leave", (room) => {
@@ -22,6 +22,7 @@ export function createLeaveScene() {
 		k.onClick("replay", async () => {
 			destroy(tiledBackground);
 			destroyAll("leave");
+			setReconnectEnabled(false);
 			room.leave();
 			k.camFlash(k.BLACK, 1);
 

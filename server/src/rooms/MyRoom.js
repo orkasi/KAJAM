@@ -1,146 +1,226 @@
 import { Room } from "@colyseus/core";
 import { MyRoomState, Player } from "./schema/MyRoomState.js";
 
+const START_DELAY_MS = 3200;
+const DEFAULT_DIFFICULTY = "casual";
+
+const DIFFICULTY_PRESETS = {
+	casual: { spawnIntervalMultiplier: 1.25, durationMultiplier: 1.1 },
+	sweaty: { spawnIntervalMultiplier: 0.8, durationMultiplier: 0.9 },
+};
+
+const GAME_MODES = {
+	fish: { spawnIntervalMs: 100, durationMs: 20000 },
+	rat: { spawnIntervalMs: 150, durationMs: 5000 },
+	butterfly: { spawnIntervalMs: 100, durationMs: 10000 },
+};
+
+function resolveDifficulty(value) {
+	return Object.prototype.hasOwnProperty.call(DIFFICULTY_PRESETS, value) ? value : DEFAULT_DIFFICULTY;
+}
+
+function getModeConfig(mode, difficulty) {
+	const base = GAME_MODES[mode];
+	if (!base) return null;
+	const preset = DIFFICULTY_PRESETS[difficulty] ?? DIFFICULTY_PRESETS[DEFAULT_DIFFICULTY];
+	const spawnIntervalMs = Math.max(60, Math.round(base.spawnIntervalMs * preset.spawnIntervalMultiplier));
+	const durationMs = Math.max(3000, Math.round(base.durationMs * preset.durationMultiplier));
+	return { spawnIntervalMs, durationMs };
+}
+
 export class MyRoom extends Room {
 	maxClients = 2;
 
 	onCreate(options) {
-		if (options.code !== "nocode") {
-			this.roomId = options.code;
-		}
 		this.setState(new MyRoomState());
 		this.winner = null;
 		this.clock.start();
 		this.autoDispose = false;
+		this.difficulty = resolveDifficulty(options?.difficulty);
+		this.state.difficulty = this.difficulty;
+		this.state.phase = "lobby";
+		this.state.mode = "";
+		this.state.startAt = 0;
+		this.round = {
+			state: "idle",
+			mode: null,
+			startTimeout: null,
+			obstacleInterval: null,
+			endTimeout: null,
+		};
 
 		this.onMessage("move", (client, message) => {
 			const player = this.state.players.get(client.sessionId);
-			player.x = message.x;
-			player.y = message.y;
+			if (!player) return;
+			const x = Number(message?.x);
+			const y = Number(message?.y);
+			if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+			player.x = x;
+			player.y = y;
 		});
 
 		this.onMessage("moveB", (client, message) => {
 			const player = this.state.players.get(client.sessionId);
-			player.x = message.pos.x;
-			player.y = message.pos.y;
-			player.angle = message.angle;
+			if (!player) return;
+			const x = Number(message?.pos?.x);
+			const y = Number(message?.pos?.y);
+			const angle = Number(message?.angle);
+			if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(angle)) return;
+			player.x = x;
+			player.y = y;
+			player.angle = angle;
 		});
 
-		this.onMessage("ready", (client, message) => {
-			const player = this.state.players.get(client.sessionId);
-			player.ready = true;
-			if (this.areAllPlayersReady()) {
-				this.broadcast("start");
-				this.clock.setTimeout(() => {
-					this.gameLoop();
-				}, 1000);
-				this.state.players.forEach((player) => {
-					player.ready = false;
-				});
-			}
-		});
-
-		this.onMessage("readyRat", (client, message) => {
-			const player = this.state.players.get(client.sessionId);
-			player.ready = true;
-			if (this.areAllPlayersReady()) {
-				this.broadcast("start");
-				this.clock.setTimeout(() => {
-					this.gameLoopRat();
-				}, 1000);
-				this.state.players.forEach((player) => {
-					player.ready = false;
-				});
-			}
-		});
-
-		this.onMessage("readyButterfly", (client, message) => {
-			const player = this.state.players.get(client.sessionId);
-			player.ready = true;
-			if (this.areAllPlayersReady()) {
-				this.broadcast("start");
-				this.clock.setTimeout(() => {
-					this.gameLoopB();
-				}, 1000);
-				this.state.players.forEach((player) => {
-					player.ready = false;
-				});
-			}
-		});
+		this.onMessage("ready", (client) => this.handleReady(client, "fish"));
+		this.onMessage("readyRat", (client) => this.handleReady(client, "rat"));
+		this.onMessage("readyButterfly", (client) => this.handleReady(client, "butterfly"));
 
 		this.onMessage("collide", (client, message) => {
-			this.broadcast("opponentCollided", { sessionId: client.sessionId, collideID: message });
+			const collideID = Number(message);
+			if (!Number.isFinite(collideID)) return;
+			this.broadcast("opponentCollided", { sessionId: client.sessionId, collideID });
 		});
 
 		this.onMessage("ended", (client) => {
-			this.winner = null;
+			this.resetRound();
 		});
 
 		this.onMessage("won", (client) => {
 			if (this.winner === null) {
 				const victor = this.state.players.get(client.sessionId);
-				victor.score += 1;
+				if (!victor) return;
 				const loser = Array.from(this.state.players.values()).find((player) => player.sessionId !== client.sessionId);
+				if (!loser) return;
+				victor.score += 1;
 				this.winner = client;
 				console.log(`${victor.name} won! They are now at ${victor.score} points! ${loser.name} is still at ${loser.score} points!`);
-				this.broadcast("won", { winner: victor, loser: loser });
+				this.broadcast("won", { winner: victor, loser });
 			}
 		});
 	}
 
-	gameLoopB() {
-		let id = 0;
-		const delayedInterval = this.clock.setInterval(() => {
-			id++;
-			this.broadcast("spawnObstacle", { data: Math.random() * 9999, obstacleID: id });
-		}, 20);
-		this.clock.setTimeout(() => {
-			delayedInterval.clear();
-			this.broadcast("end");
-		}, 10000);
+	handleReady(client, mode) {
+		if (this.round.state !== "idle") return;
+
+		const player = this.state.players.get(client.sessionId);
+		if (!player) return;
+		player.ready = true;
+
+		if (this.areAllPlayersReady()) {
+			this.startRound(mode);
+			this.state.players.forEach((p) => {
+				p.ready = false;
+			});
+		}
 	}
 
-	gameLoopRat() {
-		let id = 0;
-		const delayedInterval = this.clock.setInterval(() => {
-			id++;
-			this.broadcast("spawnObstacle", { data: Math.random() * 9999, obstacleID: id });
-		}, 100);
-		this.clock.setTimeout(() => {
-			delayedInterval.clear();
-			this.broadcast("end");
-		}, 5000);
+	startRound(mode) {
+		const config = getModeConfig(mode, this.difficulty);
+		if (!config) return;
+
+		this.round.state = "countdown";
+		this.round.mode = mode;
+		this.winner = null;
+		this.state.mode = mode;
+		this.state.phase = "countdown";
+		this.state.startAt = Date.now() + START_DELAY_MS;
+		this.broadcast("start", { startAt: this.state.startAt, mode });
+
+		this.round.startTimeout = this.clock.setTimeout(() => {
+			this.round.state = "running";
+			this.state.phase = "running";
+			this.runGameLoop(config);
+		}, START_DELAY_MS);
 	}
 
-	gameLoop() {
+	runGameLoop({ spawnIntervalMs, durationMs }) {
 		let id = 0;
-		const delayedInterval = this.clock.setInterval(() => {
+		this.round.obstacleInterval = this.clock.setInterval(() => {
 			id++;
 			this.broadcast("spawnObstacle", { data: Math.random() * 9999, obstacleID: id });
-		}, 20);
-		this.clock.setTimeout(() => {
-			delayedInterval.clear();
+		}, spawnIntervalMs);
+
+		this.round.endTimeout = this.clock.setTimeout(() => {
+			if (this.round.obstacleInterval) {
+				this.round.obstacleInterval.clear();
+				this.round.obstacleInterval = null;
+			}
+			this.round.state = "ended";
+			this.state.phase = "ended";
+			this.state.startAt = 0;
 			this.broadcast("end");
-		}, 20000);
+		}, durationMs);
+	}
+
+	resetRound() {
+		this.winner = null;
+		this.round.state = "idle";
+		this.round.mode = null;
+		this.state.mode = "";
+		this.state.phase = "lobby";
+		this.state.startAt = 0;
+
+		if (this.round.startTimeout) {
+			this.round.startTimeout.clear();
+			this.round.startTimeout = null;
+		}
+		if (this.round.obstacleInterval) {
+			this.round.obstacleInterval.clear();
+			this.round.obstacleInterval = null;
+		}
+		if (this.round.endTimeout) {
+			this.round.endTimeout.clear();
+			this.round.endTimeout = null;
+		}
+
+		this.state.players.forEach((p) => {
+			p.ready = false;
+		});
 	}
 
 	onJoin(client, options) {
 		console.log(client.sessionId, "joined!");
-		const player = new Player();
-		player.sessionId = client.sessionId;
-		player.name = options.playerName;
-		player.x = options.playerPos.x;
-		player.y = options.playerPos.y;
-		player.score = 0;
-		player.angle = 0;
-		player.ready = false;
-		this.state.players.set(client.sessionId, player);
+		const existing = this.state.players.get(client.sessionId);
+		if (existing) {
+			if (typeof options?.playerName === "string") {
+				existing.name = options.playerName;
+			}
+		} else {
+			const player = new Player();
+			player.sessionId = client.sessionId;
+			player.name = typeof options?.playerName === "string" ? options.playerName : "Player";
+			player.x = Number.isFinite(Number(options?.playerPos?.x)) ? options.playerPos.x : 0;
+			player.y = Number.isFinite(Number(options?.playerPos?.y)) ? options.playerPos.y : 0;
+			player.score = 0;
+			player.angle = 0;
+			player.ready = false;
+			this.state.players.set(client.sessionId, player);
+		}
+
+		client.send("difficulty", this.difficulty);
+		if (this.round.state === "countdown" || this.round.state === "running") {
+			client.send("start", { startAt: this.state.startAt, mode: this.round.mode });
+		} else if (this.round.state === "ended") {
+			client.send("end");
+		}
 	}
 
-	onLeave(client, options) {
-		const playerName = this.state.players.get(client.sessionId).name;
+	async onLeave(client, consented) {
+		const leavingPlayer = this.state.players.get(client.sessionId);
+		const playerName = leavingPlayer?.name ?? client.sessionId;
 		console.log(`${playerName} left!\nsessionId: ${client.sessionId}`);
+		if (!consented) {
+			try {
+				await this.allowReconnection(client, 15);
+				return;
+			} catch {
+				// reconnection failed
+			}
+		}
+
+		this.winner = null;
 		this.state.players.delete(client.sessionId);
+		this.resetRound();
 		if (this.state.players.size === 0) {
 			this.disconnect();
 		}

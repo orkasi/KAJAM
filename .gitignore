@@ -1,6 +1,15 @@
 # Node modules
 node_modules/
 
+# Env files
+.env
+.env.*
+!.env.example
+
+# OS junk
+.DS_Store
+Thumbs.db
+
 # Visual Studio Code
 .vscode
 

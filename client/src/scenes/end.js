@@ -1,27 +1,19 @@
 import { k } from "../init";
-import { createNormalText, createCoolText, createTiledBackground, createMuteButton } from "../utils";
+import { createCoolText, createMuteButton, createNormalText, createTiledBackground, goScene, registerLoopSound } from "../utils";
 import { createFishScene } from "./fish";
 
 export function createEndScene() {
 	k.scene("end", (player, opponent, room) => {
-		const lobbySound = k.play("lobbyScene", {
-			loop: true,
-			paused: false,
-			volume: 0.05,
-		});
-		let muteButton;
+		const lobbySound = registerLoopSound(
+			k.play("lobbyScene", {
+				loop: true,
+				paused: false,
+				volume: 0.05,
+			}),
+			0.05,
+		);
+		createMuteButton();
 
-		k.onClick("mute", () => {
-			if (lobbySound.paused === false) {
-				lobbySound.paused = true;
-				muteButton.use(k.color(k.RED));
-			} else {
-				lobbySound.paused = false;
-				muteButton.unuse("color");
-			}
-		});
-
-		muteButton = createMuteButton();
 		createFishScene();
 		let sText;
 		const tiledBackground = createTiledBackground("#000000", "#686767");
@@ -55,7 +47,7 @@ export function createEndScene() {
 		k.onClick("replay", () => {
 			destroy(tiledBackground);
 			lobbySound.stop();
-			k.go("fish", room);
+			goScene("fish", room);
 		});
 	});
 }

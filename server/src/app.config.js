@@ -1,6 +1,9 @@
-import config from "@colyseus/tools";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { monitor } from "@colyseus/monitor";
-import { playground } from "@colyseus/playground";
+import config from "@colyseus/tools";
+import express from "express";
 import basicAuth from "express-basic-auth";
 
 /**
@@ -17,20 +20,35 @@ export default config.default({
 	},
 
 	initializeExpress: (app) => {
+		const isProduction = process.env.NODE_ENV === "production";
+		const monitorEnabled = process.env.MONITOR_ENABLED === "true";
+		const serveClient = process.env.SERVE_CLIENT === "true";
+		const frameAncestors = process.env.FRAME_ANCESTORS;
+
 		/**
 		 * Bind your custom express routes here:
 		 * Read more: https://expressjs.com/en/starter/basic-routing.html
 		 */
+		if (frameAncestors) {
+			app.use((_req, res, next) => {
+				res.setHeader("Content-Security-Policy", `frame-ancestors ${frameAncestors}`);
+				next();
+			});
+		}
+
+		app.get("/healthz", (_req, res) => {
+			res.status(200).send("ok");
+		});
+
 		app.get("/hello_world", (req, res) => {
 			res.send("It's time to kick ass and chew bubblegum!");
 		});
 
-		/**
-		 * Use @colyseus/playground
-		 * (It is not recommended to expose this route in a production environment)
-		 */
-		if (process.env.NODE_ENV !== "production") {
-			app.use("/", playground);
+		if (serveClient) {
+			const __filename = fileURLToPath(import.meta.url);
+			const __dirname = path.dirname(__filename);
+			const clientDist = path.resolve(__dirname, "../../client/dist");
+			app.use(express.static(clientDist));
 		}
 
 		/**
@@ -39,16 +57,19 @@ export default config.default({
 		 * Read more: https://docs.colyseus.io/colyseus/tools/monitor/#restrict-access-to-the-panel-using-a-password
 		 *
 		 */
-		const basicAuthMiddleware = basicAuth({
-			// list of users and passwords
-			users: {
-				nomure: "rattpuap077",
-			},
-			// sends WWW-Authenticate header, which will prompt the user to fill
-			// credentials in
-			challenge: true,
-		});
-		app.use("/colyseus", basicAuthMiddleware, monitor());
+		if (monitorEnabled) {
+			const monitorUser = process.env.MONITOR_USER;
+			const monitorPass = process.env.MONITOR_PASS;
+			if (!monitorUser || !monitorPass) {
+				throw new Error("MONITOR_USER and MONITOR_PASS are required when MONITOR_ENABLED=true");
+			}
+
+			const basicAuthMiddleware = basicAuth({
+				users: { [monitorUser]: monitorPass },
+				challenge: true,
+			});
+			app.use("/colyseus", basicAuthMiddleware, monitor());
+		}
 	},
 
 	beforeListen: () => {

@@ -5,10 +5,10 @@
 		"build": "vite build",
 		"dev": "vite --host",
 		"preview": "vite preview",
-		"zip": "npm run build && mkdir -p dist && zip -r dist/game.zip www -x \"**/.DS_Store\""
+		"zip": "npm run build && node -e \"const { execSync } = require('node:child_process'); execSync('zip -r game.zip . -x \\\\\\\"**/.DS_Store\\\\\\\"', { cwd: 'dist', stdio: 'inherit' });\""
 	},
 	"dependencies": {
-		"colyseus.js": "^0.15.26",
+		"colyseus.js": "^0.16.22",
 		"kaplay": "3001.0.2"
 	},
 	"devDependencies": {

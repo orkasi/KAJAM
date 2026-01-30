@@ -1,35 +1,32 @@
 import { k } from "../init";
-import { createCoolText, overlay, tweenFunc, createTiledBackground, createNormalText, createTutorialRect, createMuteButton } from "../utils";
+import { createCoolText, createMatchHud, createMuteButton, createNormalText, createTiledBackground, createTutorialRect, getMatchContext, goScene, overlay, playSound, registerLoopSound, tweenFunc } from "../utils";
 import { createButterflyScene } from "./butterfly";
 
 export const startPos = k.vec2(k.width() / 2, k.height() - 77.5);
 
 const RATSPEED = 75;
-const rectLoop = [];
+const MOVE_SEND_HZ = 20;
 
 export function createRatScene() {
 	k.scene("rat", (room) => {
-		const ratSound = k.play("ratScene", {
-			loop: false,
-			paused: false,
-			volume: 0.01,
-		});
+		const ratSound = registerLoopSound(
+			k.play("ratScene", {
+				loop: false,
+				paused: false,
+				volume: 0.01,
+			}),
+			0.01,
+		);
 		const killRoom = [];
+		const rectLoops = [];
+		const sceneLoops = [];
 		let opponent = null;
 		let opponentP = null;
+		let hasStarted = false;
 		k.setBackground(rgb(78, 24, 124));
 		k.setGravity(1750);
-		const muteButton = createMuteButton();
-
-		k.onClick("mute", () => {
-			if (ratSound.paused === false) {
-				ratSound.paused = true;
-				muteButton.use(k.color(k.RED));
-			} else {
-				ratSound.paused = false;
-				muteButton.unuse("color");
-			}
-		});
+		createMuteButton();
+		const hud = createMatchHud(room, getMatchContext());
 
 		function ratKeyBackground() {
 			const ratMoveRect = createTutorialRect(k.width() * 0.8, k.height() * 0.25, k.width() * 0.28, k.height() * 0.27, rgb(144, 129, 214), rgb(89, 47, 146), rgb(100, 72, 169), rgb(118, 100, 192));
@@ -44,7 +41,7 @@ export function createRatScene() {
 			const ratgamepadUpandDownUI = ratMoveRect.add([k.sprite("gamepadUpandDown"), k.pos(ratMoveRect.width / 8, ratMoveRect.height * 0.27), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
 			const ratmouseLeftUI = ratMoveRect.add([k.sprite("mouseLeftandRight"), k.pos(ratMoveRect.width * 0.35, ratMoveRect.height * 0.27), k.opacity(), k.anchor("center"), k.animate(), "backgroundRect"]);
 
-			rectLoop.push(
+			rectLoops.push(
 				k.loop(1.5, async () => {
 					ratkeyUpUI.play("upKeyPressed");
 					ratmouseLeftandRightUI.play("mouseRightPressed");
@@ -94,7 +91,7 @@ export function createRatScene() {
 				direction: "ping-pong",
 			});
 
-			rectLoop.push(
+			rectLoops.push(
 				k.loop(2, async () => {
 					await tweenFunc(dummyRat, "pos", k.vec2(-ratObstacleRectangle.width / 4 - 20, ratObstacleRectangle.height / 4 - 25), k.vec2(-ratObstacleRectangle.width / 4 + 120, ratObstacleRectangle.height / 4 - 25), 0.25, 1);
 					tweenFunc(obstacleExample, "scale", k.vec2(1.5, 1.5), k.vec2(0, 0), 0.25, 1);
@@ -107,23 +104,9 @@ export function createRatScene() {
 		}
 		ratTutorialBackground();
 
-		const loseMusic = k.play("loseSound", {
-			loop: false,
-			paused: true,
-			volume: 0.3,
-		});
-
-		const wonMusic = k.play("wonSound", {
-			loop: false,
-			paused: true,
-			volume: 0.3,
-		});
-
-		const drawSound = k.play("drawSound", {
-			loop: false,
-			paused: true,
-			volume: 0.3,
-		});
+		const playLoseSound = () => playSound("loseSound", { volume: 0.3 });
+		const playWonSound = () => playSound("wonSound", { volume: 0.3 });
+		const playDrawSound = () => playSound("drawSound", { volume: 0.3 });
 
 		const moon = k.add([k.sprite("moon"), k.pos(k.width() * 0.85, k.height() * 0.1), k.scale(1), k.fixed(), k.animate()]);
 		moon.animate("angle", [-15, 15], {
@@ -131,25 +114,27 @@ export function createRatScene() {
 			direction: "ping-pong",
 		});
 		let lastCPos = k.width() + 100;
-		k.loop(0.1, () => {
-			if (lastCPos < camPos().x + k.width()) {
-				const cloud = k.add([k.sprite("cloud"), k.pos(k.rand(lastCPos, lastCPos + k.width() / 6), k.rand(k.height() * 0.01, k.height() * 0.4)), k.scale(k.rand(0.5, 2.5)), k.animate()]);
-				const mirror = k.randi();
-				if (mirror === 1) {
-					cloud.flipX = true;
-				}
-				cloud.animate("angle", [k.rand(-5, 0), k.rand(0, 5)], {
-					duration: k.rand(1, 2),
-					direction: "ping-pong",
-				});
-				lastCPos = cloud.pos.x;
-				cloud.onUpdate(() => {
-					if (cloud.pos.x < camPos().x - k.width()) {
-						k.destroy(cloud);
+		sceneLoops.push(
+			k.loop(0.1, () => {
+				if (lastCPos < camPos().x + k.width()) {
+					const cloud = k.add([k.sprite("cloud"), k.pos(k.rand(lastCPos, lastCPos + k.width() / 6), k.rand(k.height() * 0.01, k.height() * 0.4)), k.scale(k.rand(0.5, 2.5)), k.animate()]);
+					const mirror = k.randi();
+					if (mirror === 1) {
+						cloud.flipX = true;
 					}
-				});
-			}
-		});
+					cloud.animate("angle", [k.rand(-5, 0), k.rand(0, 5)], {
+						duration: k.rand(1, 2),
+						direction: "ping-pong",
+					});
+					lastCPos = cloud.pos.x;
+					cloud.onUpdate(() => {
+						if (cloud.pos.x < camPos().x - k.width()) {
+							k.destroy(cloud);
+						}
+					});
+				}
+			}),
+		);
 		function addGround() {
 			let lastGroundPos = k.width() * -1;
 			const tiles = [];
@@ -208,19 +193,21 @@ export function createRatScene() {
 						opponent.onStateUpdate("move", () => {
 							opponent.pos.x += RATSPEED * 12 * k.dt();
 						});
-						k.loop(0.1, () => {
-							if (opponent.state === "move" && opponent.pos.y > k.height() - (60 + opponent.height / 2)) {
-								k.add([
-									k.sprite("green"),
-									k.pos(k.rand(opponent.pos.x - opponent.width / 2, opponent.pos.x + opponent.width * 0.4), k.rand(opponent.pos.y + opponent.height * 0.5, opponent.pos.y + opponent.height * 0.6)),
-									k.anchor("center"),
-									k.scale(k.rand(0.05, 0.1)),
-									k.lifespan(0.3, { fade: 0.25 }),
-									k.opacity(k.rand(0.3, 1)),
-									k.move(k.randi(180, 260), k.rand(60, 100)),
-								]);
-							}
-						});
+						sceneLoops.push(
+							k.loop(0.1, () => {
+								if (opponent.state === "move" && opponent.pos.y > k.height() - (60 + opponent.height / 2)) {
+									k.add([
+										k.sprite("green"),
+										k.pos(k.rand(opponent.pos.x - opponent.width / 2, opponent.pos.x + opponent.width * 0.4), k.rand(opponent.pos.y + opponent.height * 0.5, opponent.pos.y + opponent.height * 0.6)),
+										k.anchor("center"),
+										k.scale(k.rand(0.05, 0.1)),
+										k.lifespan(0.3, { fade: 0.25 }),
+										k.opacity(k.rand(0.3, 1)),
+										k.move(k.randi(180, 260), k.rand(60, 100)),
+									]);
+								}
+							}),
+						);
 					}
 				}
 			}),
@@ -233,7 +220,7 @@ export function createRatScene() {
 				if (opponent) {
 					k.destroy(opponent);
 				}
-				k.go("leave", room);
+				goScene("leave", room);
 			}),
 		);
 
@@ -252,6 +239,11 @@ export function createRatScene() {
 			"player",
 		]);
 		createCoolText(cPlayer, room.state.players.get(room.sessionId).name, 0, -cPlayer.height, 15);
+
+		const moveSendInterval = 1 / MOVE_SEND_HZ;
+		let moveSendElapsed = 0;
+		let lastSentX = cPlayer.pos.x;
+		let lastSentY = cPlayer.pos.y;
 
 		k.onGamepadButtonPress("south", () => cPlayer.isGrounded() && cPlayer.jump(800));
 		k.onMousePress(["left", "right"], () => cPlayer.isGrounded() && cPlayer.jump(800));
@@ -273,19 +265,21 @@ export function createRatScene() {
 			});
 		});
 
-		k.loop(0.1, () => {
-			if (cPlayer.state === "move" && cPlayer.isGrounded()) {
-				k.add([
-					k.sprite("green"),
-					k.pos(k.rand(cPlayer.pos.x - cPlayer.width / 2, cPlayer.pos.x + cPlayer.width * 0.4), k.rand(cPlayer.pos.y + cPlayer.height * 0.5, cPlayer.pos.y + cPlayer.height * 0.6)),
-					k.anchor("center"),
-					k.scale(k.rand(0.05, 0.1)),
-					k.lifespan(0.3, { fade: 0.25 }),
-					k.opacity(k.rand(0.3, 1)),
-					k.move(k.randi(180, 260), k.rand(60, 100)),
-				]);
-			}
-		});
+		sceneLoops.push(
+			k.loop(0.1, () => {
+				if (cPlayer.state === "move" && cPlayer.isGrounded()) {
+					k.add([
+						k.sprite("green"),
+						k.pos(k.rand(cPlayer.pos.x - cPlayer.width / 2, cPlayer.pos.x + cPlayer.width * 0.4), k.rand(cPlayer.pos.y + cPlayer.height * 0.5, cPlayer.pos.y + cPlayer.height * 0.6)),
+						k.anchor("center"),
+						k.scale(k.rand(0.05, 0.1)),
+						k.lifespan(0.3, { fade: 0.25 }),
+						k.opacity(k.rand(0.3, 1)),
+						k.move(k.randi(180, 260), k.rand(60, 100)),
+					]);
+				}
+			}),
+		);
 		cPlayer.onStateEnter("move", () => {
 			cPTweenL = k.loop(0.5, async () => {
 				cPTween = await cPlayer.tween(-10, 10, 0.25, (value) => (cPlayer.angle = value));
@@ -295,50 +289,82 @@ export function createRatScene() {
 
 		cPlayer.onStateUpdate("move", () => {
 			cPlayer.pos.x += RATSPEED * 12 * k.dt();
-			room.send("move", cPlayer.pos);
 		});
 
-		cPlayer.onUpdate(async () => {
-			room.send("move", cPlayer.pos);
+		cPlayer.onUpdate(() => {
+			moveSendElapsed += k.dt();
+			if (moveSendElapsed >= moveSendInterval) {
+				const x = cPlayer.pos.x;
+				const y = cPlayer.pos.y;
+				if (Math.abs(x - lastSentX) > 0.5 || Math.abs(y - lastSentY) > 0.5) {
+					room.send("move", { x, y });
+					lastSentX = x;
+					lastSentY = y;
+				}
+				moveSendElapsed = 0;
+			}
+
 			const targetCamX = cPlayer.pos.x + k.width() * 0.3;
 			const dampedCamX = k.lerp(k.camPos().x, targetCamX, 3 * k.dt());
 			k.camPos(k.vec2(dampedCamX, k.height() / 2));
 		});
 		const readyText = createCoolText(k, "Press space to get ready", k.width() * 0.85, k.height() / 2, 50);
 
-		const readyKey = k.onKeyPress("space", () => {
+		const startCountdown = async (startAt) => {
+			let remaining = 3;
+			if (Number.isFinite(startAt)) {
+				const diff = Math.ceil((startAt - Date.now()) / 1000);
+				remaining = Math.max(0, diff);
+			}
+			readyText.font = "Iosevka-Heavy";
+			for (let i = remaining; i > 0; i--) {
+				readyText.text = i;
+				playSound("count", { volume: 0.08 });
+				await k.wait(1);
+			}
+			if (opponent) opponent.enterState("move");
+			cPlayer.enterState("move");
+
+			playSound("go", { volume: 0.1 });
+
+			readyText.text = "Go";
+			readyText.textSize = 128;
+			readyText.font = "Iosevka-Heavy";
+			readyText.pos = k.vec2(k.width() * 1.2, k.height() / 2, 50);
+			readyText.use(move(k.LEFT, 400));
+			k.wait(5, () => {
+				k.destroy(readyText);
+			});
+		};
+
+		const handleStart = async (payload) => {
+			if (hasStarted) return;
+			hasStarted = true;
 			k.destroyAll("backgroundRect");
-			rectLoop.forEach((loop) => loop.cancel());
+			rectLoops.forEach((loop) => loop.cancel());
+			await startCountdown(payload?.startAt);
+		};
+
+		const readyKey = k.onKeyPress("space", () => {
+			if (hasStarted) return;
 			readyKey.cancel();
 			readyText.text = "Ready";
 			room.send("readyRat");
-			room.onMessage("start", async () => {
-				readyText.font = "Iosevka-Heavy";
-
-				for (let i = 3; i > 0; i--) {
-					readyText.text = i;
-					k.play("count");
-					await k.wait(1);
-				}
-				opponent.enterState("move");
-				cPlayer.enterState("move");
-
-				k.play("go", { volume: 0.1 });
-
-				readyText.text = "Go";
-				readyText.textSize = 128;
-				readyText.font = "Iosevka-Heavy";
-				readyText.pos = k.vec2(k.width() * 1.2, k.height() / 2, 50);
-				readyText.use(move(k.LEFT, 400));
-				k.wait(5, () => {
-					k.destroy(readyText);
-				});
-			});
 		});
+
+		killRoom.push(
+			room.onMessage("start", async (payload) => {
+				await handleStart(payload);
+			}),
+		);
+
+		if (room.state?.mode === "rat" && room.state?.phase !== "lobby") {
+			handleStart({ startAt: room.state.startAt });
+		}
 
 		let lastPos = k.width() * 2;
 
-		const obstacles = [];
+		const obstacles = new Map();
 		killRoom.push(
 			room.onMessage("spawnObstacle", (message) => {
 				k.randSeed(message.data);
@@ -356,6 +382,7 @@ export function createRatScene() {
 					{ obstacleID: message.obstacleID },
 					"obstacle",
 				]);
+				obstacles.set(message.obstacleID, obstacle);
 				if (rand === 2) {
 					obstacle.scale = k.vec2(2, 2);
 				}
@@ -367,10 +394,10 @@ export function createRatScene() {
 				});
 				obstacle.onUpdate(() => {
 					if (obstacle.pos.x < camPos().x - k.width()) {
+						obstacles.delete(obstacle.obstacleID);
 						k.destroy(obstacle);
 					}
 				});
-				obstacles.push(obstacle);
 			}),
 		);
 
@@ -380,10 +407,11 @@ export function createRatScene() {
 					opponent.enterState("stun");
 					opponent.stunTime += 1;
 
-					k.play("ratHurt", { volume: 0.08 });
-					const target = obstacles.find((obj) => obj.obstacleID === message.collideID);
+					playSound("ratHurt", { volume: 0.08 });
+					const target = obstacles.get(message.collideID);
 
 					if (target) {
+						obstacles.delete(message.collideID);
 						tweenFunc(target, "scale", target.scale, k.vec2(0, 0), 0.5, 1);
 						k.wait(0.5, () => {
 							if (target) {
@@ -400,8 +428,9 @@ export function createRatScene() {
 				cPlayer.enterState("stun");
 				cPlayer.stunTime += 1;
 				room.send("collide", collidedObstacle.obstacleID);
+				obstacles.delete(collidedObstacle.obstacleID);
 				tweenFunc(collidedObstacle, "scale", collidedObstacle.scale, k.vec2(0, 0), 0.5, 1);
-				k.play("ratHurt", { volume: 0.08 });
+				playSound("ratHurt", { volume: 0.08 });
 				k.wait(0.5, () => {
 					if (collidedObstacle) {
 						k.destroy(collidedObstacle);
@@ -414,7 +443,7 @@ export function createRatScene() {
 			room.onMessage("won", (message) => {
 				if (message.winner.sessionId !== room.sessionId) {
 					ratSound.stop();
-					loseMusic.paused = false;
+					playLoseSound();
 
 					k.scene("lost", async () => {
 						const tiledBackground = createTiledBackground("#E07A7A", "#C25A5A");
@@ -431,28 +460,28 @@ export function createRatScene() {
 						next.letterSpacing = 0;
 						const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.85, 56);
 						timer.font = "Iosevka-Heavy";
-						k.play("count", { volume: 0.08 });
+						playSound("count", { volume: 0.08 });
 
 						for (let t = 4; t > 0; t--) {
 							await k.wait(1);
-							k.play("count", { volume: 0.08 });
+							playSound("count", { volume: 0.08 });
 							timer.text = t;
 						}
 
 						createButterflyScene();
 						k.wait(1, () => {
-							k.play("go", { volume: 0.1 });
+							playSound("go", { volume: 0.1 });
 							k.destroy(tiledBackground);
-							k.go("butterfly", room);
+							goScene("butterfly", room);
 						});
 					});
 					room.send("ended");
-					k.go("lost");
+					goScene("lost");
 				} else {
 					k.scene("won", async () => {
 						const tiledBackground = createTiledBackground("#6FCF97", "#4CAF71");
 						ratSound.stop();
-						wonMusic.paused = false;
+						playWonSound();
 						const mText = createCoolText(k, "You've won!", k.width() / 2, k.height() * 0.15, 72);
 						mText.letterSpacing = 15;
 
@@ -465,21 +494,21 @@ export function createRatScene() {
 						next.letterSpacing = 0;
 						const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.85, 56);
 						timer.font = "Iosevka-Heavy";
-						k.play("count", { volume: 0.08 });
+						playSound("count", { volume: 0.08 });
 
 						for (let t = 4; t > 0; t--) {
 							await k.wait(1);
-							k.play("count", { volume: 0.08 });
+							playSound("count", { volume: 0.08 });
 							timer.text = t;
 						}
 						createButterflyScene();
 						k.wait(1, () => {
-							k.play("go", { volume: 0.1 });
+							playSound("go", { volume: 0.1 });
 							k.destroy(tiledBackground);
-							k.go("butterfly", room);
+							goScene("butterfly", room);
 						});
 					});
-					k.go("won");
+					goScene("won");
 				}
 			}),
 		);
@@ -491,7 +520,7 @@ export function createRatScene() {
 				k.scene("DRAW", async () => {
 					const tiledBackground = createTiledBackground("#A98BC7", "#8F76B8");
 					ratSound.stop();
-					drawSound.paused = false;
+					playDrawSound();
 
 					const mText = createCoolText(k, "It's a draw!", k.width() / 2, k.height() * 0.15, 72);
 					mText.letterSpacing = 15;
@@ -505,22 +534,22 @@ export function createRatScene() {
 					next.letterSpacing = 0;
 					const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.85, 56);
 					timer.font = "Iosevka-Heavy";
-					k.play("count", { volume: 0.08 });
+					playSound("count", { volume: 0.08 });
 
 					for (let t = 4; t > 0; t--) {
 						await k.wait(1);
-						k.play("count", { volume: 0.08 });
+						playSound("count", { volume: 0.08 });
 						timer.text = t;
 					}
 					createButterflyScene();
 					k.wait(1, () => {
-						k.play("go", { volume: 0.1 });
+						playSound("go", { volume: 0.1 });
 						k.destroy(tiledBackground);
-						k.go("butterfly", room);
+						goScene("butterfly", room);
 					});
 				});
 				room.send("ended");
-				k.go("DRAW");
+				goScene("DRAW");
 			} else {
 				room.send("won");
 			}
@@ -534,6 +563,10 @@ export function createRatScene() {
 			}),
 		);
 		k.onSceneLeave(() => {
+			rectLoops.forEach((loop) => loop.cancel());
+			sceneLoops.forEach((loop) => loop.cancel());
+			if (cPTweenL) cPTweenL.cancel();
+			if (hud) hud.destroy();
 			killRoom.forEach((kill) => kill());
 		});
 	});

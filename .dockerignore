@@ -1,0 +1,10 @@
+.git
+.vscode
+node_modules
+client/node_modules
+server/node_modules
+client/dist
+server/dist
+**/.DS_Store
+**/Thumbs.db
+**/*.log

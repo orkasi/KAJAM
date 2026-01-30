@@ -1,5 +1,31 @@
 import { k } from "./init.js";
 
+const muteStorageKey = "kajam:muted";
+let muted = false;
+const loopSounds = new Set();
+const loopSoundVolumes = new WeakMap();
+let reconnectEnabled = true;
+let currentScene = null;
+let matchContext = { roomCode: "nocode", difficulty: "casual" };
+
+const readStoredMute = () => {
+	try {
+		return localStorage.getItem(muteStorageKey) === "true";
+	} catch {
+		return false;
+	}
+};
+
+const storeMute = (value) => {
+	try {
+		localStorage.setItem(muteStorageKey, value ? "true" : "false");
+	} catch {
+		// ignore storage errors
+	}
+};
+
+muted = readStoredMute();
+
 export const overlay = ($color = WHITE, $opacity = 1) => ({
 	async add() {
 		const overlay = this.add([sprite(this.sprite), mask(), this?.anchor && anchor(this.anchor)]);
@@ -97,6 +123,148 @@ export function createTutorialRect(x, y, size_x, size_y, color, outlinecolor, ou
 	return rect;
 }
 
+export function isMuted() {
+	return muted;
+}
+
+export function setMuted(value) {
+	muted = Boolean(value);
+	storeMute(muted);
+	loopSounds.forEach((sound) => {
+		const baseVolume = loopSoundVolumes.get(sound) ?? 1;
+		sound.volume = muted ? 0 : baseVolume;
+	});
+}
+
+export function toggleMuted() {
+	setMuted(!muted);
+}
+
+export function registerLoopSound(sound, baseVolume) {
+	if (!sound) return sound;
+	loopSounds.add(sound);
+	loopSoundVolumes.set(sound, baseVolume ?? sound.volume ?? 1);
+	sound.volume = muted ? 0 : loopSoundVolumes.get(sound);
+	return sound;
+}
+
+export function playSound(name, options = {}) {
+	const volume = options.volume ?? 1;
+	return k.play(name, {
+		...options,
+		volume: muted ? 0 : volume,
+	});
+}
+
 export function createMuteButton() {
-	return k.add([k.sprite("mute"), k.pos(k.width(), 0), k.scale(0.5), k.area(), k.opacity(0.5), k.fixed(), k.anchor("topright"), "mute"]);
+	const button = k.add([k.sprite("mute"), k.pos(k.width(), 0), k.scale(0.5), k.area(), k.opacity(0.5), k.fixed(), k.anchor("topright"), "mute"]);
+	const updateColor = () => {
+		if (muted) {
+			button.use(k.color(k.RED));
+		} else {
+			button.unuse("color");
+		}
+	};
+	updateColor();
+	button.onClick(() => {
+		toggleMuted();
+		updateColor();
+	});
+	return button;
+}
+
+export function createMatchHud(room, { roomCode = "nocode", difficulty = "casual" } = {}) {
+	const container = k.add([k.pos(20, 20), k.fixed(), k.z(100)]);
+
+	const roomLabel = roomCode && roomCode !== "nocode" ? `Room: ${roomCode}` : "Room: Public";
+	const roomText = container.add([k.text(roomLabel, { size: 20, font: "Iosevka-Heavy" }), k.pos(0, 0), k.anchor("topleft")]);
+
+	const copyButton = container.add([k.text("Copy", { size: 16, font: "Iosevka-Heavy" }), k.pos(0, 24), k.anchor("topleft"), k.area(), k.color(k.rgb(255, 255, 255))]);
+
+	const copyStatus = container.add([k.text("", { size: 14, font: "Iosevka" }), k.pos(60, 24), k.anchor("topleft")]);
+
+	let lastDifficulty = difficulty;
+	const difficultyText = container.add([k.text(`Difficulty: ${difficulty}`, { size: 16, font: "Iosevka-Heavy" }), k.pos(0, 48), k.anchor("topleft")]);
+
+	const youText = container.add([k.text("You: Not Ready", { size: 16, font: "Iosevka" }), k.pos(0, 72), k.anchor("topleft")]);
+	const oppText = container.add([k.text("Opponent: Waiting...", { size: 16, font: "Iosevka" }), k.pos(0, 92), k.anchor("topleft")]);
+
+	if (!roomCode || roomCode === "nocode") {
+		copyButton.hidden = true;
+	}
+
+	copyButton.onClick(async () => {
+		if (!roomCode || roomCode === "nocode") return;
+		try {
+			await navigator.clipboard.writeText(roomCode);
+			copyStatus.text = "Copied!";
+			k.wait(2, () => {
+				copyStatus.text = "";
+			});
+		} catch {
+			copyStatus.text = "Copy failed";
+			k.wait(2, () => {
+				copyStatus.text = "";
+			});
+		}
+	});
+
+	const updateLoop = k.loop(0.2, () => {
+		const effectiveDifficulty = room?.state?.difficulty || lastDifficulty;
+		if (effectiveDifficulty !== lastDifficulty) {
+			lastDifficulty = effectiveDifficulty;
+			difficultyText.text = `Difficulty: ${effectiveDifficulty}`;
+		}
+		const me = room.state.players.get(room.sessionId);
+		if (me) {
+			youText.text = `You: ${me.ready ? "Ready" : "Not Ready"}`;
+		}
+		const opponent = Array.from(room.state.players.values()).find((player) => player.sessionId !== room.sessionId);
+		if (opponent) {
+			oppText.text = `${opponent.name}: ${opponent.ready ? "Ready" : "Not Ready"}`;
+		} else {
+			oppText.text = "Opponent: Waiting...";
+		}
+	});
+
+	return {
+		updateDifficulty: (value) => {
+			lastDifficulty = value;
+			difficultyText.text = `Difficulty: ${value}`;
+		},
+		updateRoomCode: (value) => {
+			const label = value && value !== "nocode" ? `Room: ${value}` : "Room: Public";
+			roomText.text = label;
+			copyButton.hidden = !value || value === "nocode";
+		},
+		destroy: () => {
+			updateLoop.cancel();
+			k.destroy(container);
+		},
+	};
+}
+
+export function setMatchContext({ roomCode = "nocode", difficulty = "casual" } = {}) {
+	matchContext = { roomCode, difficulty };
+}
+
+export function getMatchContext() {
+	return matchContext;
+}
+
+export function goScene(sceneName, ...args) {
+	currentScene = sceneName;
+	k.go(sceneName, ...args);
+}
+
+export function getCurrentScene() {
+	return currentScene;
+}
+
+export function setReconnectEnabled(value) {
+	reconnectEnabled = Boolean(value);
+}
+
+export function getReconnectEnabled() {
+	return reconnectEnabled;
 }

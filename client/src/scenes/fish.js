@@ -1,36 +1,33 @@
 import { k } from "../init";
-import { createRatScene } from "./rat";
-import { tweenFunc, overlay, createCoolText, createTiledBackground, createTutorialRect, createNormalText, createMuteButton } from "../utils";
+import { createCoolText, createMatchHud, createMuteButton, createNormalText, createTiledBackground, createTutorialRect, getMatchContext, goScene, overlay, playSound, registerLoopSound, tweenFunc } from "../utils";
 import { createLeaveScene } from "./leave";
+import { createRatScene } from "./rat";
 
 export const startPos = k.vec2(k.width() / 2, k.height() / 2);
 const FISHSPEED = 50;
+const MOVE_SEND_HZ = 20;
 
 export function createFishScene() {
 	k.scene("fish", (room) => {
-		const fishSound = k.play("fishScene", {
-			loop: false,
-			paused: false,
-			volume: 0.05,
-		});
+		const fishSound = registerLoopSound(
+			k.play("fishScene", {
+				loop: false,
+				paused: false,
+				volume: 0.05,
+			}),
+			0.05,
+		);
 		k.setBackground(rgb(90, 108, 230));
-		const muteButton = createMuteButton();
-
-		k.onClick("mute", () => {
-			if (fishSound.paused === false) {
-				fishSound.paused = true;
-				muteButton.use(k.color(k.RED));
-			} else {
-				fishSound.paused = false;
-				muteButton.unuse("color");
-			}
-		});
+		createMuteButton();
+		const hud = createMatchHud(room, getMatchContext());
 
 		const players = {};
 		const killRoom = [];
+		const sceneLoops = [];
 		let rectLoop;
 		let startP = false;
 		let startO = false;
+		let hasStarted = false;
 
 		function fishKeyBackground() {
 			const fishMoveRect = createTutorialRect(k.width() * 0.8, k.height() * 0.23, k.width() * 0.28, k.height() * 0.17, rgb(174, 226, 255), rgb(110, 144, 251), rgb(124, 169, 253), rgb(141, 197, 255));
@@ -125,13 +122,18 @@ export function createFishScene() {
 				if (players[0]) {
 					k.destroy(players[0]);
 				}
-				k.go("leave", room);
+				goScene("leave", room);
 			}),
 		);
 
 		const cPlayer = k.add([k.sprite("sukomi"), k.pos(startPos), k.body(), k.anchor("center"), k.rotate(), k.z(2), k.area(), k.timer(), k.opacity(1), "player"]);
 
 		createCoolText(cPlayer, room.state.players.get(room.sessionId).name, 0, -cPlayer.height, 15);
+
+		const moveSendInterval = 1 / MOVE_SEND_HZ;
+		let moveSendElapsed = 0;
+		let lastSentX = cPlayer.pos.x;
+		let lastSentY = cPlayer.pos.y;
 
 		let upPressed = false;
 		let downPressed = false;
@@ -150,61 +152,84 @@ export function createFishScene() {
 
 		const readyText = createCoolText(k, "Press space to get ready", k.width() * 0.85, k.height() / 2, 50);
 
+		const startCountdown = async (startAt) => {
+			let remaining = 3;
+			if (Number.isFinite(startAt)) {
+				const diff = Math.ceil((startAt - Date.now()) / 1000);
+				remaining = Math.max(0, diff);
+			}
+			readyText.font = "Iosevka-Heavy";
+			for (let i = remaining; i > 0; i--) {
+				readyText.text = i;
+				playSound("count", { volume: 0.08 });
+				await k.wait(1);
+			}
+			playSound("go", { volume: 0.1 });
+			readyText.text = "Go";
+			readyText.textSize = 128;
+			readyText.pos = k.vec2(k.width() * 1.2, k.height() / 2, 50);
+			readyText.use(move(k.LEFT, 400));
+			startP = true;
+			startO = true;
+			k.wait(5, () => {
+				k.destroy(readyText);
+			});
+		};
+
+		const handleStart = async (payload) => {
+			if (hasStarted) return;
+			hasStarted = true;
+			k.destroyAll("backgroundRect");
+			if (rectLoop) rectLoop.cancel();
+			await startCountdown(payload?.startAt);
+		};
+
 		const readyKey = k.onKeyPress("space", () => {
+			if (hasStarted) return;
 			readyKey.cancel();
 			readyText.text = "Ready";
 			room.send("ready");
-			k.destroyAll("backgroundRect");
-			rectLoop.cancel();
-			killRoom.push(
-				room.onMessage("start", async () => {
-					readyText.font = "Iosevka-Heavy";
-
-					for (let i = 3; i > 0; i--) {
-						readyText.text = i;
-						k.play("count", { volume: 0.08 });
-						await k.wait(1);
-					}
-					k.play("go", { volume: 0.1 });
-					readyText.text = "Go";
-					readyText.textSize = 128;
-					readyText.pos = k.vec2(k.width() * 1.2, k.height() / 2, 50);
-					readyText.use(move(k.LEFT, 400));
-					startP = true;
-					startO = true;
-					k.wait(5, () => {
-						k.destroy(readyText);
-					});
-				}),
-			);
 		});
 
-		k.loop(0.1, () => {
-			if (startP) {
-				k.add([
-					k.sprite("bubble"),
-					k.color(rgb(255, 255, 255)),
-					k.pos(cPlayer.pos.x - cPlayer.width / 2, k.rand(cPlayer.pos.y, cPlayer.pos.y + cPlayer.height / 2)),
-					k.anchor("center"),
-					k.scale(k.rand(0.1, 0.7)),
-					k.lifespan(0.5, { fade: 0.25 }),
-					k.opacity(k.rand(0.9, 1)),
-					k.move(k.randi(120, 240), k.rand(120, 240)),
-				]);
-			}
-			if (startO) {
-				k.add([
-					k.sprite("bubble"),
-					k.color(rgb(255, 255, 255)),
-					k.pos(players[0].pos.x - players[0].width / 2, k.rand(players[0].pos.y, players[0].pos.y + players[0].height / 2)),
-					k.anchor("center"),
-					k.scale(k.rand(0.1, 0.7)),
-					k.lifespan(0.5, { fade: 0.25 }),
-					k.opacity(k.rand(0.9, 1)),
-					k.move(k.randi(140, 240), k.rand(120, 240)),
-				]);
-			}
-		});
+		killRoom.push(
+			room.onMessage("start", async (payload) => {
+				await handleStart(payload);
+			}),
+		);
+
+		if (room.state?.mode === "fish" && room.state?.phase !== "lobby") {
+			handleStart({ startAt: room.state.startAt });
+		}
+
+		sceneLoops.push(
+			k.loop(0.1, () => {
+				if (startP) {
+					k.add([
+						k.sprite("bubble"),
+						k.color(rgb(255, 255, 255)),
+						k.pos(cPlayer.pos.x - cPlayer.width / 2, k.rand(cPlayer.pos.y, cPlayer.pos.y + cPlayer.height / 2)),
+						k.anchor("center"),
+						k.scale(k.rand(0.1, 0.7)),
+						k.lifespan(0.5, { fade: 0.25 }),
+						k.opacity(k.rand(0.9, 1)),
+						k.move(k.randi(120, 240), k.rand(120, 240)),
+					]);
+				}
+				if (startO) {
+					if (!players[0]) return;
+					k.add([
+						k.sprite("bubble"),
+						k.color(rgb(255, 255, 255)),
+						k.pos(players[0].pos.x - players[0].width / 2, k.rand(players[0].pos.y, players[0].pos.y + players[0].height / 2)),
+						k.anchor("center"),
+						k.scale(k.rand(0.1, 0.7)),
+						k.lifespan(0.5, { fade: 0.25 }),
+						k.opacity(k.rand(0.9, 1)),
+						k.move(k.randi(140, 240), k.rand(120, 240)),
+					]);
+				}
+			}),
+		);
 
 		cPlayer.onUpdate(() => {
 			if (upPressed && cPlayer.pos.y > 50 && !downPressed) {
@@ -216,7 +241,17 @@ export function createFishScene() {
 			} else if ((!downPressed && !upPressed) || (downPressed && upPressed)) {
 				cPlayer.angle += (0 - cPlayer.angle) * 12 * k.dt();
 			}
-			room.send("move", cPlayer.pos);
+			moveSendElapsed += k.dt();
+			if (moveSendElapsed >= moveSendInterval) {
+				const x = cPlayer.pos.x;
+				const y = cPlayer.pos.y;
+				if (Math.abs(x - lastSentX) > 0.5 || Math.abs(y - lastSentY) > 0.5) {
+					room.send("move", { x, y });
+					lastSentX = x;
+					lastSentY = y;
+				}
+				moveSendElapsed = 0;
+			}
 
 			if (startP) {
 				cPlayer.pos.x += (cPlayer.pos.x + FISHSPEED - cPlayer.pos.x) * 12 * k.dt();
@@ -230,7 +265,7 @@ export function createFishScene() {
 
 		let isEnding = false;
 
-		const obstacles = [];
+		const obstacles = new Map();
 		killRoom.push(
 			room.onMessage("spawnObstacle", (message) => {
 				if (!isEnding) {
@@ -248,6 +283,7 @@ export function createFishScene() {
 						"obstacle",
 					]);
 					lastPos = obstacle.pos.x;
+					obstacles.set(message.obstacleID, obstacle);
 					obstacle.use(move(k.LEFT, 400));
 					obstacle.animate("angle", [k.rand(-25, -15), k.rand(-10, 0)], {
 						duration: k.rand(0.3, 0.6),
@@ -255,10 +291,10 @@ export function createFishScene() {
 					});
 					obstacle.onUpdate(() => {
 						if (obstacle.pos.x < camPos().x - k.width()) {
+							obstacles.delete(obstacle.obstacleID);
 							k.destroy(obstacle);
 						}
 					});
-					obstacles.push(obstacle);
 				}
 			}),
 		);
@@ -271,24 +307,15 @@ export function createFishScene() {
 			}),
 		);
 
-		const loseMusic = k.play("loseSound", {
-			loop: false,
-			paused: true,
-			volume: 0.5,
-		});
-
-		const wonMusic = k.play("wonSound", {
-			loop: false,
-			paused: true,
-			volume: 0.2,
-		});
+		const playLoseSound = () => playSound("loseSound", { volume: 0.5 });
+		const playWonSound = () => playSound("wonSound", { volume: 0.2 });
 
 		killRoom.push(
 			room.onMessage("won", (message) => {
 				createRatScene();
 				if (message.winner.sessionId !== room.sessionId) {
 					fishSound.stop();
-					loseMusic.paused = false;
+					playLoseSound();
 
 					k.scene("lost", async () => {
 						const tiledBackground = createTiledBackground("#E07A7A", "#C25A5A");
@@ -303,27 +330,27 @@ export function createFishScene() {
 						next.letterSpacing = 0;
 						const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.85, 56);
 						timer.font = "Iosevka-Heavy";
-						k.play("count", { volume: 0.08 });
+						playSound("count", { volume: 0.08 });
 
 						for (let t = 4; t > 0; t--) {
 							await k.wait(1);
-							k.play("count", { volume: 0.08 });
+							playSound("count", { volume: 0.08 });
 							timer.text = t;
 						}
 
 						k.wait(1, () => {
-							k.play("go", { volume: 0.1 });
+							playSound("go", { volume: 0.1 });
 							k.destroy(tiledBackground);
-							k.go("rat", room);
+							goScene("rat", room);
 						});
 					});
 					room.send("ended");
-					k.go("lost");
+					goScene("lost");
 				} else {
 					k.scene("won", async () => {
 						const tiledBackground = createTiledBackground("#6FCF97", "#4CAF71");
 						fishSound.stop();
-						wonMusic.paused = false;
+						playWonSound();
 						const mText = createCoolText(k, "You've won!", k.width() / 2, k.height() * 0.15, 72);
 						mText.letterSpacing = 15;
 						mText.font = "Iosevka-Heavy";
@@ -334,31 +361,27 @@ export function createFishScene() {
 						next.letterSpacing = 0;
 						const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.85, 56);
 						timer.font = "Iosevka-Heavy";
-						k.play("count", { volume: 0.08 });
+						playSound("count", { volume: 0.08 });
 
 						for (let t = 4; t > 0; t--) {
 							await k.wait(1);
-							k.play("count", { volume: 0.08 });
+							playSound("count", { volume: 0.08 });
 							timer.text = t;
 						}
 
 						k.wait(1, () => {
-							k.play("go", { volume: 0.1 });
+							playSound("go", { volume: 0.1 });
 							k.destroy(tiledBackground);
 
-							k.go("rat", room);
+							goScene("rat", room);
 						});
 					});
-					k.go("won");
+					goScene("won");
 				}
 			}),
 		);
 
-		const drawSound = k.play("drawSound", {
-			loop: false,
-			paused: true,
-			volume: 0.3,
-		});
+		const playDrawSound = () => playSound("drawSound", { volume: 0.3 });
 
 		k.onCollide("finish", "player", () => {
 			if (opponentStunTime === stunTime) {
@@ -368,7 +391,7 @@ export function createFishScene() {
 				k.scene("DRAW", async () => {
 					const tiledBackground = createTiledBackground("#89C3E0", "#6FAFD4");
 
-					drawSound.paused = false;
+					playDrawSound();
 					fishSound.stop();
 
 					const mText = createCoolText(k, "It's a draw!", k.width() / 2, k.height() * 0.15, 72);
@@ -382,22 +405,22 @@ export function createFishScene() {
 					next.letterSpacing = 0;
 					const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.85, 56);
 					timer.font = "Iosevka-Heavy";
-					k.play("count", { volume: 0.08 });
+					playSound("count", { volume: 0.08 });
 
 					for (let t = 4; t > 0; t--) {
 						await k.wait(1);
-						k.play("count", { volume: 0.08 });
+						playSound("count", { volume: 0.08 });
 						timer.text = t;
 					}
 					k.wait(1, () => {
-						k.play("go", { volume: 0.1 });
+						playSound("go", { volume: 0.1 });
 						k.destroy(tiledBackground);
 
-						k.go("rat", room);
+						goScene("rat", room);
 					});
 				});
 				room.send("ended");
-				k.go("DRAW");
+				goScene("DRAW");
 			} else {
 				room.send("won");
 			}
@@ -413,7 +436,7 @@ export function createFishScene() {
 				if (message.sessionId !== room.sessionId) {
 					if (!stunTimerO) {
 						opponentStunTime += 1;
-						k.play("fishHit", {
+						playSound("fishHit", {
 							volume: 0.08,
 						});
 						startO = false;
@@ -424,9 +447,10 @@ export function createFishScene() {
 						});
 						tweenFunc(players[0], "angle", 360, 0, 0.25, 1);
 						tweenFunc(players[0], "opacity", 0, 1, 0.25, 4);
-						const target = obstacles.find((obj) => obj.obstacleID === message.collideID);
+						const target = obstacles.get(message.collideID);
 
 						if (target) {
+							obstacles.delete(message.collideID);
 							tweenFunc(target, "scale", target.scale, k.vec2(0, 0), 0.5, 1);
 							k.wait(0.5, () => {
 								if (target) {
@@ -442,7 +466,7 @@ export function createFishScene() {
 		k.onCollide("obstacle", "player", (collidedObstacle) => {
 			if (!stunTimerP) {
 				stunTime += 1;
-				k.play("fishHit", { volume: 0.09 });
+				playSound("fishHit", { volume: 0.09 });
 				startP = false;
 				stunTimerP = true;
 				k.wait(1, () => {
@@ -451,6 +475,7 @@ export function createFishScene() {
 				});
 				tweenFunc(cPlayer, "angle", 360, 0, 0.25, 1);
 				tweenFunc(cPlayer, "opacity", 0, 1, 0.25, 4);
+				obstacles.delete(collidedObstacle.obstacleID);
 				tweenFunc(collidedObstacle, "scale", collidedObstacle.scale, k.vec2(0, 0), 0.5, 1);
 
 				k.wait(0.5, () => {
@@ -463,6 +488,9 @@ export function createFishScene() {
 			}
 		});
 		k.onSceneLeave(() => {
+			sceneLoops.forEach((loop) => loop.cancel());
+			if (rectLoop) rectLoop.cancel();
+			if (hud) hud.destroy();
 			killRoom.forEach((kill) => kill());
 		});
 	});

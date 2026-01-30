@@ -1,8 +1,31 @@
-import { k } from "./init";
 import * as Colyseus from "colyseus.js";
-import { createTiledBackground, createCoolText, createNormalText, createMuteButton } from "./utils";
+import { k } from "./init";
+import { createCoolText, createMuteButton, createNormalText, createTiledBackground, getReconnectEnabled, goScene, playSound, registerLoopSound, setMatchContext, setReconnectEnabled } from "./utils";
 
 import { createFishScene, startPos } from "./scenes/fish";
+
+async function loadRuntimeConfig() {
+	try {
+		const res = await fetch("./config.json", { cache: "no-store" });
+		if (!res.ok) return {};
+		const json = await res.json();
+		if (!json || typeof json !== "object") return {};
+		return json;
+	} catch {
+		return {};
+	}
+}
+
+function resolveColyseusEndpoint(runtimeConfig) {
+	const fromRuntimeConfig = typeof runtimeConfig?.colyseusEndpoint === "string" ? runtimeConfig.colyseusEndpoint.trim() : "";
+	if (fromRuntimeConfig) return fromRuntimeConfig;
+
+	const fromBuild = typeof import.meta.env?.VITE_COLYSEUS_ENDPOINT === "string" ? import.meta.env.VITE_COLYSEUS_ENDPOINT.trim() : "";
+	if (fromBuild) return fromBuild;
+
+	const wsProto = window.location.protocol === "https:" ? "wss:" : "ws:";
+	return `${wsProto}//${window.location.host}`;
+}
 
 window.addEventListener("keydown", (e) => {
 	if (e.key === "F1") {
@@ -10,145 +33,161 @@ window.addEventListener("keydown", (e) => {
 	}
 });
 
-const client = new Colyseus.Client("https://de-fra-1cb3f4c6.colyseus.cloud/");
+let colyseusClient;
+let colyseusEndpoint = "";
+let currentRoomCode = "nocode";
+let currentDifficulty = "casual";
+let reconnecting = false;
+let reconnectOverlay = null;
 
-async function loadStuff() {
+async function loadAssets() {
 	k.loadRoot(".");
 
-	//Shaders
-	await k.loadShaderURL("tiledPattern", null, "/shaders/tiledPattern.frag");
+	const assets = [];
 
-	//Fish Game Sprites
-	k.loadSprite("sukomi", "/sprites/sukomi.png");
-	k.loadSprite("bobo", "/sprites/bobo.png");
-	k.loadSprite("bubble", "/sprites/particles/bubble.png");
+	// Shaders
+	assets.push(k.loadShaderURL("tiledPattern", null, "/shaders/tiledPattern.frag"));
 
-	//Sounds
-	k.loadSound("loseSound", "/sounds/lost.ogg");
-	k.loadSound("fishHit", "/sounds/fishHit.ogg");
-	k.loadSound("wonSound", "/sounds/won.ogg");
-	k.loadSound("drawSound", "/sounds/draw.ogg");
-	await k.loadSound("wrongName", "/sounds/wrongName.ogg");
-	await k.loadSound("count", "/sounds/count.ogg");
-	await k.loadSound("go", "/sounds/go.ogg");
-	k.loadSound("ratHurt", "/sounds/ratHurt.ogg");
-	await k.loadSound("lobbyScene", "/sounds/lobbyScene.ogg");
-	k.loadSound("fishScene", "/sounds/fishScene.ogg");
-	k.loadSound("ratScene", "/sounds/ratScene.ogg");
-	k.loadSound("butterflyScene", "/sounds/butterflyScene.ogg");
-	k.loadSound("butterflyHit", "/sounds/butterflyHit.ogg");
+	// Fish Game Sprites
+	assets.push(k.loadSprite("sukomi", "/sprites/sukomi.png"));
+	assets.push(k.loadSprite("bobo", "/sprites/bobo.png"));
+	assets.push(k.loadSprite("bubble", "/sprites/particles/bubble.png"));
 
-	//Butterfly Game Sprites
-	k.loadSprite("butterfly", "/sprites/butterfly.png");
-	k.loadSprite("goldfly", "/sprites/goldfly.png");
-	k.loadSprite("ghosty", "/sprites/ghosty.png");
-	k.loadSprite("white", "/sprites/particles/white.png");
-	k.loadSprite("heart", "/sprites/particles/heart.png");
+	// Sounds
+	assets.push(k.loadSound("loseSound", "/sounds/lost.ogg"));
+	assets.push(k.loadSound("fishHit", "/sounds/fishHit.ogg"));
+	assets.push(k.loadSound("wonSound", "/sounds/won.ogg"));
+	assets.push(k.loadSound("drawSound", "/sounds/draw.ogg"));
+	assets.push(k.loadSound("wrongName", "/sounds/wrongName.ogg"));
+	assets.push(k.loadSound("count", "/sounds/count.ogg"));
+	assets.push(k.loadSound("go", "/sounds/go.ogg"));
+	assets.push(k.loadSound("ratHurt", "/sounds/ratHurt.ogg"));
+	assets.push(k.loadSound("lobbyScene", "/sounds/lobbyScene.ogg"));
+	assets.push(k.loadSound("fishScene", "/sounds/fishScene.ogg"));
+	assets.push(k.loadSound("ratScene", "/sounds/ratScene.ogg"));
+	assets.push(k.loadSound("butterflyScene", "/sounds/butterflyScene.ogg"));
+	assets.push(k.loadSound("butterflyHit", "/sounds/butterflyHit.ogg"));
 
-	//Rat Game Sprites
-	k.loadSprite("gigagantrum", "/sprites/gigagantrum.png");
-	k.loadSprite("karat", "/sprites/karat.png");
-	k.loadSprite("bag", "/sprites/bag.png");
-	k.loadSprite("money_bag", "/sprites/money_bag.png");
-	k.loadSprite("grass", "/sprites/grass.png");
-	k.loadSprite("portal", "/sprites/portal.png");
-	k.loadSprite("moon", "/sprites/moon.png");
-	k.loadSprite("cloud", "/sprites/cloud.png");
-	k.loadSprite("green", "/sprites/particles/green.png");
+	// Butterfly Game Sprites
+	assets.push(k.loadSprite("butterfly", "/sprites/butterfly.png"));
+	assets.push(k.loadSprite("goldfly", "/sprites/goldfly.png"));
+	assets.push(k.loadSprite("ghosty", "/sprites/ghosty.png"));
+	assets.push(k.loadSprite("white", "/sprites/particles/white.png"));
+	assets.push(k.loadSprite("heart", "/sprites/particles/heart.png"));
 
-	//Icons
-	await k.loadSprite("play-o", "/sprites/icons/play-o.png");
-	await k.loadSprite("kaplay", "/sprites/icons/kaplay.png");
-	await k.loadSprite("kajam", "/sprites/icons/kajam.png");
-	await k.loadSprite("colyseus", "/sprites/icons/colyseus.png");
-	await k.loadSprite("mute", "/sprites/icons/mute.png");
-	await k.loadSprite("enterButton", "/sprites/icons/enterButton.png");
-	await k.loadSprite("space", "/sprites/icons/spaceKey.png");
+	// Rat Game Sprites
+	assets.push(k.loadSprite("gigagantrum", "/sprites/gigagantrum.png"));
+	assets.push(k.loadSprite("karat", "/sprites/karat.png"));
+	assets.push(k.loadSprite("bag", "/sprites/bag.png"));
+	assets.push(k.loadSprite("money_bag", "/sprites/money_bag.png"));
+	assets.push(k.loadSprite("grass", "/sprites/grass.png"));
+	assets.push(k.loadSprite("portal", "/sprites/portal.png"));
+	assets.push(k.loadSprite("moon", "/sprites/moon.png"));
+	assets.push(k.loadSprite("cloud", "/sprites/cloud.png"));
+	assets.push(k.loadSprite("green", "/sprites/particles/green.png"));
 
-	//Fonts
-	await k.loadFont("Iosevka", "/fonts/Iosevka-Regular.woff2", { outline: 1, filter: "linear" });
-	await k.loadFont("Iosevka-Heavy", "/fonts/Iosevka-Heavy.woff2", { outline: 3, filter: "linear" });
+	// Icons
+	assets.push(k.loadSprite("play-o", "/sprites/icons/play-o.png"));
+	assets.push(k.loadSprite("kaplay", "/sprites/icons/kaplay.png"));
+	assets.push(k.loadSprite("kajam", "/sprites/icons/kajam.png"));
+	assets.push(k.loadSprite("colyseus", "/sprites/icons/colyseus.png"));
+	assets.push(k.loadSprite("mute", "/sprites/icons/mute.png"));
+	assets.push(k.loadSprite("enterButton", "/sprites/icons/enterButton.png"));
+	assets.push(k.loadSprite("space", "/sprites/icons/spaceKey.png"));
 
-	//Key sprites
-	await k.loadSprite("gamepadUpandDown", "/sprites/icons/gamepadUpandDown.png", {
-		sliceX: 3,
-		anims: {
-			emptyGamepad: {
-				from: 0,
-				to: 0,
-				loop: true,
+	// Fonts
+	assets.push(k.loadFont("Iosevka", "/fonts/Iosevka-Regular.woff2", { outline: 1, filter: "linear" }));
+	assets.push(k.loadFont("Iosevka-Heavy", "/fonts/Iosevka-Heavy.woff2", { outline: 3, filter: "linear" }));
+
+	// Key sprites
+	assets.push(
+		k.loadSprite("gamepadUpandDown", "/sprites/icons/gamepadUpandDown.png", {
+			sliceX: 3,
+			anims: {
+				emptyGamepad: {
+					from: 0,
+					to: 0,
+					loop: true,
+				},
+				gamepadUp: {
+					from: 1,
+					to: 1,
+					loop: true,
+				},
+				gamepadDown: {
+					from: 2,
+					to: 2,
+					loop: true,
+				},
 			},
-			gamepadUp: {
-				from: 1,
-				to: 1,
-				loop: true,
-			},
-			gamepadDown: {
-				from: 2,
-				to: 2,
-				loop: true,
-			},
-		},
-	});
+		}),
+	);
 
-	await k.loadSprite("mouseLeftandRight", "/sprites/icons/mouseLeftandRight.png", {
-		sliceX: 3,
-		anims: {
-			emptyMouse: {
-				from: 0,
-				to: 0,
-				loop: true,
-			},
+	assets.push(
+		k.loadSprite("mouseLeftandRight", "/sprites/icons/mouseLeftandRight.png", {
+			sliceX: 3,
+			anims: {
+				emptyMouse: {
+					from: 0,
+					to: 0,
+					loop: true,
+				},
 
-			mouseRightPressed: {
-				from: 1,
-				to: 1,
-				loop: true,
-			},
+				mouseRightPressed: {
+					from: 1,
+					to: 1,
+					loop: true,
+				},
 
-			mouseLeftPressed: {
-				from: 2,
-				to: 2,
-				loop: true,
+				mouseLeftPressed: {
+					from: 2,
+					to: 2,
+					loop: true,
+				},
 			},
-		},
-	});
+		}),
+	);
 
-	await k.loadSprite("upKey", "/sprites/icons/upKey.png", {
-		sliceX: 2,
-		anims: {
-			upKey: {
-				from: 0,
-				to: 0,
-				loop: true,
-			},
+	assets.push(
+		k.loadSprite("upKey", "/sprites/icons/upKey.png", {
+			sliceX: 2,
+			anims: {
+				upKey: {
+					from: 0,
+					to: 0,
+					loop: true,
+				},
 
-			upKeyPressed: {
-				from: 1,
-				to: 1,
-				loop: true,
+				upKeyPressed: {
+					from: 1,
+					to: 1,
+					loop: true,
+				},
 			},
-		},
-	});
+		}),
+	);
 
-	await k.loadSprite("downKey", "/sprites/icons/downKey.png", {
-		sliceX: 2,
-		anims: {
-			downKey: {
-				from: 0,
-				to: 0,
-				loop: true,
-			},
+	assets.push(
+		k.loadSprite("downKey", "/sprites/icons/downKey.png", {
+			sliceX: 2,
+			anims: {
+				downKey: {
+					from: 0,
+					to: 0,
+					loop: true,
+				},
 
-			downKeyPressed: {
-				from: 1,
-				to: 1,
-				loop: true,
+				downKeyPressed: {
+					from: 1,
+					to: 1,
+					loop: true,
+				},
 			},
-		},
-	});
+		}),
+	);
+
+	await Promise.all(assets);
 }
-loadStuff();
 
 let muteButton;
 let lobbySound;
@@ -158,6 +197,20 @@ function isAlphanumeric(str) {
 	return regex.test(str);
 }
 let tiledBackgroundN;
+
+function showReconnectOverlay(text) {
+	hideReconnectOverlay();
+	reconnectOverlay = createNormalText(k, text, k.width() / 2, k.height() / 2, 32, "reconnectOverlay", k.fixed(), k.z(100));
+	reconnectOverlay.font = "Iosevka-Heavy";
+}
+
+function hideReconnectOverlay() {
+	if (reconnectOverlay) {
+		k.destroy(reconnectOverlay);
+		reconnectOverlay = null;
+	}
+	k.destroyAll("reconnectOverlay");
+}
 async function name() {
 	tiledBackgroundN = createTiledBackground("#9982e8", "#8465ec");
 
@@ -168,7 +221,7 @@ async function name() {
 	const kInput = k.onCharInput(async (ch) => {
 		if (ch === "\\") {
 			return;
-		} else if (name.text.length <= 10) {
+		} else if (name.text.length < 10) {
 			name.text += ch;
 		} else {
 			const warning = createNormalText(k, "Name must be at most 10 characters.", k.width() / 2, k.height() * 0.3, 32, "destroyN");
@@ -191,10 +244,7 @@ async function name() {
 			k.destroyAll("destroyN");
 			roomName(name);
 		} else {
-			await k.play("wrongName", {
-				loop: false,
-				volume: 0.1,
-			});
+			playSound("wrongName", { loop: false, volume: 0.1 });
 			await askName.tween(-10, 10, 0.1, (value) => (askName.angle = value));
 			await askName.tween(10, 0, 0.1, (value) => (askName.angle = value));
 			const warning = createNormalText(k, "Do not use special characters. Name must be longer than 1 characters and at most 10 characters.", k.width() / 2, k.height() * 0.3, 32, "destroyN");
@@ -216,9 +266,10 @@ async function roomName(nameT) {
 	const kInput = k.onCharInput(async (ch) => {
 		if (ch === "\\") {
 			return;
-		} else if (roomCode.text.length <= 10) {
+		} else if (roomCode.text.length < 10) {
 			roomCode.text += ch;
-			const warning = createNormalText(k, "Code must be at most 10 characters.", k.width() / 2, k.height() * 0.3, 32, "destroyN");
+		} else {
+			const warning = createNormalText(k, "Code must be at most 10 characters.", k.width() / 2, k.height() * 0.3, 32, "destroyR");
 			warning.font = "Iosevka-Heavy";
 
 			k.wait(3, () => {
@@ -233,21 +284,19 @@ async function roomName(nameT) {
 	k.wait(0.5, () => {
 		const keyPress2 = k.onKeyPress("enter", async () => {
 			if (roomCode.text.length < 1) {
-				main(nameT.text);
+				selectDifficulty(nameT, "nocode");
 				keyPress2.cancel();
 				kInput.cancel();
 				bInput.cancel();
 				destroyAll("destroyR");
 			} else if (roomCode.text.length > 1 && isAlphanumeric(roomCode.text)) {
-				main(nameT.text, roomCode.text);
+				selectDifficulty(nameT, roomCode.text);
 				keyPress2.cancel();
 				kInput.cancel();
 				bInput.cancel();
 				destroyAll("destroyR");
 			} else {
-				await k.play("wrongName", {
-					loop: false,
-				});
+				playSound("wrongName", { loop: false });
 				await askCode.tween(-10, 10, 0.1, (value) => (askCode.angle = value));
 				await askCode.tween(10, 0, 0.1, (value) => (askCode.angle = value));
 				const warning = createNormalText(k, "Do not use special characters", k.width() / 2, k.height() * 0.3, 32, "destroyR");
@@ -260,47 +309,128 @@ async function roomName(nameT) {
 	});
 }
 
-async function main(name, roomCode = "nocode") {
+async function selectDifficulty(nameT, roomCode) {
+	const askDifficulty = createCoolText(k, "Select difficulty", k.width() / 2, k.height() * 0.2, 48, "destroyD", k.timer(), k.rotate());
+	askDifficulty.font = "Iosevka-Heavy";
+	const casualText = createNormalText(k, "1 - Casual", k.width() / 2, k.height() * 0.45, 40, "destroyD");
+	casualText.font = "Iosevka-Heavy";
+	const sweatyText = createNormalText(k, "2 - Sweaty", k.width() / 2, k.height() * 0.6, 40, "destroyD");
+	sweatyText.font = "Iosevka-Heavy";
+
+	const choose = (difficulty) => {
+		destroyAll("destroyD");
+		main(nameT.text, roomCode, difficulty);
+	};
+
+	const pickCasual = k.onKeyPress(["1", "c"], () => {
+		pickCasual.cancel();
+		pickSweaty.cancel();
+		choose("casual");
+	});
+
+	const pickSweaty = k.onKeyPress(["2", "s"], () => {
+		pickCasual.cancel();
+		pickSweaty.cancel();
+		choose("sweaty");
+	});
+}
+
+function moveToSceneForRoom(room) {
+	const mode = room.state?.mode;
+	if (mode === "rat") {
+		goScene("rat", room);
+	} else if (mode === "butterfly") {
+		goScene("butterfly", room);
+	} else {
+		goScene("fish", room);
+	}
+}
+
+function attachRoomHandlers(room) {
+	room.onMessage("difficulty", (difficulty) => {
+		if (typeof difficulty === "string") {
+			currentDifficulty = difficulty;
+			setMatchContext({ roomCode: currentRoomCode, difficulty: currentDifficulty });
+		}
+	});
+
+	room.onLeave(() => {
+		if (!getReconnectEnabled()) return;
+		void attemptReconnect(room);
+	});
+}
+
+async function attemptReconnect(previousRoom) {
+	if (reconnecting || !getReconnectEnabled()) return;
+	const token = previousRoom?.reconnectionToken;
+	if (!token) return;
+	reconnecting = true;
+	showReconnectOverlay("Reconnecting...");
+	try {
+		const reconnected = await colyseusClient.reconnect(token);
+		reconnecting = false;
+		hideReconnectOverlay();
+		setReconnectEnabled(true);
+		attachRoomHandlers(reconnected);
+		setMatchContext({ roomCode: currentRoomCode, difficulty: currentDifficulty });
+		moveToSceneForRoom(reconnected);
+	} catch (err) {
+		reconnecting = false;
+		showReconnectOverlay("Reconnect failed. Press R to retry");
+		const retry = k.onKeyPress("r", () => {
+			retry.cancel();
+			void attemptReconnect(previousRoom);
+		});
+	}
+}
+
+async function main(name, roomCode = "nocode", difficulty = "casual") {
+	if (!colyseusClient) {
+		colyseusEndpoint = resolveColyseusEndpoint(await loadRuntimeConfig());
+		colyseusClient = new Colyseus.Client(colyseusEndpoint);
+	}
+
 	const lobbyText = createCoolText(k, "Connecting...", k.width() / 2, k.height() / 2, 48);
-	await client
-		.joinOrCreate("my_room", { playerName: name, playerPos: startPos, code: roomCode })
+	await colyseusClient
+		.joinOrCreate("my_room", { playerName: name, playerPos: startPos, code: roomCode, difficulty })
 		.then((room) => {
 			lobbyText.text = "Connected!";
 
 			k.wait(1, async () => {
+				currentRoomCode = roomCode;
+				currentDifficulty = room.state?.difficulty || difficulty;
+				setMatchContext({ roomCode, difficulty: currentDifficulty });
+				setReconnectEnabled(true);
+				attachRoomHandlers(room);
 				k.destroy(tiledBackgroundN);
-				lobbySound.stop();
-				destroy(muteButton);
-				k.go("fish", room);
+				if (lobbySound) lobbySound.stop();
+				if (muteButton) destroy(muteButton);
+				moveToSceneForRoom(room);
 			});
 		})
 		.catch((e) => {
-			lobbyText.text = `Connection failed!\n${e.message || "No Error Code"}`;
+			lobbyText.text = `Connection failed!\n${e.message || "No Error Code"}\n\nServer: ${colyseusEndpoint}\n\nPress R to retry`;
 			console.log(e);
-			k.wait(5, async () => {
+
+			const retry = k.onKeyPress("r", async () => {
+				retry.cancel();
 				await k.destroy(lobbyText);
-				main(name, roomCode);
+				main(name, roomCode, difficulty);
 			});
 		});
 }
 
 export function titleScreen() {
 	const tiledBackground = createTiledBackground("#000000", "#686767");
-	lobbySound = k.play("lobbyScene", {
-		loop: true,
-		paused: true,
-		volume: 0.05,
-	});
+	lobbySound = registerLoopSound(
+		k.play("lobbyScene", {
+			loop: true,
+			paused: true,
+			volume: 0.05,
+		}),
+		0.05,
+	);
 	muteButton = createMuteButton();
-	k.onClick("mute", () => {
-		if (lobbySound.paused === false) {
-			lobbySound.paused = true;
-			muteButton.use(k.color(k.RED));
-		} else {
-			lobbySound.paused = false;
-			muteButton.unuse("color");
-		}
-	});
 
 	const playOnClick = k.onClick(() => {
 		lobbySound.paused = false;
@@ -340,7 +470,14 @@ export function titleScreen() {
 	});
 }
 
-k.onLoad(() => {
+async function bootstrap() {
+	await loadAssets();
+
+	colyseusEndpoint = resolveColyseusEndpoint(await loadRuntimeConfig());
+	colyseusClient = new Colyseus.Client(colyseusEndpoint);
+
 	createFishScene();
 	titleScreen();
-});
+}
+
+bootstrap();
