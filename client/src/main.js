@@ -576,19 +576,29 @@ function showSafariWarning() {
 	headline.font = "Iosevka-Heavy";
 	headline.color = k.rgb(255, 255, 255);
 
-	const body = createNormalText(
-		k,
-		"The game engine used in this game is not recommended\n" +
-			"to be used with Safari.\n" +
-			"For the best experience, please use Chromium browsers\n" +
-			"like Edge and Chrome or Firefox.",
-		panel.pos.x,
-		panel.pos.y - 40,
-		22,
-		"safariWarning",
-		k.fixed(),
-		k.z(311),
-	);
+	const lineSpacing = 12;
+	const lineFontSize = 22;
+	const bodyLines = [
+		"The game engine used in this game is not recommended",
+		"to be used with Safari.",
+		"For the best experience, please use Chromium browsers",
+		"like Edge and Chrome or Firefox.",
+	];
+	bodyLines.forEach((line, index) => {
+		const lineText = createNormalText(
+			k,
+			line,
+			panel.pos.x,
+			panel.pos.y - 40 + index * (lineFontSize + lineSpacing),
+			lineFontSize,
+			"safariWarning",
+			k.fixed(),
+			k.z(311),
+		);
+		lineText.font = "Iosevka";
+		lineText.color = k.rgb(245, 245, 250);
+		lineText.align = "center";
+	});
 	body.font = "Iosevka";
 	body.color = k.rgb(245, 245, 250);
 	body.align = "center";
