@@ -224,6 +224,7 @@ function isAlphanumeric(str) {
 	return regex.test(str);
 }
 let tiledBackgroundN;
+let safariWarningShown = false;
 
 function showReconnectOverlay(text) {
 	hideReconnectOverlay();
@@ -511,7 +512,7 @@ export function titleScreen() {
 		playOnClick.cancel();
 	});
 
-	const hText = createNormalText(k, "Made by Orkun Kaan & Irem", k.width() / 2, k.height() * 0.05, 16, "title");
+	const hText = createNormalText(k, "Made by Jelibon", k.width() / 2, k.height() * 0.05, 16, "title");
 	hText.letterSpacing = 2;
 
 	const sText = createCoolText(k, "Reincarnation Racing", k.width() / 2, k.height() * 0.2, 80, "title");
@@ -542,6 +543,11 @@ export function titleScreen() {
 		destroyAll("title");
 		name();
 	});
+
+	if (!safariWarningShown && isSafariBrowser()) {
+		safariWarningShown = true;
+		showSafariWarning();
+	}
 }
 
 async function bootstrap() {
@@ -555,3 +561,32 @@ async function bootstrap() {
 }
 
 bootstrap();
+
+function isSafariBrowser() {
+	const ua = navigator.userAgent;
+	return /Safari/.test(ua) && !/Chrome|Chromium|Edg|OPR|Brave|CriOS/.test(ua);
+}
+
+function showSafariWarning() {
+	const overlay = k.add([k.rect(k.width(), k.height()), k.color(0, 0, 0), k.opacity(0.6), k.fixed(), k.z(300)]);
+	const title = createCoolText(k, "Safari Not Recommended", k.width() / 2, k.height() * 0.4, 48, "safariWarning", k.fixed(), k.z(310));
+	title.font = "Iosevka-Heavy";
+	const body = createNormalText(
+		k,
+		"For the best experience, please use Chrome or Firefox.",
+		k.width() / 2,
+		k.height() * 0.48,
+		20,
+		"safariWarning",
+		k.fixed(),
+		k.z(310),
+	);
+	body.font = "Iosevka-Heavy";
+	const close = k.add([k.rect(180, 48), k.pos(k.width() / 2, k.height() * 0.6), k.anchor("center"), k.area(), k.color(60, 60, 60), k.fixed(), k.z(310), "safariWarning"]);
+	const closeText = createNormalText(k, "OK", close.pos.x, close.pos.y, 20, "safariWarning", k.fixed(), k.z(311));
+	closeText.font = "Iosevka-Heavy";
+	close.onClick(() => {
+		k.destroy(overlay);
+		k.destroyAll("safariWarning");
+	});
+}
