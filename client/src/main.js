@@ -4,6 +4,26 @@ import { createCoolText, createMuteButton, createNormalText, createTiledBackgrou
 
 import { createFishScene, startPos } from "./scenes/fish";
 
+function normalizeSeatReservation(reservation) {
+	if (!reservation || reservation.room) return reservation;
+	if (!reservation.roomId || !reservation.name) return reservation;
+	return {
+		room: {
+			roomId: reservation.roomId,
+			name: reservation.name,
+			processId: reservation.processId,
+			publicAddress: reservation.publicAddress,
+		},
+		sessionId: reservation.sessionId,
+		reconnectionToken: reservation.reconnectionToken,
+	};
+}
+
+const originalConsumeSeatReservation = Colyseus.Client.prototype.consumeSeatReservation;
+Colyseus.Client.prototype.consumeSeatReservation = function consumeSeatReservation(reservation, rootSchema) {
+	return originalConsumeSeatReservation.call(this, normalizeSeatReservation(reservation), rootSchema);
+};
+
 async function loadRuntimeConfig() {
 	try {
 		const res = await fetch("./config.json", { cache: "no-store" });
