@@ -484,7 +484,7 @@ export function createRatScene() {
 						const score = createNormalText(k, `${message.loser.name} : ${message.loser.score}		-		${message.winner.name} : ${message.winner.score}`, k.width() / 2, k.height() * 0.4, 48);
 						score.font = "Iosevka-Heavy";
 
-						const next = createCoolText(k, "Get ready to reborn as a butterfly!", k.width() / 2, k.height() * 0.7, 40);
+						const next = createCoolText(k, "Get ready to be reborn as a butterfly!", k.width() / 2, k.height() * 0.7, 40);
 						next.font = "Iosevka-Heavy";
 						next.letterSpacing = 0;
 						const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.85, 56);
@@ -518,7 +518,7 @@ export function createRatScene() {
 						const score = createNormalText(k, `${message.winner.name} : ${message.winner.score}		-		${message.loser.name} : ${message.loser.score}`, k.width() / 2, k.height() * 0.4, 48);
 						score.font = "Iosevka-Heavy";
 
-						const next = createCoolText(k, "Get ready to reborn as a butterfly!", k.width() / 2, k.height() * 0.7, 40);
+						const next = createCoolText(k, "Get ready to be reborn as a butterfly!", k.width() / 2, k.height() * 0.7, 40);
 						next.font = "Iosevka-Heavy";
 						next.letterSpacing = 0;
 						const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.85, 56);
@@ -559,7 +559,7 @@ export function createRatScene() {
 					const score = createNormalText(k, `${me.name} : ${me.score}		-		${opponent.name} : ${opponent.score}`, k.width() / 2, k.height() * 0.4, 48);
 					score.font = "Iosevka-Heavy";
 
-					const next = createCoolText(k, "Get ready to reborn as a butterfly!", k.width() / 2, k.height() * 0.7, 40);
+					const next = createCoolText(k, "Get ready to be reborn as a butterfly!", k.width() / 2, k.height() * 0.7, 40);
 					next.font = "Iosevka-Heavy";
 					next.letterSpacing = 0;
 					const timer = createCoolText(k, "5", k.width() / 2, k.height() * 0.85, 56);
