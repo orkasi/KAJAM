@@ -11,7 +11,7 @@ import basicAuth from "express-basic-auth";
  */
 import { MyRoom } from "./rooms/MyRoom.js";
 
-export default config.default({
+export default config({
 	initializeGameServer: (gameServer) => {
 		/**
 		 * Define your room handlers:
