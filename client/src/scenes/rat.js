@@ -154,6 +154,7 @@ export function createRatScene() {
 		}
 		addGround();
 
+		let nameText = null;
 		killRoom.push(
 			room.state.players.onAdd((player, sessionId) => {
 				if (opponent === null) {
@@ -208,6 +209,8 @@ export function createRatScene() {
 								}
 							}),
 						);
+					} else if (player?.name && nameText) {
+						nameText.text = player.name;
 					}
 				}
 			}),
@@ -238,7 +241,8 @@ export function createRatScene() {
 			{ stunTime: 0 },
 			"player",
 		]);
-		createCoolText(cPlayer, room.state.players.get(room.sessionId).name, 0, -cPlayer.height, 15);
+		const me = room.state.players.get(room.sessionId);
+		nameText = createCoolText(cPlayer, me?.name || "You", 0, -cPlayer.height, 15);
 
 		const moveSendInterval = 1 / MOVE_SEND_HZ;
 		let moveSendElapsed = 0;
@@ -516,6 +520,7 @@ export function createRatScene() {
 		k.onCollide("finish", "player", () => {
 			if (cPlayer.stunTime === opponent.stunTime) {
 				const me = room.state.players.get(room.sessionId);
+				if (!me) return;
 				const opponent = opponentP;
 				k.scene("DRAW", async () => {
 					const tiledBackground = createTiledBackground("#A98BC7", "#8F76B8");

@@ -183,8 +183,15 @@ export function createMatchHud(room, { roomCode = "nocode", difficulty = "casual
 
 	const copyStatus = container.add([k.text("", { size: 14, font: "Iosevka" }), k.pos(60, 24), k.anchor("topleft")]);
 
+	const formatDifficulty = (value) => {
+		const normalized = value === "sweaty" ? "competitive" : value;
+		if (normalized === "casual") return "Casual";
+		if (normalized === "competitive") return "Competitive";
+		return normalized || "Casual";
+	};
+
 	let lastDifficulty = difficulty;
-	const difficultyText = container.add([k.text(`Difficulty: ${difficulty}`, { size: 16, font: "Iosevka-Heavy" }), k.pos(0, 48), k.anchor("topleft")]);
+	const difficultyText = container.add([k.text(`Difficulty: ${formatDifficulty(difficulty)}`, { size: 16, font: "Iosevka-Heavy" }), k.pos(0, 48), k.anchor("topleft")]);
 
 	const youText = container.add([k.text("You: Not Ready", { size: 16, font: "Iosevka" }), k.pos(0, 72), k.anchor("topleft")]);
 	const oppText = container.add([k.text("Opponent: Waiting...", { size: 16, font: "Iosevka" }), k.pos(0, 92), k.anchor("topleft")]);
@@ -213,7 +220,7 @@ export function createMatchHud(room, { roomCode = "nocode", difficulty = "casual
 		const effectiveDifficulty = room?.state?.difficulty || lastDifficulty;
 		if (effectiveDifficulty !== lastDifficulty) {
 			lastDifficulty = effectiveDifficulty;
-			difficultyText.text = `Difficulty: ${effectiveDifficulty}`;
+			difficultyText.text = `Difficulty: ${formatDifficulty(effectiveDifficulty)}`;
 		}
 		const me = room.state.players.get(room.sessionId);
 		if (me) {
@@ -230,7 +237,7 @@ export function createMatchHud(room, { roomCode = "nocode", difficulty = "casual
 	return {
 		updateDifficulty: (value) => {
 			lastDifficulty = value;
-			difficultyText.text = `Difficulty: ${value}`;
+			difficultyText.text = `Difficulty: ${formatDifficulty(value)}`;
 		},
 		updateRoomCode: (value) => {
 			const label = value && value !== "nocode" ? `Room: ${value}` : "Room: Public";
@@ -245,7 +252,8 @@ export function createMatchHud(room, { roomCode = "nocode", difficulty = "casual
 }
 
 export function setMatchContext({ roomCode = "nocode", difficulty = "casual" } = {}) {
-	matchContext = { roomCode, difficulty };
+	const normalizedDifficulty = difficulty === "sweaty" ? "competitive" : difficulty;
+	matchContext = { roomCode, difficulty: normalizedDifficulty };
 }
 
 export function getMatchContext() {

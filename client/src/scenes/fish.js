@@ -88,6 +88,7 @@ export function createFishScene() {
 		}
 		fishTutorialBackground();
 
+		let nameText = null;
 		killRoom.push(
 			room.state.players.onAdd((player, sessionId) => {
 				if (!startO) {
@@ -110,6 +111,8 @@ export function createFishScene() {
 								players[0].pos.x += (players[0].pos.x + FISHSPEED - players[0].pos.x) * 12 * k.dt();
 							}
 						});
+					} else if (player?.name && nameText) {
+						nameText.text = player.name;
 					}
 				}
 			}),
@@ -128,7 +131,8 @@ export function createFishScene() {
 
 		const cPlayer = k.add([k.sprite("sukomi"), k.pos(startPos), k.body(), k.anchor("center"), k.rotate(), k.z(2), k.area(), k.timer(), k.opacity(1), "player"]);
 
-		createCoolText(cPlayer, room.state.players.get(room.sessionId).name, 0, -cPlayer.height, 15);
+		const me = room.state.players.get(room.sessionId);
+		nameText = createCoolText(cPlayer, me?.name || "You", 0, -cPlayer.height, 15);
 
 		const moveSendInterval = 1 / MOVE_SEND_HZ;
 		let moveSendElapsed = 0;
@@ -387,6 +391,7 @@ export function createFishScene() {
 			if (opponentStunTime === stunTime) {
 				createRatScene();
 				const me = room.state.players.get(room.sessionId);
+				if (!me) return;
 				const opponent = players[1];
 				k.scene("DRAW", async () => {
 					const tiledBackground = createTiledBackground("#89C3E0", "#6FAFD4");

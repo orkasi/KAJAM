@@ -60,6 +60,12 @@ let currentDifficulty = "casual";
 let reconnecting = false;
 let reconnectOverlay = null;
 
+function normalizeDifficulty(value) {
+	if (value === "sweaty") return "competitive";
+	if (value === "competitive" || value === "casual") return value;
+	return value || "casual";
+}
+
 async function loadAssets() {
 	k.loadRoot(".");
 
@@ -334,8 +340,8 @@ async function selectDifficulty(nameT, roomCode) {
 	askDifficulty.font = "Iosevka-Heavy";
 	const casualText = createNormalText(k, "1 - Casual", k.width() / 2, k.height() * 0.45, 40, "destroyD");
 	casualText.font = "Iosevka-Heavy";
-	const sweatyText = createNormalText(k, "2 - Sweaty", k.width() / 2, k.height() * 0.6, 40, "destroyD");
-	sweatyText.font = "Iosevka-Heavy";
+	const competitiveText = createNormalText(k, "2 - Competitive", k.width() / 2, k.height() * 0.6, 40, "destroyD");
+	competitiveText.font = "Iosevka-Heavy";
 
 	const choose = (difficulty) => {
 		destroyAll("destroyD");
@@ -348,10 +354,10 @@ async function selectDifficulty(nameT, roomCode) {
 		choose("casual");
 	});
 
-	const pickSweaty = k.onKeyPress(["2", "s"], () => {
+	const pickSweaty = k.onKeyPress(["2", "p", "s"], () => {
 		pickCasual.cancel();
 		pickSweaty.cancel();
-		choose("sweaty");
+		choose("competitive");
 	});
 }
 
@@ -369,7 +375,7 @@ function moveToSceneForRoom(room) {
 function attachRoomHandlers(room) {
 	room.onMessage("difficulty", (difficulty) => {
 		if (typeof difficulty === "string") {
-			currentDifficulty = difficulty;
+			currentDifficulty = normalizeDifficulty(difficulty);
 			setMatchContext({ roomCode: currentRoomCode, difficulty: currentDifficulty });
 		}
 	});
@@ -418,7 +424,7 @@ async function main(name, roomCode = "nocode", difficulty = "casual") {
 
 			k.wait(1, async () => {
 				currentRoomCode = roomCode;
-				currentDifficulty = room.state?.difficulty || difficulty;
+				currentDifficulty = normalizeDifficulty(room.state?.difficulty || difficulty);
 				setMatchContext({ roomCode, difficulty: currentDifficulty });
 				setReconnectEnabled(true);
 				attachRoomHandlers(room);

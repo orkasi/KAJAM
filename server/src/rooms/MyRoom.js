@@ -6,6 +6,7 @@ const DEFAULT_DIFFICULTY = "casual";
 
 const DIFFICULTY_PRESETS = {
 	casual: { spawnIntervalMultiplier: 1.25, durationMultiplier: 1.1 },
+	competitive: { spawnIntervalMultiplier: 0.8, durationMultiplier: 0.9 },
 	sweaty: { spawnIntervalMultiplier: 0.8, durationMultiplier: 0.9 },
 };
 
@@ -16,6 +17,7 @@ const GAME_MODES = {
 };
 
 function resolveDifficulty(value) {
+	if (value === "sweaty") return "competitive";
 	return Object.prototype.hasOwnProperty.call(DIFFICULTY_PRESETS, value) ? value : DEFAULT_DIFFICULTY;
 }
 

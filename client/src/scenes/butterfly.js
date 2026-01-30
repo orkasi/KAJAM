@@ -169,6 +169,7 @@ export function createButterflyScene() {
 		addGround();
 		addCeiling();
 
+		let nameText = null;
 		killRoom.push(
 			room.state.players.onAdd((player, sessionId) => {
 				if (opponent === null) {
@@ -222,6 +223,8 @@ export function createButterflyScene() {
 						opponent.onStateUpdate("move", () => {
 							opponent.pos.x += (opponent.pos.x + BUTTERFLYSPEED - opponent.pos.x) * 12 * k.dt();
 						});
+					} else if (player?.name && nameText) {
+						nameText.text = player.name;
 					}
 				}
 			}),
@@ -253,7 +256,8 @@ export function createButterflyScene() {
 			{ stunTime: 0, onTransition: false, onWhere: "ground" },
 			"player",
 		]);
-		createCoolText(cPlayer, room.state.players.get(room.sessionId).name, 0, -cPlayer.height, 15);
+		const me = room.state.players.get(room.sessionId);
+		nameText = createCoolText(cPlayer, me?.name || "You", 0, -cPlayer.height, 15);
 
 		const moveSendInterval = 1 / MOVE_SEND_HZ;
 		let moveSendElapsed = 0;
@@ -582,6 +586,7 @@ export function createButterflyScene() {
 			if (cPlayer.stunTime === opponent.stunTime) {
 				createEndScene();
 				const me = room.state.players.get(room.sessionId);
+				if (!me) return;
 				const opponent = opponentP;
 				k.scene("DRAW", async () => {
 					const tiledBackground = createTiledBackground("#D7A8C9", "#C48BB2");
