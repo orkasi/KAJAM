@@ -9,7 +9,7 @@ FROM node:22-slim AS server
 WORKDIR /app
 RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
 COPY server/package*.json server/
-RUN npm --prefix server ci --omit=dev
+RUN npm --prefix server install --omit=dev --legacy-peer-deps
 COPY server/ server/
 COPY --from=client-build /app/client/dist /app/client/dist
 
