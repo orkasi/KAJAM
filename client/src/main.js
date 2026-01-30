@@ -569,14 +569,18 @@ function isSafariBrowser() {
 
 function showSafariWarning() {
 	const overlay = k.add([k.rect(k.width(), k.height()), k.color(0, 0, 0), k.opacity(0.7), k.fixed(), k.z(300)]);
-	const panel = k.add([k.rect(640, 300, { radius: 16 }), k.pos(k.width() / 2, k.height() / 2), k.anchor("center"), k.color(18, 18, 22), k.fixed(), k.z(310), "safariWarning"]);
+	const panel = k.add([k.rect(760, 320, { radius: 16 }), k.pos(k.width() / 2, k.height() / 2), k.anchor("center"), k.color(18, 18, 22), k.fixed(), k.z(310), "safariWarning"]);
 	panel.add([k.outline(2, k.rgb(80, 80, 90))]);
+
+	const headline = createCoolText(k, "Looks like you are using Safari.", panel.pos.x, panel.pos.y - 90, 28, "safariWarning", k.fixed(), k.z(311));
+	headline.font = "Iosevka-Heavy";
+	headline.color = k.rgb(255, 255, 255);
 
 	const body = createNormalText(
 		k,
-		"Looks like you are using Safari.\nThe game engine used in this game is not recommended to be used with Safari.\nFor the best experience, please use Chromium browsers like Edge and Chrome or Firefox.",
+		"The game engine used in this game is not recommended to be used with Safari.\nFor the best experience, please use Chromium browsers like Edge and Chrome or Firefox.",
 		panel.pos.x,
-		panel.pos.y - 10,
+		panel.pos.y - 20,
 		16,
 		"safariWarning",
 		k.fixed(),
