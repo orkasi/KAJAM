@@ -59,6 +59,7 @@ let currentRoomCode = "nocode";
 let currentDifficulty = "casual";
 let reconnecting = false;
 let reconnectOverlay = null;
+let enteredScene = false;
 
 function normalizeDifficulty(value) {
 	if (value === "competitive" || value === "casual") return value;
@@ -236,6 +237,11 @@ function hideReconnectOverlay() {
 	}
 	k.destroyAll("reconnectOverlay");
 }
+
+function showFatalOverlay(text) {
+	const overlayText = createNormalText(k, text, k.width() / 2, k.height() / 2, 24, "fatalOverlay", k.fixed(), k.z(200));
+	overlayText.font = "Iosevka-Heavy";
+}
 async function name() {
 	tiledBackgroundN = createTiledBackground("#9982e8", "#8465ec");
 
@@ -380,6 +386,7 @@ function attachRoomHandlers(room) {
 	});
 
 	room.onLeave(() => {
+		if (!enteredScene) return;
 		if (!getReconnectEnabled()) return;
 		void attemptReconnect(room);
 	});
@@ -398,6 +405,7 @@ async function attemptReconnect(previousRoom) {
 		setReconnectEnabled(true);
 		attachRoomHandlers(reconnected);
 		setMatchContext({ roomCode: currentRoomCode, difficulty: currentDifficulty });
+		enteredScene = true;
 		moveToSceneForRoom(reconnected);
 	} catch (err) {
 		reconnecting = false;
@@ -414,6 +422,7 @@ async function main(name, roomCode = "nocode", difficulty = "casual") {
 		colyseusEndpoint = resolveColyseusEndpoint(await loadRuntimeConfig());
 		colyseusClient = new Colyseus.Client(colyseusEndpoint);
 	}
+	enteredScene = false;
 
 	const lobbyText = createCoolText(k, "Connecting...", k.width() / 2, k.height() / 2, 48);
 	await colyseusClient
@@ -421,13 +430,8 @@ async function main(name, roomCode = "nocode", difficulty = "casual") {
 		.then((room) => {
 			lobbyText.text = "Connected!";
 
-			k.wait(1, async () => {
-				let entered = false;
-				let addHandler = null;
-
+			setTimeout(() => {
 				const enterRoom = () => {
-					if (entered) return;
-					entered = true;
 					currentRoomCode = roomCode;
 					currentDifficulty = normalizeDifficulty(room.state?.difficulty || difficulty);
 					setMatchContext({ roomCode, difficulty: currentDifficulty });
@@ -437,41 +441,17 @@ async function main(name, roomCode = "nocode", difficulty = "casual") {
 					k.destroy(tiledBackgroundN);
 					if (lobbySound) lobbySound.stop();
 					if (muteButton) destroy(muteButton);
-					moveToSceneForRoom(room);
-				};
-
-				const tryEnter = () => {
-					const players = room.state?.players;
-					if (!players) return false;
-					if (!players.get(room.sessionId)) return false;
-					enterRoom();
-					return true;
-				};
-
-				if (tryEnter()) {
-					return;
-				}
-
-				const fallback = setTimeout(() => {
-					enterRoom();
-				}, 2000);
-
-				room.onStateChange.once(() => {
-					if (tryEnter()) {
-						clearTimeout(fallback);
-						if (addHandler) addHandler();
-						return;
+					try {
+						enteredScene = true;
+						moveToSceneForRoom(room);
+					} catch (err) {
+						console.error("Scene init failed", err);
+						showFatalOverlay(`Scene init failed: ${err?.message || err}`);
 					}
-					const players = room.state?.players;
-					if (!players) return;
-					addHandler = players.onAdd((player, sessionId) => {
-						if (sessionId !== room.sessionId) return;
-						clearTimeout(fallback);
-						enterRoom();
-						if (addHandler) addHandler();
-					});
-				});
-			});
+				};
+
+				enterRoom();
+			}, 0);
 		})
 		.catch((e) => {
 			lobbyText.text = `Connection failed!\n${e.message || "No Error Code"}\n\nServer: ${colyseusEndpoint}\n\nPress R to retry`;

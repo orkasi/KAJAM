@@ -7,8 +7,8 @@ export const startPos = k.vec2(k.width() / 2, k.height() / 2);
 const FISHSPEED = 50;
 const MOVE_SEND_HZ = 20;
 
-export function createFishScene() {
-	k.scene("fish", (room) => {
+	export function createFishScene() {
+		k.scene("fish", (room) => {
 		const fishSound = registerLoopSound(
 			k.play("fishScene", {
 				loop: false,
@@ -20,6 +20,8 @@ export function createFishScene() {
 		k.setBackground(rgb(90, 108, 230));
 		createMuteButton();
 		const hud = createMatchHud(room, getMatchContext());
+		const waitForSelf = createNormalText(k, "Syncing player...", k.width() / 2, k.height() * 0.15, 24, "waitForSelf", k.fixed(), k.z(120));
+		waitForSelf.font = "Iosevka-Heavy";
 
 		const players = {};
 		const killRoom = [];
@@ -115,6 +117,9 @@ export function createFishScene() {
 						nameText.text = player.name;
 					}
 				}
+				if (sessionId === room.sessionId && waitForSelf) {
+					k.destroy(waitForSelf);
+				}
 			}),
 		);
 
@@ -133,6 +138,9 @@ export function createFishScene() {
 
 		const me = room.state.players.get(room.sessionId);
 		nameText = createCoolText(cPlayer, me?.name || "You", 0, -cPlayer.height, 15);
+		if (me && waitForSelf) {
+			k.destroy(waitForSelf);
+		}
 
 		const moveSendInterval = 1 / MOVE_SEND_HZ;
 		let moveSendElapsed = 0;

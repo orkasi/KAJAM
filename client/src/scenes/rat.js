@@ -27,6 +27,8 @@ export function createRatScene() {
 		k.setGravity(1750);
 		createMuteButton();
 		const hud = createMatchHud(room, getMatchContext());
+		const waitForSelf = createNormalText(k, "Syncing player...", k.width() / 2, k.height() * 0.15, 24, "waitForSelf", k.fixed(), k.z(120));
+		waitForSelf.font = "Iosevka-Heavy";
 
 		function ratKeyBackground() {
 			const ratMoveRect = createTutorialRect(k.width() * 0.8, k.height() * 0.25, k.width() * 0.28, k.height() * 0.27, rgb(144, 129, 214), rgb(89, 47, 146), rgb(100, 72, 169), rgb(118, 100, 192));
@@ -213,6 +215,9 @@ export function createRatScene() {
 						nameText.text = player.name;
 					}
 				}
+				if (sessionId === room.sessionId && waitForSelf) {
+					k.destroy(waitForSelf);
+				}
 			}),
 		);
 
@@ -243,6 +248,9 @@ export function createRatScene() {
 		]);
 		const me = room.state.players.get(room.sessionId);
 		nameText = createCoolText(cPlayer, me?.name || "You", 0, -cPlayer.height, 15);
+		if (me && waitForSelf) {
+			k.destroy(waitForSelf);
+		}
 
 		const moveSendInterval = 1 / MOVE_SEND_HZ;
 		let moveSendElapsed = 0;

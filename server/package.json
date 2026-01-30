@@ -28,10 +28,9 @@
 		"rimraf": "^5.0.0"
 	},
 	"dependencies": {
-		"@colyseus/monitor": "^0.15.0",
-		"@colyseus/tools": "^0.17.16",
-		"@colyseus/ws-transport": "^0.17.8",
-		"colyseus": "^0.17.8",
+		"@colyseus/monitor": "^0.16.7",
+		"@colyseus/ws-transport": "^0.16.5",
+		"colyseus": "^0.16.5",
 		"express": "^4.18.2",
 		"express-basic-auth": "^1.2.1"
 	}

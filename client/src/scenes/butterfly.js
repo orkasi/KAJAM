@@ -29,6 +29,8 @@ export function createButterflyScene() {
 
 		createMuteButton();
 		const hud = createMatchHud(room, getMatchContext());
+		const waitForSelf = createNormalText(k, "Syncing player...", k.width() / 2, k.height() * 0.15, 24, "waitForSelf", k.fixed(), k.z(120));
+		waitForSelf.font = "Iosevka-Heavy";
 
 		function butterflyKeyBackground() {
 			const butterflyMoveRect = createTutorialRect(k.width() * 0.8, k.height() * 0.25, k.width() * 0.28, k.height() * 0.23, rgb(165, 225, 183), rgb(104, 178, 129), rgb(117, 190, 141), rgb(137, 204, 158));
@@ -227,6 +229,9 @@ export function createButterflyScene() {
 						nameText.text = player.name;
 					}
 				}
+				if (sessionId === room.sessionId && waitForSelf) {
+					k.destroy(waitForSelf);
+				}
 			}),
 		);
 
@@ -258,6 +263,9 @@ export function createButterflyScene() {
 		]);
 		const me = room.state.players.get(room.sessionId);
 		nameText = createCoolText(cPlayer, me?.name || "You", 0, -cPlayer.height, 15);
+		if (me && waitForSelf) {
+			k.destroy(waitForSelf);
+		}
 
 		const moveSendInterval = 1 / MOVE_SEND_HZ;
 		let moveSendElapsed = 0;
