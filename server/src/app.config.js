@@ -68,9 +68,8 @@ export default config({
 				users: { [monitorUser]: monitorPass },
 				challenge: true,
 			});
-			// Serve the monitor at both /monitor and /colyseus for compatibility.
+			// Serve the monitor only at /monitor.
 			app.use("/monitor", basicAuthMiddleware, monitor());
-			app.use("/colyseus", basicAuthMiddleware, monitor());
 		}
 	},
 
