@@ -1,5 +1,5 @@
 import { k } from "../init";
-import { bindPlayers, createCoolText, createMatchHud, createMuteButton, createNormalText, createTiledBackground, createTutorialRect, getMatchContext, getPlayer, goScene, overlay, playSound, registerLoopSound, tweenFunc } from "../utils";
+import { bindPlayers, createCoolText, createMuteButton, createNormalText, createTiledBackground, createTutorialRect, getPlayer, getPlayersSnapshot, goScene, overlay, playSound, registerLoopSound, tweenFunc } from "../utils";
 import { createLeaveScene } from "./leave";
 import { createRatScene } from "./rat";
 
@@ -19,7 +19,6 @@ const MOVE_SEND_HZ = 20;
 		);
 		k.setBackground(rgb(90, 108, 230));
 		createMuteButton();
-		const hud = createMatchHud(room, getMatchContext());
 		const waitForSelf = createNormalText(k, "Syncing player...", k.width() / 2, k.height() * 0.15, 24, "waitForSelf", k.fixed(), k.z(120));
 		waitForSelf.font = "Iosevka-Heavy";
 
@@ -161,7 +160,27 @@ const MOVE_SEND_HZ = 20;
 		k.onKeyPress(["down", "s"], () => (downPressed = true));
 		k.onKeyRelease(["down", "s"], () => (downPressed = false));
 
-		const readyText = createCoolText(k, "Press space to get ready", k.width() * 0.85, k.height() / 2, 50);
+		const readyText = createCoolText(k, "Press space to get ready", k.width() / 2, k.height() / 2, 50);
+		const updateReadyStatus = () => {
+			if (hasStarted) return;
+			const me = getPlayer(room, room.sessionId);
+			const players = getPlayersSnapshot(room);
+			let opponent = null;
+			for (const [id, player] of players) {
+				if (id !== room.sessionId) {
+					opponent = player;
+					break;
+				}
+			}
+			if (me?.ready) {
+				readyText.text = "You are ready";
+			} else if (opponent?.ready) {
+				readyText.text = "Opponent is ready";
+			} else {
+				readyText.text = "Press space to get ready";
+			}
+		};
+		sceneLoops.push(k.loop(0.2, updateReadyStatus));
 
 		const startCountdown = async (startAt) => {
 			let remaining = 3;
@@ -198,7 +217,6 @@ const MOVE_SEND_HZ = 20;
 		const readyKey = k.onKeyPress("space", () => {
 			if (hasStarted) return;
 			readyKey.cancel();
-			readyText.text = "Ready";
 			room.send("ready");
 		});
 
@@ -502,7 +520,6 @@ const MOVE_SEND_HZ = 20;
 		k.onSceneLeave(() => {
 			sceneLoops.forEach((loop) => loop.cancel());
 			if (rectLoop) rectLoop.cancel();
-			if (hud) hud.destroy();
 			killRoom.forEach((kill) => kill());
 		});
 	});

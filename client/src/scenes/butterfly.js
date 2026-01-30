@@ -1,5 +1,5 @@
 import { k } from "../init";
-import { bindPlayers, createCoolText, createMatchHud, createMuteButton, createNormalText, createTiledBackground, createTutorialRect, getMatchContext, getPlayer, goScene, overlay, playSound, registerLoopSound, tweenFunc } from "../utils";
+import { bindPlayers, createCoolText, createMuteButton, createNormalText, createTiledBackground, createTutorialRect, getPlayer, getPlayersSnapshot, goScene, overlay, playSound, registerLoopSound, tweenFunc } from "../utils";
 import { createEndScene } from "./end";
 import { createLeaveScene } from "./leave";
 
@@ -28,7 +28,6 @@ export function createButterflyScene() {
 		k.setBackground(rgb(91, 166, 117));
 
 		createMuteButton();
-		const hud = createMatchHud(room, getMatchContext());
 		const waitForSelf = createNormalText(k, "Syncing player...", k.width() / 2, k.height() * 0.15, 24, "waitForSelf", k.fixed(), k.z(120));
 		waitForSelf.font = "Iosevka-Heavy";
 
@@ -376,7 +375,27 @@ export function createButterflyScene() {
 			const dampedCamX = k.lerp(k.camPos().x, targetCamX, 3 * k.dt());
 			k.camPos(k.vec2(dampedCamX, k.height() / 2));
 		});
-		const readyText = createCoolText(k, "Press space to get ready", k.width() * 0.85, k.height() / 2, 50);
+		const readyText = createCoolText(k, "Press space to get ready", k.width() / 2, k.height() / 2, 50);
+		const updateReadyStatus = () => {
+			if (hasStarted) return;
+			const me = getPlayer(room, room.sessionId);
+			const players = getPlayersSnapshot(room);
+			let opponentPlayer = null;
+			for (const [id, player] of players) {
+				if (id !== room.sessionId) {
+					opponentPlayer = player;
+					break;
+				}
+			}
+			if (me?.ready) {
+				readyText.text = "You are ready";
+			} else if (opponentPlayer?.ready) {
+				readyText.text = "Opponent is ready";
+			} else {
+				readyText.text = "Press space to get ready";
+			}
+		};
+		sceneLoops.push(k.loop(0.2, updateReadyStatus));
 
 		const startCountdown = async (startAt) => {
 			let remaining = 3;
@@ -415,7 +434,6 @@ export function createButterflyScene() {
 		const readyKey = k.onKeyPress("space", () => {
 			if (hasStarted) return;
 			readyKey.cancel();
-			readyText.text = "Ready";
 			room.send("readyButterfly");
 		});
 
@@ -641,7 +659,6 @@ export function createButterflyScene() {
 		k.onSceneLeave(() => {
 			rectLoops.forEach((loop) => loop.cancel());
 			sceneLoops.forEach((loop) => loop.cancel());
-			if (hud) hud.destroy();
 			killRoom.forEach((kill) => kill());
 		});
 	});
