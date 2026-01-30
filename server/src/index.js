@@ -65,16 +65,20 @@ if (monitorEnabled) {
 
 const server = http.createServer(app);
 const gameServer = new Server({
-	transport: new WebSocketTransport({
-		server,
-	}),
+	transport: new WebSocketTransport({ server }),
 });
 
 gameServer.define("my_room", MyRoom).filterBy(["code"]);
 
-server.listen(port, () => {
-	console.log(`⚔️  Listening on http://localhost:${port}`);
-	if (!isProduction) {
-		console.log("Environment:", process.env.NODE_ENV);
-	}
-});
+gameServer
+	.listen(port)
+	.then(() => {
+		console.log(`⚔️  Listening on http://localhost:${port}`);
+		if (!isProduction) {
+			console.log("Environment:", process.env.NODE_ENV);
+		}
+	})
+	.catch((err) => {
+		console.error("Failed to start server", err);
+		process.exit(1);
+	});
