@@ -569,10 +569,10 @@ function isSafariBrowser() {
 
 function showSafariWarning() {
 	const overlay = k.add([k.rect(k.width(), k.height()), k.color(0, 0, 0), k.opacity(0.7), k.fixed(), k.z(300)]);
-	const panel = k.add([k.rect(820, 360, { radius: 18 }), k.pos(k.width() / 2, k.height() / 2), k.anchor("center"), k.color(22, 22, 28), k.fixed(), k.z(310), "safariWarning"]);
-	panel.add([k.outline(2, k.rgb(90, 90, 105))]);
+	const panel = k.add([k.rect(980, 440, { radius: 20 }), k.pos(k.width() / 2, k.height() / 2), k.anchor("center"), k.color(24, 24, 30), k.fixed(), k.z(310), "safariWarning"]);
+	panel.add([k.outline(2, k.rgb(95, 95, 115))]);
 
-	const headline = createCoolText(k, "Looks like you are using Safari.", panel.pos.x, panel.pos.y - 110, 30, "safariWarning", k.fixed(), k.z(311));
+	const headline = createCoolText(k, "Looks like you are using Safari.", panel.pos.x, panel.pos.y - 150, 36, "safariWarning", k.fixed(), k.z(311));
 	headline.font = "Iosevka-Heavy";
 	headline.color = k.rgb(255, 255, 255);
 
@@ -583,18 +583,18 @@ function showSafariWarning() {
 			"For the best experience, please use Chromium browsers\n" +
 			"like Edge and Chrome or Firefox.",
 		panel.pos.x,
-		panel.pos.y - 20,
-		18,
+		panel.pos.y - 40,
+		22,
 		"safariWarning",
 		k.fixed(),
 		k.z(311),
 	);
-	body.font = "Iosevka-Heavy";
-	body.color = k.rgb(240, 240, 245);
+	body.font = "Iosevka";
+	body.color = k.rgb(245, 245, 250);
 	body.align = "center";
 
-	const close = k.add([k.rect(200, 52, { radius: 12 }), k.pos(panel.pos.x, panel.pos.y + 115), k.anchor("center"), k.area(), k.color(70, 70, 75), k.fixed(), k.z(312), "safariWarning"]);
-	const closeText = createNormalText(k, "OK", close.pos.x, close.pos.y, 22, "safariWarning", k.fixed(), k.z(313));
+	const close = k.add([k.rect(240, 60, { radius: 14 }), k.pos(panel.pos.x, panel.pos.y + 150), k.anchor("center"), k.area(), k.color(70, 70, 78), k.fixed(), k.z(312), "safariWarning"]);
+	const closeText = createNormalText(k, "OK", close.pos.x, close.pos.y, 24, "safariWarning", k.fixed(), k.z(313));
 	closeText.font = "Iosevka-Heavy";
 	closeText.color = k.rgb(245, 245, 245);
 	close.onClick(() => {
