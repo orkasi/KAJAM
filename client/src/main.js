@@ -568,23 +568,32 @@ function isSafariBrowser() {
 }
 
 function showSafariWarning() {
-	const overlay = k.add([k.rect(k.width(), k.height()), k.color(0, 0, 0), k.opacity(0.6), k.fixed(), k.z(300)]);
-	const title = createCoolText(k, "Safari Not Recommended", k.width() / 2, k.height() * 0.4, 48, "safariWarning", k.fixed(), k.z(310));
+	const overlay = k.add([k.rect(k.width(), k.height()), k.color(0, 0, 0), k.opacity(0.7), k.fixed(), k.z(300)]);
+	const panel = k.add([k.rect(520, 280, { radius: 16 }), k.pos(k.width() / 2, k.height() / 2), k.anchor("center"), k.color(18, 18, 22), k.fixed(), k.z(310), "safariWarning"]);
+	panel.add([k.outline(2, k.rgb(80, 80, 90))]);
+
+	const title = createCoolText(k, "Safari Notice", panel.pos.x, panel.pos.y - 90, 40, "safariWarning", k.fixed(), k.z(311));
 	title.font = "Iosevka-Heavy";
+	title.color = k.rgb(255, 203, 82);
+
 	const body = createNormalText(
 		k,
-		"For the best experience, please use Chrome or Firefox.",
-		k.width() / 2,
-		k.height() * 0.48,
-		20,
+		"Looks like you are using Safari.\nThe game engine used in this game is not recommended to be used with Safari.\nFor the best experience, please use Chromium browsers like Edge and Chrome or Firefox.",
+		panel.pos.x,
+		panel.pos.y - 10,
+		18,
 		"safariWarning",
 		k.fixed(),
-		k.z(310),
+		k.z(311),
 	);
 	body.font = "Iosevka-Heavy";
-	const close = k.add([k.rect(180, 48), k.pos(k.width() / 2, k.height() * 0.6), k.anchor("center"), k.area(), k.color(60, 60, 60), k.fixed(), k.z(310), "safariWarning"]);
-	const closeText = createNormalText(k, "OK", close.pos.x, close.pos.y, 20, "safariWarning", k.fixed(), k.z(311));
+	body.color = k.rgb(230, 230, 235);
+	body.align = "center";
+
+	const close = k.add([k.rect(180, 48, { radius: 10 }), k.pos(panel.pos.x, panel.pos.y + 85), k.anchor("center"), k.area(), k.color(60, 60, 60), k.fixed(), k.z(312), "safariWarning"]);
+	const closeText = createNormalText(k, "OK", close.pos.x, close.pos.y, 20, "safariWarning", k.fixed(), k.z(313));
 	closeText.font = "Iosevka-Heavy";
+	closeText.color = k.rgb(245, 245, 245);
 	close.onClick(() => {
 		k.destroy(overlay);
 		k.destroyAll("safariWarning");
