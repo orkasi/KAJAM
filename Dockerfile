@@ -7,6 +7,7 @@ RUN npm --prefix client run build
 
 FROM node:22-slim AS server
 WORKDIR /app
+RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
 COPY server/package*.json server/
 RUN npm --prefix server ci --omit=dev
 COPY server/ server/
