@@ -21,9 +21,6 @@
 	},
 	"homepage": "https://github.com/colyseus/create-colyseus#readme",
 	"devDependencies": {
-		"@colyseus/cloud": "^1.0.7",
-		"@colyseus/loadtest": "^0.15.0",
-		"@colyseus/testing": "^0.17.11",
 		"mocha": "^10.2.0",
 		"rimraf": "^5.0.0"
 	},
