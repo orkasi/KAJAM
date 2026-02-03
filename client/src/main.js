@@ -64,9 +64,7 @@ let enteredScene = false;
 let stateOverlay = null;
 
 let assetStatusText = null;
-let backgroundProgress = null;
 let soundProgress = null;
-let backgroundLoadPromise = null;
 let soundLoadPromise = null;
 let lobbyMusicArmed = false;
 
@@ -87,14 +85,13 @@ function showBootLoader() {
 }
 
 function refreshAssetStatus() {
-	const active = soundProgress ?? backgroundProgress;
-	if (!active) {
+	if (!soundProgress) {
 		if (assetStatusText) k.destroy(assetStatusText);
 		assetStatusText = null;
 		return;
 	}
-	const pct = active.total ? Math.round((active.done / active.total) * 100) : 0;
-	const label = soundProgress ? `Loading audio... ${pct}%` : `Loading assets... ${pct}%`;
+	const pct = soundProgress.total ? Math.round((soundProgress.done / soundProgress.total) * 100) : 0;
+	const label = `Loading audio... ${pct}%`;
 	if (!assetStatusText) {
 		assetStatusText = k.add([
 			k.text(label, { size: 16, font: "Iosevka" }),
@@ -111,25 +108,10 @@ function refreshAssetStatus() {
 async function loadCoreAssets() {
 	const boot = showBootLoader();
 	k.loadRoot(".");
-	await loadAssetGroups(["core"], {
+	await loadAssetGroups(["core", "uiControls", "fish", "rat", "butterfly", "sounds"], {
 		onProgress: (done, total) => boot.update(done, total),
 	});
 	boot.destroy();
-}
-
-function startBackgroundAssetStreaming() {
-	if (backgroundLoadPromise) return backgroundLoadPromise;
-	const groups = ["uiControls", "fish", "rat", "butterfly"];
-	backgroundLoadPromise = loadAssetGroups(groups, {
-		onProgress: (done, total) => {
-			backgroundProgress = { done, total };
-			refreshAssetStatus();
-		},
-	}).finally(() => {
-		backgroundProgress = null;
-		refreshAssetStatus();
-	});
-	return backgroundLoadPromise;
 }
 
 function ensureSoundAssets() {
@@ -545,7 +527,6 @@ async function bootstrap() {
 	createFishScene();
 	createLeaveScene();
 	titleScreen();
-	startBackgroundAssetStreaming();
 }
 
 bootstrap();
