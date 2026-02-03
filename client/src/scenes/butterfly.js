@@ -6,8 +6,8 @@ import { createLeaveScene } from "./leave";
 export const startPos = k.vec2(k.width() / 2, k.height() - 120);
 
 const BUTTERFLYSPEED = 75;
-const MOVE_SEND_HZ = 30;
-const FAST_INTERP_DELAY_MS = 50;
+const MOVE_SEND_HZ = 60;
+const FAST_INTERP_DELAY_MS = 10;
 const FAST_FALLBACK_MS = 500;
 
 export function createButterflyScene() {
@@ -214,9 +214,16 @@ export function createButterflyScene() {
 								const sample = opponentMove.shouldFallback(now, FAST_FALLBACK_MS) ? null : opponentMove.sample(now);
 								const targetY = sample?.y ?? player.y;
 								const targetAngle = sample?.angle ?? player.angle;
-								opponent.pos.y += (targetY - opponent.pos.y) * 12 * k.dt();
-								if (Number.isFinite(targetAngle)) {
-									opponent.angle += (targetAngle - opponent.angle) * 12 * k.dt();
+								if (sample) {
+									opponent.pos.y = targetY;
+									if (Number.isFinite(targetAngle)) {
+										opponent.angle = targetAngle;
+									}
+								} else {
+									opponent.pos.y += (targetY - opponent.pos.y) * 12 * k.dt();
+									if (Number.isFinite(targetAngle)) {
+										opponent.angle += (targetAngle - opponent.angle) * 12 * k.dt();
+									}
 								}
 							});
 

@@ -5,8 +5,8 @@ import { createRatScene } from "./rat";
 
 export const startPos = k.vec2(k.width() / 2, k.height() / 2);
 const FISHSPEED = 50;
-const MOVE_SEND_HZ = 30;
-const FAST_INTERP_DELAY_MS = 50;
+const MOVE_SEND_HZ = 60;
+const FAST_INTERP_DELAY_MS = 10;
 const FAST_FALLBACK_MS = 500;
 
 	export function createFishScene() {
@@ -33,6 +33,7 @@ const FAST_FALLBACK_MS = 500;
 		let hasStarted = false;
 		const opponentMove = createMoveInterpolator({ delayMs: FAST_INTERP_DELAY_MS });
 		let opponentSessionId = null;
+		let lastOpponentY = startPos.y;
 
 		killRoom.push(
 			room.onMessage("moveFast", (message) => {
@@ -110,6 +111,7 @@ const FAST_FALLBACK_MS = 500;
 						if (sessionId !== room.sessionId) {
 							opponentSessionId = sessionId;
 							opponentMove.clear();
+							lastOpponentY = Number.isFinite(player.y) ? player.y : startPos.y;
 							players[0] = k.add([k.sprite("sukomi"), k.pos(startPos), k.opacity(1), k.anchor("center"), k.rotate(), k.timer(), overlay(rgb(90, 108, 230), 0.4)]);
 							players[1] = player;
 							createCoolText(players[0], player.name, 0, -players[0].height, 15);
@@ -118,14 +120,23 @@ const FAST_FALLBACK_MS = 500;
 								const now = Date.now();
 								const sample = opponentMove.shouldFallback(now, FAST_FALLBACK_MS) ? null : opponentMove.sample(now);
 								const targetY = sample?.y ?? player.y;
-								if (targetY - 5 > players[0].pos.y) {
-									players[0].pos.y += (targetY - players[0].pos.y) * 12 * k.dt();
-									players[0].angle += (30 - players[0].angle) * 12 * k.dt();
-								} else if (targetY + 5 < players[0].pos.y) {
-									players[0].pos.y += (targetY - players[0].pos.y) * 12 * k.dt();
-									players[0].angle += (-30 - players[0].angle) * 12 * k.dt();
+								if (sample) {
+									const deltaY = targetY - lastOpponentY;
+									lastOpponentY = targetY;
+									players[0].pos.y = targetY;
+									const targetAngle = deltaY > 2 ? 30 : deltaY < -2 ? -30 : 0;
+									players[0].angle += (targetAngle - players[0].angle) * 12 * k.dt();
 								} else {
-									players[0].angle += (0 - players[0].angle) * 12 * k.dt();
+									if (targetY - 5 > players[0].pos.y) {
+										players[0].pos.y += (targetY - players[0].pos.y) * 12 * k.dt();
+										players[0].angle += (30 - players[0].angle) * 12 * k.dt();
+									} else if (targetY + 5 < players[0].pos.y) {
+										players[0].pos.y += (targetY - players[0].pos.y) * 12 * k.dt();
+										players[0].angle += (-30 - players[0].angle) * 12 * k.dt();
+									} else {
+										players[0].angle += (0 - players[0].angle) * 12 * k.dt();
+									}
+									lastOpponentY = targetY;
 								}
 								if (startO) {
 									players[0].pos.x += (players[0].pos.x + FISHSPEED - players[0].pos.x) * 12 * k.dt();

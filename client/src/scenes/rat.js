@@ -5,8 +5,8 @@ import { createButterflyScene } from "./butterfly";
 export const startPos = k.vec2(k.width() / 2, k.height() - 77.5);
 
 const RATSPEED = 75;
-const MOVE_SEND_HZ = 30;
-const FAST_INTERP_DELAY_MS = 50;
+const MOVE_SEND_HZ = 60;
+const FAST_INTERP_DELAY_MS = 10;
 const FAST_FALLBACK_MS = 500;
 
 export function createRatScene() {
@@ -185,7 +185,11 @@ export function createRatScene() {
 								const now = Date.now();
 								const sample = opponentMove.shouldFallback(now, FAST_FALLBACK_MS) ? null : opponentMove.sample(now);
 								const targetY = sample?.y ?? player.y;
-								opponent.pos.y += (targetY - opponent.pos.y) * 12 * k.dt();
+								if (sample) {
+									opponent.pos.y = targetY;
+								} else {
+									opponent.pos.y += (targetY - opponent.pos.y) * 12 * k.dt();
+								}
 							});
 
 							let oPTween = null;
