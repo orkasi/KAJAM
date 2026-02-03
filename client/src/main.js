@@ -68,6 +68,7 @@ let backgroundProgress = null;
 let soundProgress = null;
 let backgroundLoadPromise = null;
 let soundLoadPromise = null;
+let lobbyMusicArmed = false;
 
 function showBootLoader() {
 	const overlay = k.add([k.rect(k.width(), k.height()), k.color(0, 0, 0), k.opacity(0.85), k.fixed(), k.z(500)]);
@@ -438,7 +439,14 @@ export function titleScreen() {
 	const tiledBackground = createTiledBackground("#000000", "#686767");
 	muteButton = createMuteButton();
 
-	const startLobbyMusic = () => {
+	const startLobbyMusic = ({ forceResume = false } = {}) => {
+		if (forceResume && k.audioCtx?.state === "suspended") {
+			try {
+				void k.audioCtx.resume();
+			} catch (err) {
+				console.warn("Failed to resume audio context", err);
+			}
+		}
 		ensureSoundAssets().then(() => {
 			if (!lobbySound) {
 				lobbySound = registerLoopSound(
@@ -455,13 +463,23 @@ export function titleScreen() {
 		});
 	};
 
+	const armLobbyMusicOnInput = () => {
+		if (lobbyMusicArmed) return;
+		lobbyMusicArmed = true;
+		const resume = () => startLobbyMusic({ forceResume: true });
+		window.addEventListener("pointerdown", resume, { once: true });
+		window.addEventListener("keydown", resume, { once: true });
+		window.addEventListener("touchstart", resume, { once: true });
+	};
+
 	startLobbyMusic();
+	armLobbyMusicOnInput();
 
 	let hasStarted = false;
 	const startGame = () => {
 		if (hasStarted) return;
 		hasStarted = true;
-		startLobbyMusic();
+		startLobbyMusic({ forceResume: true });
 		k.camFlash("#000000", 1);
 		destroy(tiledBackground);
 		destroyAll("title");
