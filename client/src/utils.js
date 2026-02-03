@@ -44,40 +44,25 @@ export async function tweenFunc(gameObject, propertyToTween, startValue, endValu
 }
 
 export function createCoolText(gameObject, text, x, y, size, ...extraComps) {
-	const cache = [];
-	let lastUpdate = -Infinity;
-	const updateInterval = 1 / 30;
-	let textComp = null;
-
-	const transform = (idx) => {
-		const now = time();
-		const currentText = typeof textComp?.text === "string" ? textComp.text : String(text ?? "");
-		if (now - lastUpdate >= updateInterval || cache.length !== currentText.length) {
-			lastUpdate = now;
-			const len = currentText.length;
-			cache.length = len;
-			for (let i = 0; i < len; i++) {
-				const entry = cache[i] ?? (cache[i] = { color: hsl2rgb(0, 0, 0), pos: vec2(0, 0), scale: 1, angle: 0 });
-				entry.color = hsl2rgb((now * 0.2 + i * 0.1) % 1, 0.7, 0.8);
-				entry.pos = vec2(0, wave(-4, 4, now * 4 + i * 0.5));
-				entry.scale = wave(1, 1.2, now * 3 + i);
-				entry.angle = wave(-9, 9, now * 3 + i);
-			}
-		}
-		return cache[idx] ?? { color: hsl2rgb(0, 0, 0), pos: vec2(0, 0), scale: 1, angle: 0 };
-	};
-
-	textComp = k.text(text, {
-		font: "Iosevka",
-		width: k.width() - 24 * 2,
-		size: size,
-		align: "center",
-		lineSpacing: 8,
-		letterSpacing: 4,
-		transform,
-	});
-
-	return gameObject.add([textComp, k.pos(x, y), k.anchor("center"), ...extraComps]);
+	return gameObject.add([
+		k.text(text, {
+			font: "Iosevka",
+			width: k.width() - 24 * 2,
+			size: size,
+			align: "center",
+			lineSpacing: 8,
+			letterSpacing: 4,
+			transform: (idx, ch) => ({
+				color: hsl2rgb((time() * 0.2 + idx * 0.1) % 1, 0.7, 0.8),
+				pos: vec2(0, wave(-4, 4, time() * 4 + idx * 0.5)),
+				scale: wave(1, 1.2, time() * 3 + idx),
+				angle: wave(-9, 9, time() * 3 + idx),
+			}),
+		}),
+		k.pos(x, y),
+		k.anchor("center"),
+		...extraComps,
+	]);
 }
 
 export function createNormalText(gameObject, text, x, y, size, ...extraComps) {
@@ -113,17 +98,29 @@ export function createTiledBackground(color1, color2) {
 }
 
 export function createTutorialRect(x, y, size_x, size_y, color, outlinecolor, outlinecolor1, outlinecolor2) {
-	const radius = 20;
-	const rect = k.add([k.pos(x, y), k.rect(size_x, size_y, { radius }), k.scale(), k.opacity(1), k.color(color), k.anchor("center"), "backgroundRect"]);
+	const rect = k.add([k.pos(x, y), k.rect(size_x, size_y), k.scale(), k.opacity(1), k.outline(20, color, 1, "round"), k.color(color), k.anchor("center"), "backgroundRect"]);
 
-	const addOutlineLayer = (pad, layerColor, z) => {
-		rect.add([k.rect(size_x + pad * 2, size_y + pad * 2, { radius: radius + pad }), k.color(layerColor), k.anchor("center"), k.z(z)]);
-	};
-
-	addOutlineLayer(80, outlinecolor, -3);
-	addOutlineLayer(60, outlinecolor1, -2);
-	addOutlineLayer(40, outlinecolor2, -1);
-
+	rect.outlineColors = [outlinecolor, outlinecolor1, outlinecolor2];
+	rect.onUpdate(() => {
+		k.drawRect({
+			width: rect.width,
+			height: rect.height,
+			pos: k.vec2(rect.pos.x - rect.width / 2, rect.pos.y - rect.height / 2),
+			outline: { color: outlinecolor, width: 80, join: "round" },
+		});
+		k.drawRect({
+			width: rect.width,
+			height: rect.height,
+			pos: k.vec2(rect.pos.x - rect.width / 2, rect.pos.y - rect.height / 2),
+			outline: { color: outlinecolor1, width: 60, join: "round" },
+		});
+		k.drawRect({
+			width: rect.width,
+			height: rect.height,
+			pos: k.vec2(rect.pos.x - rect.width / 2, rect.pos.y - rect.height / 2),
+			outline: { color: outlinecolor2, width: 40, join: "round" },
+		});
+	});
 	return rect;
 }
 
