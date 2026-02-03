@@ -318,7 +318,7 @@ export function createRatScene() {
 			const dampedCamX = k.lerp(k.camPos().x, targetCamX, 3 * k.dt());
 			k.camPos(k.vec2(dampedCamX, k.height() / 2));
 		});
-		const readyText = createCoolText(k, "Press space to get ready", k.width() / 2, k.height() / 2, 50);
+		const readyText = createCoolText(k, "Press space to get ready", k.width() / 2, k.height() / 2, 50, k.fixed(), k.z(120));
 		const updateReadyStatus = () => {
 			if (hasStarted) return;
 			const me = getPlayer(room, room.sessionId);
@@ -333,7 +333,7 @@ export function createRatScene() {
 			if (me?.ready) {
 				readyText.text = "You are ready";
 			} else if (opponentPlayer?.ready) {
-				readyText.text = "Opponent is ready";
+				readyText.text = "Only opponent is ready\n Press space to get ready";
 			} else {
 				readyText.text = "Press space to get ready";
 			}
@@ -394,38 +394,78 @@ export function createRatScene() {
 		let lastPos = k.width() * 2;
 
 		const obstacles = new Map();
+		const obstaclePools = {
+			bag: [],
+			gigagantrum: [],
+			money_bag: [],
+		};
+		const releaseObstacle = (obstacle) => {
+			if (!obstacle) return;
+			obstacles.delete(obstacle.obstacleID);
+			obstacle.obstacleID = null;
+			obstacle.active = false;
+			obstacle.hidden = true;
+			obstacle.paused = true;
+			obstacle.opacity = 1;
+			if (obstacle.__areaActive) {
+				obstacle.unuse("area");
+				obstacle.__areaActive = false;
+			}
+			const pool = obstaclePools[obstacle.kind] ?? obstaclePools.bag;
+			pool.push(obstacle);
+		};
+		const createObstacle = (spriteName, { flipX }) => {
+			const obstacle = k.add([
+				k.sprite(spriteName, { flipX }),
+				k.pos(-9999, -9999),
+				k.anchor("bot"),
+				k.rotate(),
+				k.timer(),
+				k.animate(),
+				k.scale(1),
+				{ obstacleID: null, active: false, speed: 20, __areaActive: false, kind: spriteName },
+				"obstacle",
+			]);
+			obstacle.hidden = true;
+			obstacle.paused = true;
+			obstacle.onUpdate(() => {
+				if (!obstacle.active) return;
+				obstacle.pos.x -= obstacle.speed * k.dt();
+				if (obstacle.pos.x < camPos().x - k.width()) {
+					releaseObstacle(obstacle);
+				}
+			});
+			return obstacle;
+		};
+		const acquireObstacle = (spriteName, options) => {
+			const pool = obstaclePools[spriteName] ?? obstaclePools.bag;
+			const obstacle = pool.pop() ?? createObstacle(spriteName, options);
+			obstacle.active = true;
+			obstacle.hidden = false;
+			obstacle.paused = false;
+			obstacle.opacity = 1;
+			if (!obstacle.__areaActive) {
+				obstacle.use(k.area());
+				obstacle.__areaActive = true;
+			}
+			return obstacle;
+		};
 		killRoom.push(
 			room.onMessage("spawnObstacle", (message) => {
 				k.randSeed(message.data);
-				const sprites = [k.sprite("bag", { flipX: true }), k.sprite("gigagantrum"), k.sprite("money_bag", { flipX: true })];
+				const spriteNames = ["bag", "gigagantrum", "money_bag"];
 				const rand = k.randi(3);
-				const obstacle = k.add([
-					sprites[rand],
-					k.pos(k.rand(lastPos + k.width() / 2, lastPos + k.width()), k.height() - 55),
-					k.area(),
-					k.anchor("bot"),
-					k.rotate(),
-					k.timer(),
-					k.animate(),
-					k.scale(),
-					{ obstacleID: message.obstacleID },
-					"obstacle",
-				]);
+				const spriteName = spriteNames[rand];
+				const obstacle = acquireObstacle(spriteName, { flipX: spriteName !== "gigagantrum" });
+				obstacle.pos = k.vec2(k.rand(lastPos + k.width() / 2, lastPos + k.width()), k.height() - 55);
+				obstacle.scale = spriteName === "money_bag" ? k.vec2(2, 2) : k.vec2(1, 1);
+				obstacle.angle = 0;
+				obstacle.obstacleID = message.obstacleID;
 				obstacles.set(message.obstacleID, obstacle);
-				if (rand === 2) {
-					obstacle.scale = k.vec2(2, 2);
-				}
 				lastPos = obstacle.pos.x;
-				obstacle.use(move(k.LEFT, 20));
 				obstacle.animate("angle", [-5, 5], {
 					duration: 0.4,
 					direction: "ping-pong",
-				});
-				obstacle.onUpdate(() => {
-					if (obstacle.pos.x < camPos().x - k.width()) {
-						obstacles.delete(obstacle.obstacleID);
-						k.destroy(obstacle);
-					}
 				});
 			}),
 		);
@@ -440,11 +480,10 @@ export function createRatScene() {
 					const target = obstacles.get(message.collideID);
 
 					if (target) {
-						obstacles.delete(message.collideID);
 						tweenFunc(target, "scale", target.scale, k.vec2(0, 0), 0.5, 1);
 						k.wait(0.5, () => {
 							if (target) {
-								k.destroy(target);
+								releaseObstacle(target);
 							}
 						});
 					}
@@ -457,12 +496,11 @@ export function createRatScene() {
 				cPlayer.enterState("stun");
 				cPlayer.stunTime += 1;
 				room.send("collide", collidedObstacle.obstacleID);
-				obstacles.delete(collidedObstacle.obstacleID);
 				tweenFunc(collidedObstacle, "scale", collidedObstacle.scale, k.vec2(0, 0), 0.5, 1);
 				playSound("ratHurt", { volume: 0.08 });
 				k.wait(0.5, () => {
 					if (collidedObstacle) {
-						k.destroy(collidedObstacle);
+						releaseObstacle(collidedObstacle);
 					}
 				});
 			}
@@ -597,6 +635,12 @@ export function createRatScene() {
 			sceneLoops.forEach((loop) => loop.cancel());
 			if (cPTweenL) cPTweenL.cancel();
 			killRoom.forEach((kill) => kill());
+			obstacles.forEach((obstacle) => k.destroy(obstacle));
+			obstacles.clear();
+			Object.values(obstaclePools).forEach((pool) => {
+				pool.forEach((obstacle) => k.destroy(obstacle));
+				pool.length = 0;
+			});
 		});
 	});
 }

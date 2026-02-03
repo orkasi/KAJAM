@@ -375,7 +375,7 @@ export function createButterflyScene() {
 			const dampedCamX = k.lerp(k.camPos().x, targetCamX, 3 * k.dt());
 			k.camPos(k.vec2(dampedCamX, k.height() / 2));
 		});
-		const readyText = createCoolText(k, "Press space to get ready", k.width() / 2, k.height() / 2, 50);
+		const readyText = createCoolText(k, "Press space to get ready", k.width() / 2, k.height() / 2, 50, k.fixed(), k.z(120));
 		const updateReadyStatus = () => {
 			if (hasStarted) return;
 			const me = getPlayer(room, room.sessionId);
@@ -390,7 +390,7 @@ export function createButterflyScene() {
 			if (me?.ready) {
 				readyText.text = "You are ready";
 			} else if (opponentPlayer?.ready) {
-				readyText.text = "Opponent is ready";
+				readyText.text = "Only opponent is ready\n Press space to get ready";
 			} else {
 				readyText.text = "Press space to get ready";
 			}
@@ -450,25 +450,73 @@ export function createButterflyScene() {
 		let lastPos = k.width() * 2;
 
 		const obstacles = new Map();
+		const obstaclePools = {
+			ghosty: [],
+			goldfly: [],
+		};
+		const releaseObstacle = (obstacle) => {
+			if (!obstacle) return;
+			obstacles.delete(obstacle.obstacleID);
+			obstacle.obstacleID = null;
+			obstacle.active = false;
+			obstacle.hidden = true;
+			obstacle.paused = true;
+			obstacle.opacity = 1;
+			if (obstacle.__areaActive) {
+				obstacle.unuse("area");
+				obstacle.__areaActive = false;
+			}
+			const pool = obstaclePools[obstacle.kind] ?? obstaclePools.ghosty;
+			pool.push(obstacle);
+		};
+		const createObstacle = (spriteName, { flipX }) => {
+			const obstacle = k.add([
+				k.sprite(spriteName, { flipX }),
+				k.pos(-9999, -9999),
+				k.anchor("bot"),
+				k.animate(),
+				k.rotate(),
+				k.timer(),
+				k.scale(1),
+				{ obstacleID: null, active: false, speed: 20, __areaActive: false, kind: spriteName },
+				"obstacle",
+			]);
+			obstacle.hidden = true;
+			obstacle.paused = true;
+			obstacle.onUpdate(() => {
+				if (!obstacle.active) return;
+				obstacle.pos.x -= obstacle.speed * k.dt();
+				if (obstacle.pos.x < camPos().x - k.width()) {
+					releaseObstacle(obstacle);
+				}
+			});
+			return obstacle;
+		};
+		const acquireObstacle = (spriteName, options) => {
+			const pool = obstaclePools[spriteName] ?? obstaclePools.ghosty;
+			const obstacle = pool.pop() ?? createObstacle(spriteName, options);
+			obstacle.active = true;
+			obstacle.hidden = false;
+			obstacle.paused = false;
+			obstacle.opacity = 1;
+			if (!obstacle.__areaActive) {
+				obstacle.use(k.area());
+				obstacle.__areaActive = true;
+			}
+			return obstacle;
+		};
 		killRoom.push(
 			room.onMessage("spawnObstacle", (message) => {
 				k.randSeed(message.data);
 				const orientation = [k.height() - 55, 55];
-				const sprites = [k.sprite("ghosty", { flipX: false }), k.sprite("goldfly", { flipX: true })];
 				const orand = k.randi(2);
 				const rand = k.randi(2);
-				const obstacle = k.add([
-					sprites[rand],
-					k.pos(k.rand(lastPos, lastPos + k.width() * 0.4), orientation[orand]),
-					k.area(),
-					k.anchor("bot"),
-					k.animate(),
-					k.rotate(),
-					k.timer(),
-					k.scale(k.rand(0.8, 2)),
-					{ obstacleID: message.obstacleID },
-					"obstacle",
-				]);
+				const spriteName = rand === 0 ? "ghosty" : "goldfly";
+				const obstacle = acquireObstacle(spriteName, { flipX: spriteName === "goldfly" });
+				obstacle.pos = k.vec2(k.rand(lastPos, lastPos + k.width() * 0.4), orientation[orand]);
+				obstacle.scale = k.vec2(k.rand(0.8, 2));
+				obstacle.angle = 0;
+				obstacle.obstacleID = message.obstacleID;
 				obstacles.set(message.obstacleID, obstacle);
 
 				if (rand === 1) {
@@ -489,13 +537,6 @@ export function createButterflyScene() {
 				obstacle.animate("scale", [k.vec2(obstacle.scale.x - 0.1, obstacle.scale.y - 0.1), obstacle.scale], { duration: 2, direction: "ping-pong" });
 
 				lastPos = obstacle.pos.x;
-				obstacle.use(move(k.LEFT, 20));
-				obstacle.onUpdate(() => {
-					if (obstacle.pos.x < camPos().x - k.width()) {
-						obstacles.delete(obstacle.obstacleID);
-						k.destroy(obstacle);
-					}
-				});
 			}),
 		);
 
@@ -508,11 +549,10 @@ export function createButterflyScene() {
 					const target = obstacles.get(message.collideID);
 
 					if (target) {
-						obstacles.delete(message.collideID);
 						tweenFunc(target, "scale", target.scale, k.vec2(0, 0), 0.5, 1);
 						k.wait(0.5, () => {
 							if (target) {
-								k.destroy(target);
+								releaseObstacle(target);
 							}
 						});
 					}
@@ -525,12 +565,11 @@ export function createButterflyScene() {
 				cPlayer.stunTime += 1;
 				cPlayer.enterState("stun");
 				room.send("collide", collidedObstacle.obstacleID);
-				obstacles.delete(collidedObstacle.obstacleID);
 				tweenFunc(collidedObstacle, "scale", collidedObstacle.scale, k.vec2(0, 0), 0.5, 1);
 				playSound("butterflyHit", { volume: 0.08 });
 				k.wait(0.5, () => {
 					if (collidedObstacle) {
-						k.destroy(collidedObstacle);
+						releaseObstacle(collidedObstacle);
 					}
 				});
 			}
@@ -660,6 +699,12 @@ export function createButterflyScene() {
 			rectLoops.forEach((loop) => loop.cancel());
 			sceneLoops.forEach((loop) => loop.cancel());
 			killRoom.forEach((kill) => kill());
+			obstacles.forEach((obstacle) => k.destroy(obstacle));
+			obstacles.clear();
+			Object.values(obstaclePools).forEach((pool) => {
+				pool.forEach((obstacle) => k.destroy(obstacle));
+				pool.length = 0;
+			});
 		});
 	});
 }

@@ -1,8 +1,10 @@
 import * as Colyseus from "colyseus.js";
 import { k } from "./init";
-import { createCoolText, createMuteButton, createNormalText, createTiledBackground, getReconnectEnabled, goScene, hasPlayersState, playSound, registerLoopSound, setMatchContext, setReconnectEnabled } from "./utils";
+import { createCoolText, createMuteButton, createNormalText, createTiledBackground, getCurrentScene, getReconnectEnabled, goScene, hasPlayersState, playSound, registerLoopSound, setMatchContext, setReconnectEnabled } from "./utils";
+import { isAssetGroupLoaded, isSoundGroupLoaded, loadAssetGroup, loadAssetGroups } from "./assets";
 
 import { createFishScene, startPos } from "./scenes/fish";
+import { createLeaveScene } from "./scenes/leave";
 
 function normalizeSeatReservation(reservation) {
 	if (!reservation || reservation.room) return reservation;
@@ -56,164 +58,92 @@ window.addEventListener("keydown", (e) => {
 let colyseusClient;
 let colyseusEndpoint = "";
 let currentRoomCode = "nocode";
-let currentDifficulty = "casual";
 let reconnecting = false;
 let reconnectOverlay = null;
 let enteredScene = false;
 let stateOverlay = null;
 
-function normalizeDifficulty(value) {
-	if (value === "competitive" || value === "casual") return value;
-	return "casual";
+let assetStatusText = null;
+let backgroundProgress = null;
+let soundProgress = null;
+let backgroundLoadPromise = null;
+let soundLoadPromise = null;
+
+function showBootLoader() {
+	const overlay = k.add([k.rect(k.width(), k.height()), k.color(0, 0, 0), k.opacity(0.85), k.fixed(), k.z(500)]);
+	const text = k.add([k.text("Loading...", { size: 28, align: "center" }), k.pos(k.width() / 2, k.height() / 2), k.anchor("center"), k.fixed(), k.z(501)]);
+	return {
+		update(loaded, total) {
+			if (!total) return;
+			const pct = Math.round((loaded / total) * 100);
+			text.text = `Loading... ${pct}%`;
+		},
+		destroy() {
+			k.destroy(overlay);
+			k.destroy(text);
+		},
+	};
 }
 
-async function loadAssets() {
+function refreshAssetStatus() {
+	const active = soundProgress ?? backgroundProgress;
+	if (!active) {
+		if (assetStatusText) k.destroy(assetStatusText);
+		assetStatusText = null;
+		return;
+	}
+	const pct = active.total ? Math.round((active.done / active.total) * 100) : 0;
+	const label = soundProgress ? `Loading audio... ${pct}%` : `Loading assets... ${pct}%`;
+	if (!assetStatusText) {
+		assetStatusText = k.add([
+			k.text(label, { size: 16, font: "Iosevka" }),
+			k.pos(16, 16),
+			k.anchor("topleft"),
+			k.fixed(),
+			k.z(200),
+		]);
+	} else {
+		assetStatusText.text = label;
+	}
+}
+
+async function loadCoreAssets() {
+	const boot = showBootLoader();
 	k.loadRoot(".");
+	await loadAssetGroups(["core"], {
+		onProgress: (done, total) => boot.update(done, total),
+	});
+	boot.destroy();
+}
 
-	const assets = [];
+function startBackgroundAssetStreaming() {
+	if (backgroundLoadPromise) return backgroundLoadPromise;
+	const groups = ["uiControls", "fish", "rat", "butterfly"];
+	backgroundLoadPromise = loadAssetGroups(groups, {
+		onProgress: (done, total) => {
+			backgroundProgress = { done, total };
+			refreshAssetStatus();
+		},
+	}).finally(() => {
+		backgroundProgress = null;
+		refreshAssetStatus();
+	});
+	return backgroundLoadPromise;
+}
 
-	// Shaders
-	assets.push(k.loadShaderURL("tiledPattern", null, "/shaders/tiledPattern.frag"));
-
-	// Fish Game Sprites
-	assets.push(k.loadSprite("sukomi", "/sprites/sukomi.png"));
-	assets.push(k.loadSprite("bobo", "/sprites/bobo.png"));
-	assets.push(k.loadSprite("bubble", "/sprites/particles/bubble.png"));
-
-	// Sounds
-	assets.push(k.loadSound("loseSound", "/sounds/lost.ogg"));
-	assets.push(k.loadSound("fishHit", "/sounds/fishHit.ogg"));
-	assets.push(k.loadSound("wonSound", "/sounds/won.ogg"));
-	assets.push(k.loadSound("drawSound", "/sounds/draw.ogg"));
-	assets.push(k.loadSound("wrongName", "/sounds/wrongName.ogg"));
-	assets.push(k.loadSound("count", "/sounds/count.ogg"));
-	assets.push(k.loadSound("go", "/sounds/go.ogg"));
-	assets.push(k.loadSound("ratHurt", "/sounds/ratHurt.ogg"));
-	assets.push(k.loadSound("lobbyScene", "/sounds/lobbyScene.ogg"));
-	assets.push(k.loadSound("fishScene", "/sounds/fishScene.ogg"));
-	assets.push(k.loadSound("ratScene", "/sounds/ratScene.ogg"));
-	assets.push(k.loadSound("butterflyScene", "/sounds/butterflyScene.ogg"));
-	assets.push(k.loadSound("butterflyHit", "/sounds/butterflyHit.ogg"));
-
-	// Butterfly Game Sprites
-	assets.push(k.loadSprite("butterfly", "/sprites/butterfly.png"));
-	assets.push(k.loadSprite("goldfly", "/sprites/goldfly.png"));
-	assets.push(k.loadSprite("ghosty", "/sprites/ghosty.png"));
-	assets.push(k.loadSprite("white", "/sprites/particles/white.png"));
-	assets.push(k.loadSprite("heart", "/sprites/particles/heart.png"));
-
-	// Rat Game Sprites
-	assets.push(k.loadSprite("gigagantrum", "/sprites/gigagantrum.png"));
-	assets.push(k.loadSprite("karat", "/sprites/karat.png"));
-	assets.push(k.loadSprite("bag", "/sprites/bag.png"));
-	assets.push(k.loadSprite("money_bag", "/sprites/money_bag.png"));
-	assets.push(k.loadSprite("grass", "/sprites/grass.png"));
-	assets.push(k.loadSprite("portal", "/sprites/portal.png"));
-	assets.push(k.loadSprite("moon", "/sprites/moon.png"));
-	assets.push(k.loadSprite("cloud", "/sprites/cloud.png"));
-	assets.push(k.loadSprite("green", "/sprites/particles/green.png"));
-
-	// Icons
-	assets.push(k.loadSprite("play-o", "/sprites/icons/play-o.png"));
-	assets.push(k.loadSprite("kaplay", "/sprites/icons/kaplay.png"));
-	assets.push(k.loadSprite("kajam", "/sprites/icons/kajam.png"));
-	assets.push(k.loadSprite("colyseus", "/sprites/icons/colyseus.png"));
-	assets.push(k.loadSprite("mute", "/sprites/icons/mute.png"));
-	assets.push(k.loadSprite("enterButton", "/sprites/icons/enterButton.png"));
-	assets.push(k.loadSprite("space", "/sprites/icons/spaceKey.png"));
-
-	// Fonts
-	assets.push(k.loadFont("Iosevka", "/fonts/Iosevka-Regular.woff2", { outline: 1, filter: "linear" }));
-	assets.push(k.loadFont("Iosevka-Heavy", "/fonts/Iosevka-Heavy.woff2", { outline: 3, filter: "linear" }));
-
-	// Key sprites
-	assets.push(
-		k.loadSprite("gamepadUpandDown", "/sprites/icons/gamepadUpandDown.png", {
-			sliceX: 3,
-			anims: {
-				emptyGamepad: {
-					from: 0,
-					to: 0,
-					loop: true,
-				},
-				gamepadUp: {
-					from: 1,
-					to: 1,
-					loop: true,
-				},
-				gamepadDown: {
-					from: 2,
-					to: 2,
-					loop: true,
-				},
-			},
-		}),
-	);
-
-	assets.push(
-		k.loadSprite("mouseLeftandRight", "/sprites/icons/mouseLeftandRight.png", {
-			sliceX: 3,
-			anims: {
-				emptyMouse: {
-					from: 0,
-					to: 0,
-					loop: true,
-				},
-
-				mouseRightPressed: {
-					from: 1,
-					to: 1,
-					loop: true,
-				},
-
-				mouseLeftPressed: {
-					from: 2,
-					to: 2,
-					loop: true,
-				},
-			},
-		}),
-	);
-
-	assets.push(
-		k.loadSprite("upKey", "/sprites/icons/upKey.png", {
-			sliceX: 2,
-			anims: {
-				upKey: {
-					from: 0,
-					to: 0,
-					loop: true,
-				},
-
-				upKeyPressed: {
-					from: 1,
-					to: 1,
-					loop: true,
-				},
-			},
-		}),
-	);
-
-	assets.push(
-		k.loadSprite("downKey", "/sprites/icons/downKey.png", {
-			sliceX: 2,
-			anims: {
-				downKey: {
-					from: 0,
-					to: 0,
-					loop: true,
-				},
-
-				downKeyPressed: {
-					from: 1,
-					to: 1,
-					loop: true,
-				},
-			},
-		}),
-	);
-
-	await Promise.all(assets);
+function ensureSoundAssets() {
+	if (isSoundGroupLoaded()) return Promise.resolve();
+	if (soundLoadPromise) return soundLoadPromise;
+	soundLoadPromise = loadAssetGroup("sounds", {
+		onProgress: (done, total) => {
+			soundProgress = { done, total };
+			refreshAssetStatus();
+		},
+	}).finally(() => {
+		soundProgress = null;
+		refreshAssetStatus();
+	});
+	return soundLoadPromise;
 }
 
 let muteButton;
@@ -334,17 +264,17 @@ async function roomName(nameT) {
 	k.wait(0.5, () => {
 		const keyPress2 = k.onKeyPress("enter", async () => {
 			if (roomCode.text.length < 1) {
-				selectDifficulty(nameT, "nocode");
 				keyPress2.cancel();
 				kInput.cancel();
 				bInput.cancel();
 				destroyAll("destroyR");
+				main(nameT.text, "nocode");
 			} else if (roomCode.text.length > 1 && isAlphanumeric(roomCode.text)) {
-				selectDifficulty(nameT, roomCode.text);
 				keyPress2.cancel();
 				kInput.cancel();
 				bInput.cancel();
 				destroyAll("destroyR");
+				main(nameT.text, roomCode.text);
 			} else {
 				playSound("wrongName", { loop: false });
 				await askCode.tween(-10, 10, 0.1, (value) => (askCode.angle = value));
@@ -359,45 +289,44 @@ async function roomName(nameT) {
 	});
 }
 
-async function selectDifficulty(nameT, roomCode) {
-	const askDifficulty = createCoolText(k, "Select difficulty", k.width() / 2, k.height() * 0.2, 48, "destroyD", k.timer(), k.rotate());
-	askDifficulty.font = "Iosevka-Heavy";
-	const casualText = createNormalText(k, "1 - Casual", k.width() / 2, k.height() * 0.45, 40, "destroyD");
-	casualText.font = "Iosevka-Heavy";
-	const competitiveText = createNormalText(k, "2 - Competitive", k.width() / 2, k.height() * 0.6, 40, "destroyD");
-	competitiveText.font = "Iosevka-Heavy";
-
-	const choose = (difficulty) => {
-		destroyAll("destroyD");
-		main(nameT.text, roomCode, difficulty);
-	};
-
-	const pickCasual = k.onKeyPress(["1", "c"], () => {
-		pickCasual.cancel();
-		pickSweaty.cancel();
-		choose("casual");
+async function ensureAssetsForMode(mode) {
+	const groups = [];
+	if (mode === "fish") {
+		groups.push("fish", "uiControls");
+	} else if (mode === "rat") {
+		groups.push("rat");
+	} else if (mode === "butterfly") {
+		groups.push("butterfly");
+	}
+	if (!isSoundGroupLoaded()) {
+		groups.push("sounds");
+	}
+	const needsLoad = groups.some((group) => !isAssetGroupLoaded(group));
+	if (!needsLoad) return;
+	showStateOverlay("Loading assets...");
+	await loadAssetGroups(groups, {
+		onProgress: (done, total) => {
+			const pct = total ? Math.round((done / total) * 100) : 0;
+			showStateOverlay(`Loading assets... ${pct}%`);
+		},
 	});
-
-	const pickSweaty = k.onKeyPress(["2", "p", "s"], () => {
-		pickCasual.cancel();
-		pickSweaty.cancel();
-		choose("competitive");
-	});
+	hideStateOverlay();
 }
 
-function moveToSceneForRoom(room) {
+async function moveToSceneForRoom(room) {
 	if (!hasPlayersState(room)) {
 		showStateOverlay("Syncing state...");
 		if (typeof room?.onStateChange === "function") {
 			room.onStateChange.once(() => {
 				hideStateOverlay();
-				moveToSceneForRoom(room);
+				void moveToSceneForRoom(room);
 			});
 		}
 		return;
 	}
 	hideStateOverlay();
 	const mode = room.state?.mode;
+	await ensureAssetsForMode(mode);
 	if (mode === "rat") {
 		goScene("rat", room);
 	} else if (mode === "butterfly") {
@@ -408,16 +337,27 @@ function moveToSceneForRoom(room) {
 }
 
 function attachRoomHandlers(room) {
-	room.onMessage("difficulty", (difficulty) => {
-		if (typeof difficulty === "string") {
-			currentDifficulty = normalizeDifficulty(difficulty);
-			setMatchContext({ roomCode: currentRoomCode, difficulty: currentDifficulty });
-		}
-	});
-
+	let opponentEverPresent = false;
+	let offAdd = null;
+	let offRemove = null;
+	const players = room?.state?.players;
+	if (players && typeof players.onAdd === "function" && typeof players.onRemove === "function") {
+		offAdd = players.onAdd((player, sessionId) => {
+			if (sessionId !== room.sessionId) opponentEverPresent = true;
+		});
+		offRemove = players.onRemove((player, sessionId) => {
+			if (sessionId === room.sessionId) return;
+			if (!opponentEverPresent) return;
+			if (getCurrentScene() === "leave") return;
+			createLeaveScene();
+			goScene("leave", room);
+		});
+	}
 	room.onLeave(() => {
 		if (!enteredScene) return;
 		if (!getReconnectEnabled()) return;
+		if (typeof offAdd === "function") offAdd();
+		if (typeof offRemove === "function") offRemove();
 		void attemptReconnect(room);
 	});
 }
@@ -434,9 +374,9 @@ async function attemptReconnect(previousRoom) {
 		hideReconnectOverlay();
 		setReconnectEnabled(true);
 		attachRoomHandlers(reconnected);
-		setMatchContext({ roomCode: currentRoomCode, difficulty: currentDifficulty });
+		setMatchContext({ roomCode: currentRoomCode });
 		enteredScene = true;
-		moveToSceneForRoom(reconnected);
+		void moveToSceneForRoom(reconnected);
 	} catch (err) {
 		reconnecting = false;
 		showReconnectOverlay("Reconnect failed. Press R to retry");
@@ -447,7 +387,7 @@ async function attemptReconnect(previousRoom) {
 	}
 }
 
-async function main(name, roomCode = "nocode", difficulty = "casual") {
+async function main(name, roomCode = "nocode") {
 	if (!colyseusClient) {
 		colyseusEndpoint = resolveColyseusEndpoint(await loadRuntimeConfig());
 		colyseusClient = new Colyseus.Client(colyseusEndpoint);
@@ -456,15 +396,14 @@ async function main(name, roomCode = "nocode", difficulty = "casual") {
 
 	const lobbyText = createCoolText(k, "Connecting...", k.width() / 2, k.height() / 2, 48);
 	await colyseusClient
-		.joinOrCreate("my_room", { playerName: name, playerPos: startPos, code: roomCode, difficulty })
+		.joinOrCreate("my_room", { playerName: name, playerPos: startPos, code: roomCode })
 		.then((room) => {
 			lobbyText.text = "Connected!";
 
 			setTimeout(() => {
 				const enterRoom = () => {
 					currentRoomCode = roomCode;
-					currentDifficulty = normalizeDifficulty(room.state?.difficulty || difficulty);
-					setMatchContext({ roomCode, difficulty: currentDifficulty });
+					setMatchContext({ roomCode });
 					setReconnectEnabled(true);
 					attachRoomHandlers(room);
 					k.destroy(lobbyText);
@@ -473,7 +412,7 @@ async function main(name, roomCode = "nocode", difficulty = "casual") {
 					if (muteButton) destroy(muteButton);
 					try {
 						enteredScene = true;
-						moveToSceneForRoom(room);
+						void moveToSceneForRoom(room);
 					} catch (err) {
 						console.error("Scene init failed", err);
 						showFatalOverlay(`Scene init failed: ${err?.message || err}`);
@@ -490,27 +429,38 @@ async function main(name, roomCode = "nocode", difficulty = "casual") {
 			const retry = k.onKeyPress("r", async () => {
 				retry.cancel();
 				await k.destroy(lobbyText);
-				main(name, roomCode, difficulty);
+				main(name, roomCode);
 			});
 		});
 }
 
 export function titleScreen() {
 	const tiledBackground = createTiledBackground("#000000", "#686767");
-	lobbySound = registerLoopSound(
-		k.play("lobbyScene", {
-			loop: true,
-			paused: true,
-			volume: 0.05,
-		}),
-		0.05,
-	);
 	muteButton = createMuteButton();
 
-	const playOnClick = k.onClick(() => {
-		lobbySound.paused = false;
-		playOnClick.cancel();
-	});
+	let hasStarted = false;
+	const startGame = () => {
+		if (hasStarted) return;
+		hasStarted = true;
+		ensureSoundAssets().then(() => {
+			if (!lobbySound) {
+				lobbySound = registerLoopSound(
+					k.play("lobbyScene", {
+						loop: true,
+						paused: false,
+						volume: 0.05,
+					}),
+					0.05,
+				);
+			} else {
+				lobbySound.paused = false;
+			}
+		});
+		k.camFlash("#000000", 1);
+		destroy(tiledBackground);
+		destroyAll("title");
+		name();
+	};
 
 	const hText = createNormalText(k, "Made by Jelibon", k.width() / 2, k.height() * 0.05, 16, "title");
 	hText.letterSpacing = 2;
@@ -537,11 +487,10 @@ export function titleScreen() {
 	replayButton.animate("angle", [2, -2], { duration: 0.5, direction: "ping-pong" });
 	replayButton.animate("pos", [k.vec2(k.width() * 0.49, k.height() * 0.6), k.vec2(k.width() * 0.51, k.height() * 0.6)], { duration: 1, direction: "ping-pong" });
 	k.onClick("replay", async () => {
-		k.camFlash("#000000", 1);
-
-		destroy(tiledBackground);
-		destroyAll("title");
-		name();
+		startGame();
+	});
+	k.onKeyPress("enter", () => {
+		startGame();
 	});
 
 	if (!safariWarningShown && isSafariBrowser()) {
@@ -551,13 +500,15 @@ export function titleScreen() {
 }
 
 async function bootstrap() {
-	await loadAssets();
+	const [runtimeConfig] = await Promise.all([loadRuntimeConfig(), loadCoreAssets()]);
 
-	colyseusEndpoint = resolveColyseusEndpoint(await loadRuntimeConfig());
+	colyseusEndpoint = resolveColyseusEndpoint(runtimeConfig);
 	colyseusClient = new Colyseus.Client(colyseusEndpoint);
 
 	createFishScene();
+	createLeaveScene();
 	titleScreen();
+	startBackgroundAssetStreaming();
 }
 
 bootstrap();

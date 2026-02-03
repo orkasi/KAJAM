@@ -29,7 +29,6 @@ export class MyRoomState extends schema.Schema {
 		this.players = new schema.MapSchema();
 		this.mode = "";
 		this.phase = "lobby";
-		this.difficulty = "casual";
 		this.startAt = 0;
 	}
 }
@@ -38,6 +37,5 @@ schema.defineTypes(MyRoomState, {
 	players: { map: Player },
 	mode: "string",
 	phase: "string",
-	difficulty: "string",
 	startAt: "number",
 });

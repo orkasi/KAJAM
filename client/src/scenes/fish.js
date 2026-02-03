@@ -160,7 +160,7 @@ const MOVE_SEND_HZ = 20;
 		k.onKeyPress(["down", "s"], () => (downPressed = true));
 		k.onKeyRelease(["down", "s"], () => (downPressed = false));
 
-		const readyText = createCoolText(k, "Press space to get ready", k.width() / 2, k.height() / 2, 50);
+		const readyText = createCoolText(k, "Press space to get ready", k.width() / 2, k.height() / 2, 50, k.fixed(), k.z(120));
 		const updateReadyStatus = () => {
 			if (hasStarted) return;
 			const me = getPlayer(room, room.sessionId);
@@ -175,7 +175,7 @@ const MOVE_SEND_HZ = 20;
 			if (me?.ready) {
 				readyText.text = "You are ready";
 			} else if (opponent?.ready) {
-				readyText.text = "Opponent is ready";
+				readyText.text = "Only opponent is ready\n Press space to get ready";
 			} else {
 				readyText.text = "Press space to get ready";
 			}
@@ -295,34 +295,70 @@ const MOVE_SEND_HZ = 20;
 		let isEnding = false;
 
 		const obstacles = new Map();
+		const obstaclePool = [];
+		const releaseObstacle = (obstacle) => {
+			if (!obstacle) return;
+			obstacles.delete(obstacle.obstacleID);
+			obstacle.obstacleID = null;
+			obstacle.active = false;
+			obstacle.hidden = true;
+			obstacle.paused = true;
+			obstacle.opacity = 1;
+			if (obstacle.__areaActive) {
+				obstacle.unuse("area");
+				obstacle.__areaActive = false;
+			}
+			obstaclePool.push(obstacle);
+		};
+		const createObstacle = () => {
+			const obstacle = k.add([
+				k.sprite("bobo", { flipX: true }),
+				k.pos(-9999, -9999),
+				k.rotate(),
+				k.timer(),
+				k.opacity(),
+				k.animate(),
+				k.scale(1),
+				{ obstacleID: null, active: false, speed: 400, __areaActive: false },
+				"obstacle",
+			]);
+			obstacle.hidden = true;
+			obstacle.paused = true;
+			obstacle.onUpdate(() => {
+				if (!obstacle.active) return;
+				obstacle.pos.x -= obstacle.speed * k.dt();
+				if (obstacle.pos.x < camPos().x - k.width()) {
+					releaseObstacle(obstacle);
+				}
+			});
+			return obstacle;
+		};
+		const acquireObstacle = () => {
+			const obstacle = obstaclePool.pop() ?? createObstacle();
+			obstacle.active = true;
+			obstacle.hidden = false;
+			obstacle.paused = false;
+			obstacle.opacity = 1;
+			if (!obstacle.__areaActive) {
+				obstacle.use(k.area());
+				obstacle.__areaActive = true;
+			}
+			return obstacle;
+		};
 		killRoom.push(
 			room.onMessage("spawnObstacle", (message) => {
 				if (!isEnding) {
 					k.randSeed(message.data);
-					const obstacle = k.add([
-						k.sprite("bobo", { flipX: true }),
-						k.pos(k.rand(lastPos, lastPos + k.width() / 8), k.rand(20, k.height() - 20)),
-						k.area(),
-						k.rotate(),
-						k.timer(),
-						k.opacity(),
-						k.animate(),
-						k.scale(k.rand(0.5, 1.5)),
-						{ obstacleID: message.obstacleID },
-						"obstacle",
-					]);
+					const obstacle = acquireObstacle();
+					obstacle.pos = k.vec2(k.rand(lastPos, lastPos + k.width() / 8), k.rand(20, k.height() - 20));
+					obstacle.scale = k.vec2(k.rand(0.5, 1.5));
+					obstacle.angle = 0;
+					obstacle.obstacleID = message.obstacleID;
 					lastPos = obstacle.pos.x;
 					obstacles.set(message.obstacleID, obstacle);
-					obstacle.use(move(k.LEFT, 400));
 					obstacle.animate("angle", [k.rand(-25, -15), k.rand(-10, 0)], {
 						duration: k.rand(0.3, 0.6),
 						direction: "ping-pong",
-					});
-					obstacle.onUpdate(() => {
-						if (obstacle.pos.x < camPos().x - k.width()) {
-							obstacles.delete(obstacle.obstacleID);
-							k.destroy(obstacle);
-						}
 					});
 				}
 			}),
@@ -480,11 +516,10 @@ const MOVE_SEND_HZ = 20;
 						const target = obstacles.get(message.collideID);
 
 						if (target) {
-							obstacles.delete(message.collideID);
 							tweenFunc(target, "scale", target.scale, k.vec2(0, 0), 0.5, 1);
 							k.wait(0.5, () => {
 								if (target) {
-									k.destroy(target);
+									releaseObstacle(target);
 								}
 							});
 						}
@@ -505,12 +540,11 @@ const MOVE_SEND_HZ = 20;
 				});
 				tweenFunc(cPlayer, "angle", 360, 0, 0.25, 1);
 				tweenFunc(cPlayer, "opacity", 0, 1, 0.25, 4);
-				obstacles.delete(collidedObstacle.obstacleID);
 				tweenFunc(collidedObstacle, "scale", collidedObstacle.scale, k.vec2(0, 0), 0.5, 1);
 
 				k.wait(0.5, () => {
 					if (collidedObstacle) {
-						k.destroy(collidedObstacle);
+						releaseObstacle(collidedObstacle);
 					}
 				});
 
@@ -521,6 +555,10 @@ const MOVE_SEND_HZ = 20;
 			sceneLoops.forEach((loop) => loop.cancel());
 			if (rectLoop) rectLoop.cancel();
 			killRoom.forEach((kill) => kill());
+			obstacles.forEach((obstacle) => k.destroy(obstacle));
+			obstacles.clear();
+			obstaclePool.forEach((obstacle) => k.destroy(obstacle));
+			obstaclePool.length = 0;
 		});
 	});
 }

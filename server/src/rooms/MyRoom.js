@@ -2,12 +2,7 @@ import { Room } from "@colyseus/core";
 import { MyRoomState, Player } from "./schema/MyRoomState.js";
 
 const START_DELAY_MS = 3200;
-const DEFAULT_DIFFICULTY = "casual";
-
-const DIFFICULTY_PRESETS = {
-	casual: { spawnIntervalMultiplier: 1.25, durationMultiplier: 1.1 },
-	competitive: { spawnIntervalMultiplier: 0.8, durationMultiplier: 0.9 },
-};
+const DEFAULT_DIFFICULTY = { spawnIntervalMultiplier: 1.25, durationMultiplier: 1.1 };
 
 const GAME_MODES = {
 	fish: { spawnIntervalMs: 100, durationMs: 20000 },
@@ -15,29 +10,22 @@ const GAME_MODES = {
 	butterfly: { spawnIntervalMs: 100, durationMs: 10000 },
 };
 
-function resolveDifficulty(value) {
-	return Object.prototype.hasOwnProperty.call(DIFFICULTY_PRESETS, value) ? value : DEFAULT_DIFFICULTY;
-}
-
-function getModeConfig(mode, difficulty) {
+function getModeConfig(mode) {
 	const base = GAME_MODES[mode];
 	if (!base) return null;
-	const preset = DIFFICULTY_PRESETS[difficulty] ?? DIFFICULTY_PRESETS[DEFAULT_DIFFICULTY];
-	const spawnIntervalMs = Math.max(60, Math.round(base.spawnIntervalMs * preset.spawnIntervalMultiplier));
-	const durationMs = Math.max(3000, Math.round(base.durationMs * preset.durationMultiplier));
+	const spawnIntervalMs = Math.max(60, Math.round(base.spawnIntervalMs * DEFAULT_DIFFICULTY.spawnIntervalMultiplier));
+	const durationMs = Math.max(3000, Math.round(base.durationMs * DEFAULT_DIFFICULTY.durationMultiplier));
 	return { spawnIntervalMs, durationMs };
 }
 
 export class MyRoom extends Room {
 	maxClients = 2;
 
-	onCreate(options) {
+	onCreate() {
 		this.setState(new MyRoomState());
 		this.winner = null;
 		this.clock.start();
 		this.autoDispose = true;
-		this.difficulty = resolveDifficulty(options?.difficulty);
-		this.state.difficulty = this.difficulty;
 		this.state.phase = "lobby";
 		this.state.mode = "";
 		this.state.startAt = 0;
@@ -132,7 +120,7 @@ export class MyRoom extends Room {
 	}
 
 	startRound(mode) {
-		const config = getModeConfig(mode, this.difficulty);
+		const config = getModeConfig(mode);
 		if (!config) return;
 
 		this.round.state = "countdown";
@@ -218,7 +206,6 @@ export class MyRoom extends Room {
 			this.state.players.set(client.sessionId, player);
 		}
 
-		client.send("difficulty", this.difficulty);
 		if (this.round.state === "countdown" || this.round.state === "running") {
 			client.send("start", { startAt: this.state.startAt, mode: this.round.mode });
 		} else if (this.round.state === "ended") {

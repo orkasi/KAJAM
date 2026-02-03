@@ -1,4 +1,5 @@
 import { k } from "./init.js";
+import { isSoundLoaded } from "./assets.js";
 
 const muteStorageKey = "kajam:muted";
 let muted = false;
@@ -6,7 +7,7 @@ const loopSounds = new Set();
 const loopSoundVolumes = new WeakMap();
 let reconnectEnabled = true;
 let currentScene = null;
-let matchContext = { roomCode: "nocode", difficulty: "casual" };
+let matchContext = { roomCode: "nocode" };
 
 const readStoredMute = () => {
 	try {
@@ -149,6 +150,7 @@ export function registerLoopSound(sound, baseVolume) {
 }
 
 export function playSound(name, options = {}) {
+	if (!isSoundLoaded(name)) return null;
 	const volume = options.volume ?? 1;
 	return k.play(name, {
 		...options,
@@ -173,7 +175,7 @@ export function createMuteButton() {
 	return button;
 }
 
-export function createMatchHud(room, { roomCode = "nocode", difficulty = "casual" } = {}) {
+export function createMatchHud(room, { roomCode = "nocode" } = {}) {
 	const container = k.add([k.pos(20, 20), k.fixed(), k.z(100)]);
 
 	const roomLabel = roomCode && roomCode !== "nocode" ? `Room: ${roomCode}` : "Room: Public";
@@ -183,17 +185,8 @@ export function createMatchHud(room, { roomCode = "nocode", difficulty = "casual
 
 	const copyStatus = container.add([k.text("", { size: 14, font: "Iosevka" }), k.pos(60, 24), k.anchor("topleft")]);
 
-	const formatDifficulty = (value) => {
-		if (value === "casual") return "Casual";
-		if (value === "competitive") return "Competitive";
-		return "Casual";
-	};
-
-	let lastDifficulty = difficulty;
-	const difficultyText = container.add([k.text(`Difficulty: ${formatDifficulty(difficulty)}`, { size: 16, font: "Iosevka-Heavy" }), k.pos(0, 48), k.anchor("topleft")]);
-
-	const youText = container.add([k.text("You: Not Ready", { size: 16, font: "Iosevka" }), k.pos(0, 72), k.anchor("topleft")]);
-	const oppText = container.add([k.text("Opponent: Waiting...", { size: 16, font: "Iosevka" }), k.pos(0, 92), k.anchor("topleft")]);
+	const youText = container.add([k.text("You: Not Ready", { size: 16, font: "Iosevka" }), k.pos(0, 48), k.anchor("topleft")]);
+	const oppText = container.add([k.text("Opponent: Waiting...", { size: 16, font: "Iosevka" }), k.pos(0, 68), k.anchor("topleft")]);
 
 	if (!roomCode || roomCode === "nocode") {
 		copyButton.hidden = true;
@@ -218,11 +211,6 @@ export function createMatchHud(room, { roomCode = "nocode", difficulty = "casual
 	const updateLoop = k.loop(0.2, () => {
 		const playersState = getPlayersSnapshot(room);
 		if (playersState.size === 0) return;
-		const effectiveDifficulty = room?.state?.difficulty || lastDifficulty;
-		if (effectiveDifficulty !== lastDifficulty) {
-			lastDifficulty = effectiveDifficulty;
-			difficultyText.text = `Difficulty: ${formatDifficulty(effectiveDifficulty)}`;
-		}
 		const me = playersState.get(room.sessionId);
 		if (me) {
 			youText.text = `You: ${me.ready ? "Ready" : "Not Ready"}`;
@@ -236,10 +224,6 @@ export function createMatchHud(room, { roomCode = "nocode", difficulty = "casual
 	});
 
 	return {
-		updateDifficulty: (value) => {
-			lastDifficulty = value;
-			difficultyText.text = `Difficulty: ${formatDifficulty(value)}`;
-		},
 		updateRoomCode: (value) => {
 			const label = value && value !== "nocode" ? `Room: ${value}` : "Room: Public";
 			roomText.text = label;
@@ -331,8 +315,8 @@ export function hasPlayersState(room) {
 	return Boolean(room?.state?.players);
 }
 
-export function setMatchContext({ roomCode = "nocode", difficulty = "casual" } = {}) {
-	matchContext = { roomCode, difficulty: difficulty === "competitive" ? "competitive" : "casual" };
+export function setMatchContext({ roomCode = "nocode" } = {}) {
+	matchContext = { roomCode };
 }
 
 export function getMatchContext() {
