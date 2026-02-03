@@ -44,7 +44,15 @@ export async function tweenFunc(gameObject, propertyToTween, startValue, endValu
 }
 
 export function createCoolText(gameObject, text, x, y, size, ...extraComps) {
-	return gameObject.add([
+	// Kaplay calls `transform()` for every glyph, every frame.
+	// Doing per-glyph math in that hot path can tank FPS on some GPUs/CPUs.
+	// Instead, we compute the per-letter transforms at a fixed rate (30Hz) and reuse them.
+	const state = {
+		cache: /** @type {Array<{color:any, pos:any, scale:number, angle:number}>} */ ([]),
+		acc: 0,
+	};
+
+	const textObj = gameObject.add([
 		k.text(text, {
 			font: "Iosevka",
 			width: k.width() - 24 * 2,
@@ -52,17 +60,46 @@ export function createCoolText(gameObject, text, x, y, size, ...extraComps) {
 			align: "center",
 			lineSpacing: 8,
 			letterSpacing: 4,
-			transform: (idx, ch) => ({
-				color: hsl2rgb((time() * 0.2 + idx * 0.1) % 1, 0.7, 0.8),
-				pos: vec2(0, wave(-4, 4, time() * 4 + idx * 0.5)),
-				scale: wave(1, 1.2, time() * 3 + idx),
-				angle: wave(-9, 9, time() * 3 + idx),
-			}),
+			transform: (idx) => state.cache[idx] ?? { color: hsl2rgb(0, 0, 1), pos: vec2(0, 0), scale: 1, angle: 0 },
 		}),
 		k.pos(x, y),
 		k.anchor("center"),
 		...extraComps,
 	]);
+
+	const ensureCacheSize = () => {
+		const currentText = typeof textObj.text === "string" ? textObj.text : String(text ?? "");
+		const len = currentText.length;
+		if (state.cache.length !== len) {
+			state.cache.length = len;
+			for (let i = 0; i < len; i++) {
+				state.cache[i] ??= { color: hsl2rgb(0, 0, 1), pos: vec2(0, 0), scale: 1, angle: 0 };
+			}
+		}
+	};
+
+	const recompute = () => {
+		ensureCacheSize();
+		const now = time();
+		for (let i = 0; i < state.cache.length; i++) {
+			const entry = state.cache[i];
+			entry.color = hsl2rgb((now * 0.2 + i * 0.1) % 1, 0.7, 0.8);
+			entry.pos = vec2(0, wave(-4, 4, now * 4 + i * 0.5));
+			entry.scale = wave(1, 1.2, now * 3 + i);
+			entry.angle = wave(-9, 9, now * 3 + i);
+		}
+	};
+
+	// Initialize so the first render has data.
+	recompute();
+	textObj.onUpdate(() => {
+		state.acc += dt();
+		if (state.acc < 1 / 30) return;
+		state.acc = 0;
+		recompute();
+	});
+
+	return textObj;
 }
 
 export function createNormalText(gameObject, text, x, y, size, ...extraComps) {
@@ -100,27 +137,12 @@ export function createTiledBackground(color1, color2) {
 export function createTutorialRect(x, y, size_x, size_y, color, outlinecolor, outlinecolor1, outlinecolor2) {
 	const rect = k.add([k.pos(x, y), k.rect(size_x, size_y), k.scale(), k.opacity(1), k.outline(20, color, 1, "round"), k.color(color), k.anchor("center"), "backgroundRect"]);
 
-	rect.outlineColors = [outlinecolor, outlinecolor1, outlinecolor2];
-	rect.onUpdate(() => {
-		k.drawRect({
-			width: rect.width,
-			height: rect.height,
-			pos: k.vec2(rect.pos.x - rect.width / 2, rect.pos.y - rect.height / 2),
-			outline: { color: outlinecolor, width: 80, join: "round" },
-		});
-		k.drawRect({
-			width: rect.width,
-			height: rect.height,
-			pos: k.vec2(rect.pos.x - rect.width / 2, rect.pos.y - rect.height / 2),
-			outline: { color: outlinecolor1, width: 60, join: "round" },
-		});
-		k.drawRect({
-			width: rect.width,
-			height: rect.height,
-			pos: k.vec2(rect.pos.x - rect.width / 2, rect.pos.y - rect.height / 2),
-			outline: { color: outlinecolor2, width: 40, join: "round" },
-		});
-	});
+	// Avoid per-frame `k.drawRect()` calls; prebuild outline layers as children instead.
+	const mkOutline = (width, col, z) =>
+		rect.add([k.rect(size_x, size_y), k.opacity(0), k.outline(width, col, 1, "round"), k.anchor("center"), k.z(z)]);
+	mkOutline(80, outlinecolor, -3);
+	mkOutline(60, outlinecolor1, -2);
+	mkOutline(40, outlinecolor2, -1);
 	return rect;
 }
 
