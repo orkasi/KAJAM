@@ -438,10 +438,7 @@ export function titleScreen() {
 	const tiledBackground = createTiledBackground("#000000", "#686767");
 	muteButton = createMuteButton();
 
-	let hasStarted = false;
-	const startGame = () => {
-		if (hasStarted) return;
-		hasStarted = true;
+	const startLobbyMusic = () => {
 		ensureSoundAssets().then(() => {
 			if (!lobbySound) {
 				lobbySound = registerLoopSound(
@@ -456,6 +453,15 @@ export function titleScreen() {
 				lobbySound.paused = false;
 			}
 		});
+	};
+
+	startLobbyMusic();
+
+	let hasStarted = false;
+	const startGame = () => {
+		if (hasStarted) return;
+		hasStarted = true;
+		startLobbyMusic();
 		k.camFlash("#000000", 1);
 		destroy(tiledBackground);
 		destroyAll("title");
