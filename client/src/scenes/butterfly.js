@@ -6,7 +6,7 @@ import { createLeaveScene } from "./leave";
 export const startPos = k.vec2(k.width() / 2, k.height() - 120);
 
 const BUTTERFLYSPEED = 75;
-const MOVE_SEND_HZ = 60;
+const MOVE_SEND_HZ = 30;
 const FAST_INTERP_DELAY_MS = 10;
 const FAST_FALLBACK_MS = 500;
 

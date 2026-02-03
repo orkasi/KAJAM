@@ -2,15 +2,15 @@ import { k } from "../init";
 import { titleScreen } from "../main";
 import { createCoolText, createNormalText, createTiledBackground, setReconnectEnabled } from "../utils";
 
-export function createLeaveScene() {
+export function createLeaveScene({ titleText = "Your opponent has left the game!", subtitleText = "Want to play again?" } = {}) {
 	k.scene("leave", (room) => {
 		const tiledBackground = createTiledBackground("#000000", "#686767");
 
-		const sText = createCoolText(k, "Your opponent has left the game!", k.width() / 2, k.height() * 0.3, 80, "leave");
+		const sText = createCoolText(k, titleText, k.width() / 2, k.height() * 0.3, 80, "leave");
 
 		sText.font = "Iosevka-Heavy";
 
-		const rText = createNormalText(k, "Want to play again?", k.width() / 2, k.height() * 0.9, 32, "leave");
+		const rText = createNormalText(k, subtitleText, k.width() / 2, k.height() * 0.9, 32, "leave");
 		rText.letterSpacing = 0;
 		rText.font = "Iosevka-Heavy";
 
@@ -23,7 +23,9 @@ export function createLeaveScene() {
 			destroy(tiledBackground);
 			destroyAll("leave");
 			setReconnectEnabled(false);
-			room.leave();
+			if (room && typeof room.leave === "function") {
+				room.leave();
+			}
 			k.camFlash(k.BLACK, 1);
 
 			titleScreen();

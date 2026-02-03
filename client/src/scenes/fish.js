@@ -5,7 +5,7 @@ import { createRatScene } from "./rat";
 
 export const startPos = k.vec2(k.width() / 2, k.height() / 2);
 const FISHSPEED = 50;
-const MOVE_SEND_HZ = 60;
+const MOVE_SEND_HZ = 30;
 const FAST_INTERP_DELAY_MS = 10;
 const FAST_FALLBACK_MS = 500;
 
@@ -27,7 +27,7 @@ const FAST_FALLBACK_MS = 500;
 		const players = {};
 		const killRoom = [];
 		const sceneLoops = [];
-		let rectLoop;
+		const rectLoops = [];
 		let startP = false;
 		let startO = false;
 		let hasStarted = false;
@@ -91,7 +91,8 @@ const FAST_FALLBACK_MS = 500;
 				direction: "ping-pong",
 			});
 
-			rectLoop = k.loop(2, async () => {
+			rectLoops.push(
+				k.loop(2, async () => {
 				await tweenFunc(fishExample, "pos", k.vec2(-fishObstacleRect.width / 3.5, 0), k.vec2(fishObstacleRect.width * 0.1, 0), 0.5, 1);
 				tweenFunc(boboExample, "scale", k.vec2(1.5, 1.5), k.vec2(0, 0), 0.5, 1);
 				tweenFunc(fishExample, "angle", 0, 360, 0.5, 1);
@@ -99,7 +100,8 @@ const FAST_FALLBACK_MS = 500;
 				await tweenFunc(fishExample, "opacity", 1, 0, 0.25, 2);
 				tweenFunc(fishExample, "opacity", 0, 1, 0.25, 2);
 				tweenFunc(boboExample, "scale", k.vec2(0, 0), k.vec2(1.5, 1.5), 0.2, 1);
-			});
+				}),
+			);
 		}
 		fishTutorialBackground();
 
@@ -239,7 +241,7 @@ const FAST_FALLBACK_MS = 500;
 			if (hasStarted) return;
 			hasStarted = true;
 			k.destroyAll("backgroundRect");
-			if (rectLoop) rectLoop.cancel();
+			rectLoops.forEach((loop) => loop.cancel());
 			await startCountdown(payload?.startAt);
 		};
 
@@ -582,7 +584,7 @@ const FAST_FALLBACK_MS = 500;
 		});
 		k.onSceneLeave(() => {
 			sceneLoops.forEach((loop) => loop.cancel());
-			if (rectLoop) rectLoop.cancel();
+			rectLoops.forEach((loop) => loop.cancel());
 			killRoom.forEach((kill) => kill());
 			obstacles.forEach((obstacle) => k.destroy(obstacle));
 			obstacles.clear();

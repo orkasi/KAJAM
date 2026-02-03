@@ -2,7 +2,7 @@ import { Room } from "@colyseus/core";
 import { MyRoomState, Player } from "./schema/MyRoomState.js";
 
 const START_DELAY_MS = 3200;
-const PATCH_RATE_MS = Math.round(1000 / 60);
+const PATCH_RATE_MS = Math.round(1000 / 30);
 const DEFAULT_DIFFICULTY = { spawnIntervalMultiplier: 1.25, durationMultiplier: 1.1 };
 
 const GAME_MODES = {

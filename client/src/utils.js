@@ -223,6 +223,19 @@ export function createMatchHud(room, { roomCode = "nocode" } = {}) {
 		}
 	});
 
+	let destroyed = false;
+	let leaveHandle = null;
+	const cleanup = () => {
+		if (destroyed) return;
+		destroyed = true;
+		updateLoop.cancel();
+		if (leaveHandle && typeof leaveHandle.cancel === "function") {
+			leaveHandle.cancel();
+		}
+		k.destroy(container);
+	};
+	leaveHandle = k.onSceneLeave(cleanup);
+
 	return {
 		updateRoomCode: (value) => {
 			const label = value && value !== "nocode" ? `Room: ${value}` : "Room: Public";
@@ -230,8 +243,7 @@ export function createMatchHud(room, { roomCode = "nocode" } = {}) {
 			copyButton.hidden = !value || value === "nocode";
 		},
 		destroy: () => {
-			updateLoop.cancel();
-			k.destroy(container);
+			cleanup();
 		},
 	};
 }

@@ -5,7 +5,7 @@ import { createButterflyScene } from "./butterfly";
 export const startPos = k.vec2(k.width() / 2, k.height() - 77.5);
 
 const RATSPEED = 75;
-const MOVE_SEND_HZ = 60;
+const MOVE_SEND_HZ = 30;
 const FAST_INTERP_DELAY_MS = 10;
 const FAST_FALLBACK_MS = 500;
 
@@ -213,6 +213,9 @@ export function createRatScene() {
 									oPTween = await opponent.tween(10, -10, 0.25, (value) => (opponent.angle = value));
 									oPTween2 = await opponent.tween(-10, 10, 0.25, (value) => (opponent.angle = value));
 								});
+								if (oPTweenL) {
+									sceneLoops.push(oPTweenL);
+								}
 							});
 
 							opponent.onStateUpdate("move", () => {
@@ -317,6 +320,9 @@ export function createRatScene() {
 				cPTween = await cPlayer.tween(-10, 10, 0.25, (value) => (cPlayer.angle = value));
 				cPTween2 = await cPlayer.tween(10, -10, 0.25, (value) => (cPlayer.angle = value));
 			});
+			if (cPTweenL) {
+				sceneLoops.push(cPTweenL);
+			}
 		});
 
 		cPlayer.onStateUpdate("move", () => {

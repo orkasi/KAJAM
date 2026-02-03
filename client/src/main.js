@@ -380,11 +380,13 @@ async function attemptReconnect(previousRoom) {
 		void moveToSceneForRoom(reconnected);
 	} catch (err) {
 		reconnecting = false;
-		showReconnectOverlay("Reconnect failed. Press R to retry");
-		const retry = k.onKeyPress("r", () => {
-			retry.cancel();
-			void attemptReconnect(previousRoom);
+		hideReconnectOverlay();
+		setReconnectEnabled(false);
+		createLeaveScene({
+			titleText: "Connection failed on our end!",
+			subtitleText: "Want to play again?",
 		});
+		goScene("leave", previousRoom);
 	}
 }
 
@@ -424,14 +426,25 @@ async function main(name, roomCode = "nocode") {
 			}, 0);
 		})
 		.catch((e) => {
-			lobbyText.text = `Connection failed!\n${e.message || "No Error Code"}\n\nServer: ${colyseusEndpoint}\n\nPress R to retry`;
 			console.log(e);
-
-			const retry = k.onKeyPress("r", async () => {
-				retry.cancel();
-				await k.destroy(lobbyText);
-				main(name, roomCode);
+			if (lobbyText) {
+				k.destroy(lobbyText);
+			}
+			if (tiledBackgroundN) {
+				k.destroy(tiledBackgroundN);
+			}
+			if (lobbySound) {
+				lobbySound.stop();
+			}
+			if (muteButton) {
+				destroy(muteButton);
+			}
+			setReconnectEnabled(false);
+			createLeaveScene({
+				titleText: "Connection failed on our end!",
+				subtitleText: "Want to play again?",
 			});
+			goScene("leave", null);
 		});
 }
 
