@@ -311,6 +311,76 @@ export function bindPlayers(room, { onAdd, onRemove }) {
 	};
 }
 
+export function createMoveInterpolator({ delayMs = 50, maxBuffer = 10, maxExtrapolateMs = 100 } = {}) {
+	const buffer = [];
+	let lastReceivedAt = 0;
+	let lastTimestamp = 0;
+
+	const toNumber = (value) => (Number.isFinite(value) ? value : null);
+
+	return {
+		push(sample) {
+			if (!sample) return;
+			const now = Date.now();
+			const t = Number.isFinite(sample.t) ? sample.t : now;
+			if (t < lastTimestamp) return;
+			lastTimestamp = t;
+			const x = toNumber(sample.x);
+			const y = toNumber(sample.y);
+			const angle = toNumber(sample.angle);
+			if (x === null || y === null) return;
+			buffer.push({ x, y, angle, t });
+			if (buffer.length > maxBuffer) buffer.shift();
+			lastReceivedAt = now;
+		},
+		sample(now = Date.now()) {
+			if (buffer.length === 0) return null;
+			const renderTime = now - delayMs;
+			while (buffer.length >= 2 && buffer[1].t <= renderTime) {
+				buffer.shift();
+			}
+			if (buffer.length >= 2 && buffer[0].t <= renderTime) {
+				const a = buffer[0];
+				const b = buffer[1];
+				const span = b.t - a.t;
+				const alpha = span > 0 ? Math.min(1, Math.max(0, (renderTime - a.t) / span)) : 0;
+				return {
+					x: k.lerp(a.x, b.x, alpha),
+					y: k.lerp(a.y, b.y, alpha),
+					angle: a.angle !== null || b.angle !== null ? k.lerp(a.angle ?? 0, b.angle ?? 0, alpha) : null,
+				};
+			}
+			if (buffer.length >= 2) {
+				const latest = buffer[buffer.length - 1];
+				if (renderTime > latest.t) {
+					const prev = buffer[buffer.length - 2];
+					const span = latest.t - prev.t;
+					if (span > 0) {
+						const ahead = Math.min(renderTime - latest.t, maxExtrapolateMs);
+						const vx = (latest.x - prev.x) / span;
+						const vy = (latest.y - prev.y) / span;
+						const va = latest.angle !== null && prev.angle !== null ? (latest.angle - prev.angle) / span : 0;
+						return {
+							x: latest.x + vx * ahead,
+							y: latest.y + vy * ahead,
+							angle: latest.angle !== null && prev.angle !== null ? latest.angle + va * ahead : latest.angle,
+						};
+					}
+				}
+			}
+			return buffer[0];
+		},
+		shouldFallback(now = Date.now(), timeoutMs = 500) {
+			return buffer.length === 0 || now - lastReceivedAt > timeoutMs;
+		},
+		clear() {
+			buffer.length = 0;
+			lastReceivedAt = 0;
+			lastTimestamp = 0;
+		},
+	};
+}
+
 export function hasPlayersState(room) {
 	return Boolean(room?.state?.players);
 }

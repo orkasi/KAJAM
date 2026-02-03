@@ -1,11 +1,13 @@
 import { k } from "../init";
-import { bindPlayers, createCoolText, createMuteButton, createNormalText, createTiledBackground, createTutorialRect, getPlayer, getPlayersSnapshot, goScene, overlay, playSound, registerLoopSound, tweenFunc } from "../utils";
+import { bindPlayers, createCoolText, createMoveInterpolator, createMuteButton, createNormalText, createTiledBackground, createTutorialRect, getPlayer, getPlayersSnapshot, goScene, overlay, playSound, registerLoopSound, tweenFunc } from "../utils";
 import { createLeaveScene } from "./leave";
 import { createRatScene } from "./rat";
 
 export const startPos = k.vec2(k.width() / 2, k.height() / 2);
 const FISHSPEED = 50;
-const MOVE_SEND_HZ = 20;
+const MOVE_SEND_HZ = 30;
+const FAST_INTERP_DELAY_MS = 50;
+const FAST_FALLBACK_MS = 500;
 
 	export function createFishScene() {
 		k.scene("fish", (room) => {
@@ -29,6 +31,17 @@ const MOVE_SEND_HZ = 20;
 		let startP = false;
 		let startO = false;
 		let hasStarted = false;
+		const opponentMove = createMoveInterpolator({ delayMs: FAST_INTERP_DELAY_MS });
+		let opponentSessionId = null;
+
+		killRoom.push(
+			room.onMessage("moveFast", (message) => {
+				if (!message) return;
+				if (message.sessionId === room.sessionId) return;
+				if (opponentSessionId && message.sessionId !== opponentSessionId) return;
+				opponentMove.push({ x: message.x, y: message.y, angle: message.angle, t: Date.now() });
+			}),
+		);
 
 		function fishKeyBackground() {
 			const fishMoveRect = createTutorialRect(k.width() * 0.8, k.height() * 0.23, k.width() * 0.28, k.height() * 0.17, rgb(174, 226, 255), rgb(110, 144, 251), rgb(124, 169, 253), rgb(141, 197, 255));
@@ -95,16 +108,21 @@ const MOVE_SEND_HZ = 20;
 				onAdd: (player, sessionId) => {
 					if (!startO) {
 						if (sessionId !== room.sessionId) {
+							opponentSessionId = sessionId;
+							opponentMove.clear();
 							players[0] = k.add([k.sprite("sukomi"), k.pos(startPos), k.opacity(1), k.anchor("center"), k.rotate(), k.timer(), overlay(rgb(90, 108, 230), 0.4)]);
 							players[1] = player;
 							createCoolText(players[0], player.name, 0, -players[0].height, 15);
 
 							players[0].onUpdate(() => {
-								if (player.y - 5 > players[0].pos.y) {
-									players[0].pos.y += (player.y - players[0].pos.y) * 12 * k.dt();
+								const now = Date.now();
+								const sample = opponentMove.shouldFallback(now, FAST_FALLBACK_MS) ? null : opponentMove.sample(now);
+								const targetY = sample?.y ?? player.y;
+								if (targetY - 5 > players[0].pos.y) {
+									players[0].pos.y += (targetY - players[0].pos.y) * 12 * k.dt();
 									players[0].angle += (30 - players[0].angle) * 12 * k.dt();
-								} else if (player.y + 5 < players[0].pos.y) {
-									players[0].pos.y += (player.y - players[0].pos.y) * 12 * k.dt();
+								} else if (targetY + 5 < players[0].pos.y) {
+									players[0].pos.y += (targetY - players[0].pos.y) * 12 * k.dt();
 									players[0].angle += (-30 - players[0].angle) * 12 * k.dt();
 								} else {
 									players[0].angle += (0 - players[0].angle) * 12 * k.dt();

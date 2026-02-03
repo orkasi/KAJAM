@@ -1,12 +1,14 @@
 import { k } from "../init";
-import { bindPlayers, createCoolText, createMuteButton, createNormalText, createTiledBackground, createTutorialRect, getPlayer, getPlayersSnapshot, goScene, overlay, playSound, registerLoopSound, tweenFunc } from "../utils";
+import { bindPlayers, createCoolText, createMoveInterpolator, createMuteButton, createNormalText, createTiledBackground, createTutorialRect, getPlayer, getPlayersSnapshot, goScene, overlay, playSound, registerLoopSound, tweenFunc } from "../utils";
 import { createEndScene } from "./end";
 import { createLeaveScene } from "./leave";
 
 export const startPos = k.vec2(k.width() / 2, k.height() - 120);
 
 const BUTTERFLYSPEED = 75;
-const MOVE_SEND_HZ = 20;
+const MOVE_SEND_HZ = 30;
+const FAST_INTERP_DELAY_MS = 50;
+const FAST_FALLBACK_MS = 500;
 
 export function createButterflyScene() {
 	k.scene("butterfly", (room) => {
@@ -25,6 +27,8 @@ export function createButterflyScene() {
 		let opponent = null;
 		let opponentP = null;
 		let hasStarted = false;
+		const opponentMove = createMoveInterpolator({ delayMs: FAST_INTERP_DELAY_MS });
+		let opponentSessionId = null;
 		k.setBackground(rgb(91, 166, 117));
 
 		createMuteButton();
@@ -172,10 +176,21 @@ export function createButterflyScene() {
 
 		let nameText = null;
 		killRoom.push(
+			room.onMessage("moveFast", (message) => {
+				if (!message) return;
+				if (message.sessionId === room.sessionId) return;
+				if (opponentSessionId && message.sessionId !== opponentSessionId) return;
+				opponentMove.push({ x: message.x, y: message.y, angle: message.angle, t: Date.now() });
+			}),
+		);
+
+		killRoom.push(
 			bindPlayers(room, {
 				onAdd: (player, sessionId) => {
 					if (opponent === null) {
 						if (sessionId !== room.sessionId) {
+							opponentSessionId = sessionId;
+							opponentMove.clear();
 							opponentP = player;
 							opponent = k.add([
 								k.sprite("butterfly"),
@@ -195,8 +210,14 @@ export function createButterflyScene() {
 							createCoolText(opponent, player.name, 0, opponent.height, 15);
 
 							opponent.onUpdate(() => {
-								opponent.pos.y += (player.y - opponent.pos.y) * 12 * k.dt();
-								opponent.angle += (player.angle - opponent.angle) * 12 * k.dt();
+								const now = Date.now();
+								const sample = opponentMove.shouldFallback(now, FAST_FALLBACK_MS) ? null : opponentMove.sample(now);
+								const targetY = sample?.y ?? player.y;
+								const targetAngle = sample?.angle ?? player.angle;
+								opponent.pos.y += (targetY - opponent.pos.y) * 12 * k.dt();
+								if (Number.isFinite(targetAngle)) {
+									opponent.angle += (targetAngle - opponent.angle) * 12 * k.dt();
+								}
 							});
 
 							opponent.onStateEnter("stun", () => {

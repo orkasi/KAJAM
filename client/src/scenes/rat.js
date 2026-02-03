@@ -1,11 +1,13 @@
 import { k } from "../init";
-import { bindPlayers, createCoolText, createMuteButton, createNormalText, createTiledBackground, createTutorialRect, getPlayer, getPlayersSnapshot, goScene, overlay, playSound, registerLoopSound, tweenFunc } from "../utils";
+import { bindPlayers, createCoolText, createMoveInterpolator, createMuteButton, createNormalText, createTiledBackground, createTutorialRect, getPlayer, getPlayersSnapshot, goScene, overlay, playSound, registerLoopSound, tweenFunc } from "../utils";
 import { createButterflyScene } from "./butterfly";
 
 export const startPos = k.vec2(k.width() / 2, k.height() - 77.5);
 
 const RATSPEED = 75;
-const MOVE_SEND_HZ = 20;
+const MOVE_SEND_HZ = 30;
+const FAST_INTERP_DELAY_MS = 50;
+const FAST_FALLBACK_MS = 500;
 
 export function createRatScene() {
 	k.scene("rat", (room) => {
@@ -23,6 +25,8 @@ export function createRatScene() {
 		let opponent = null;
 		let opponentP = null;
 		let hasStarted = false;
+		const opponentMove = createMoveInterpolator({ delayMs: FAST_INTERP_DELAY_MS });
+		let opponentSessionId = null;
 		k.setBackground(rgb(78, 24, 124));
 		k.setGravity(1750);
 		createMuteButton();
@@ -157,17 +161,31 @@ export function createRatScene() {
 
 		let nameText = null;
 		killRoom.push(
+			room.onMessage("moveFast", (message) => {
+				if (!message) return;
+				if (message.sessionId === room.sessionId) return;
+				if (opponentSessionId && message.sessionId !== opponentSessionId) return;
+				opponentMove.push({ x: message.x, y: message.y, angle: message.angle, t: Date.now() });
+			}),
+		);
+
+		killRoom.push(
 			bindPlayers(room, {
 				onAdd: (player, sessionId) => {
 					if (opponent === null) {
 						if (sessionId !== room.sessionId) {
+							opponentSessionId = sessionId;
+							opponentMove.clear();
 							opponentP = player;
 							opponent = k.add([k.sprite("karat"), k.pos(startPos), k.opacity(1), k.anchor("center"), k.rotate(), k.timer(), k.state("start", ["start", "stun", "move"]), overlay(rgb(78, 24, 124), 0.4), k.z(2), { stunTime: 0 }, "player"]);
 
 							createCoolText(opponent, player.name, 0, opponent.height, 15);
 
 							opponent.onUpdate(() => {
-								opponent.pos.y += (player.y - opponent.pos.y) * 12 * k.dt();
+								const now = Date.now();
+								const sample = opponentMove.shouldFallback(now, FAST_FALLBACK_MS) ? null : opponentMove.sample(now);
+								const targetY = sample?.y ?? player.y;
+								opponent.pos.y += (targetY - opponent.pos.y) * 12 * k.dt();
 							});
 
 							let oPTween = null;

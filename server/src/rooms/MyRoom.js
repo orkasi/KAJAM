@@ -2,6 +2,7 @@ import { Room } from "@colyseus/core";
 import { MyRoomState, Player } from "./schema/MyRoomState.js";
 
 const START_DELAY_MS = 3200;
+const PATCH_RATE_MS = Math.round(1000 / 30);
 const DEFAULT_DIFFICULTY = { spawnIntervalMultiplier: 1.25, durationMultiplier: 1.1 };
 
 const GAME_MODES = {
@@ -23,6 +24,7 @@ export class MyRoom extends Room {
 
 	onCreate() {
 		this.setState(new MyRoomState());
+		this.setPatchRate(PATCH_RATE_MS);
 		this.winner = null;
 		this.clock.start();
 		this.autoDispose = true;
@@ -46,6 +48,7 @@ export class MyRoom extends Room {
 			if (!Number.isFinite(x) || !Number.isFinite(y)) return;
 			player.x = x;
 			player.y = y;
+			this.broadcastFastMove(client, { x, y });
 		});
 
 		this.onMessage("moveB", (client, message) => {
@@ -58,6 +61,7 @@ export class MyRoom extends Room {
 			player.x = x;
 			player.y = y;
 			player.angle = angle;
+			this.broadcastFastMove(client, { x, y, angle });
 		});
 
 		this.onMessage("ready", (client) => this.handleReady(client, "fish"));
@@ -101,6 +105,19 @@ export class MyRoom extends Room {
 			}
 			console.log(`${victor.name} won! They are now at ${victor.score} points! ${loser.name} is still at ${loser.score} points!`);
 			this.broadcast("won", { winner: victor, loser });
+		});
+	}
+
+	broadcastFastMove(client, payload) {
+		const message = {
+			sessionId: client.sessionId,
+			t: Date.now(),
+			...payload,
+		};
+		this.clients.forEach((other) => {
+			if (other.sessionId !== client.sessionId) {
+				other.send("moveFast", message);
+			}
 		});
 	}
 
