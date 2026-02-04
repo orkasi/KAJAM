@@ -14,3 +14,6 @@ Thumbs.db
 .vscode
 
 dist/
+
+# Local test artifacts (Playwright skill)
+output/
