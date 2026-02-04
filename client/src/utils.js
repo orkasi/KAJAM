@@ -135,14 +135,37 @@ export function createTiledBackground(color1, color2) {
 }
 
 export function createTutorialRect(x, y, size_x, size_y, color, outlinecolor, outlinecolor1, outlinecolor2) {
-	const rect = k.add([k.pos(x, y), k.rect(size_x, size_y), k.scale(), k.opacity(1), k.outline(20, color, 1, "round"), k.color(color), k.anchor("center"), "backgroundRect"]);
+	// The original look is “layered borders” (three colored bands).
+	// We can preserve that look without per-frame `k.drawRect()` by stacking a few
+	// slightly larger filled rounded-rects behind the main rect.
+	const radius = 20;
+	const rect = k.add([
+		k.pos(x, y),
+		k.rect(size_x, size_y, { radius }),
+		k.scale(),
+		k.opacity(1),
+		k.color(color),
+		k.anchor("center"),
+		"backgroundRect",
+	]);
 
-	// Avoid per-frame `k.drawRect()` calls; prebuild outline layers as children instead.
-	const mkOutline = (width, col, z) =>
-		rect.add([k.rect(size_x, size_y), k.opacity(0), k.outline(width, col, 1, "round"), k.anchor("center"), k.z(z)]);
-	mkOutline(80, outlinecolor, -3);
-	mkOutline(60, outlinecolor1, -2);
-	mkOutline(40, outlinecolor2, -1);
+	const addLayer = (pad, layerColor, z) => {
+		rect.add([
+			k.rect(size_x + pad * 2, size_y + pad * 2, { radius: radius + pad }),
+			k.color(layerColor),
+			k.anchor("center"),
+			k.z(z),
+		]);
+	};
+
+	// Keep exact pad values so the “rings” match the old draw order (80 → 60 → 40).
+	addLayer(80, outlinecolor, -3);
+	addLayer(60, outlinecolor1, -2);
+	addLayer(40, outlinecolor2, -1);
+
+	// The original version also had a rounded outline on the main rect.
+	rect.use(k.outline(20, color, 1, "round"));
+
 	return rect;
 }
 
