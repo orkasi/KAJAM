@@ -553,11 +553,11 @@ function showSafariWarning() {
 		"For the best experience, please use Chromium browsers",
 		"like Edge and Chrome or Firefox.",
 	];
-	bodyLines.forEach((line, index) => {
-		const lineText = createNormalText(
-			k,
-			line,
-			panel.pos.x,
+		bodyLines.forEach((line, index) => {
+			const lineText = createNormalText(
+				k,
+				line,
+				panel.pos.x,
 			panel.pos.y - 40 + index * (lineFontSize + lineSpacing),
 			lineFontSize,
 			"safariWarning",
@@ -565,14 +565,11 @@ function showSafariWarning() {
 			k.z(311),
 		);
 		lineText.font = "Iosevka";
-		lineText.color = k.rgb(245, 245, 250);
-		lineText.align = "center";
-	});
-	body.font = "Iosevka";
-	body.color = k.rgb(245, 245, 250);
-	body.align = "center";
+			lineText.color = k.rgb(245, 245, 250);
+			lineText.align = "center";
+		});
 
-	const close = k.add([k.rect(240, 60, { radius: 14 }), k.pos(panel.pos.x, panel.pos.y + 150), k.anchor("center"), k.area(), k.color(70, 70, 78), k.fixed(), k.z(312), "safariWarning"]);
+		const close = k.add([k.rect(240, 60, { radius: 14 }), k.pos(panel.pos.x, panel.pos.y + 150), k.anchor("center"), k.area(), k.color(70, 70, 78), k.fixed(), k.z(312), "safariWarning"]);
 	const closeText = createNormalText(k, "OK", close.pos.x, close.pos.y, 24, "safariWarning", k.fixed(), k.z(313));
 	closeText.font = "Iosevka-Heavy";
 	closeText.color = k.rgb(245, 245, 245);
