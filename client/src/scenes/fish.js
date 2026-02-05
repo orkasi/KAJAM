@@ -327,14 +327,17 @@ const FAST_FALLBACK_MS = 500;
 
 		const obstacles = new Map();
 		const obstaclePool = [];
+		const activeObstacles = new Set();
 		const releaseObstacle = (obstacle) => {
 			if (!obstacle) return;
 			obstacles.delete(obstacle.obstacleID);
+			activeObstacles.delete(obstacle);
 			obstacle.obstacleID = null;
 			obstacle.active = false;
 			obstacle.hidden = true;
 			obstacle.paused = true;
 			obstacle.opacity = 1;
+			obstacle.unanimate("angle");
 			if (obstacle.__areaActive) {
 				obstacle.unuse("area");
 				obstacle.__areaActive = false;
@@ -355,13 +358,6 @@ const FAST_FALLBACK_MS = 500;
 			]);
 			obstacle.hidden = true;
 			obstacle.paused = true;
-			obstacle.onUpdate(() => {
-				if (!obstacle.active) return;
-				obstacle.pos.x -= obstacle.speed * k.dt();
-				if (obstacle.pos.x < camPos().x - k.width()) {
-					releaseObstacle(obstacle);
-				}
-			});
 			return obstacle;
 		};
 		const acquireObstacle = () => {
@@ -374,8 +370,20 @@ const FAST_FALLBACK_MS = 500;
 				obstacle.use(k.area());
 				obstacle.__areaActive = true;
 			}
+			activeObstacles.add(obstacle);
 			return obstacle;
 		};
+		sceneLoops.push(
+			k.onUpdate(() => {
+				const offscreenX = camPos().x - k.width();
+				activeObstacles.forEach((obstacle) => {
+					obstacle.pos.x -= obstacle.speed * k.dt();
+					if (obstacle.pos.x < offscreenX) {
+						releaseObstacle(obstacle);
+					}
+				});
+			}),
+		);
 		killRoom.push(
 			room.onMessage("spawnObstacle", (message) => {
 				if (!isEnding) {
@@ -387,6 +395,7 @@ const FAST_FALLBACK_MS = 500;
 					obstacle.obstacleID = message.obstacleID;
 					lastPos = obstacle.pos.x;
 					obstacles.set(message.obstacleID, obstacle);
+					obstacle.unanimate("angle");
 					obstacle.animate("angle", [k.rand(-25, -15), k.rand(-10, 0)], {
 						duration: k.rand(0.3, 0.6),
 						direction: "ping-pong",
@@ -588,6 +597,7 @@ const FAST_FALLBACK_MS = 500;
 			killRoom.forEach((kill) => kill());
 			obstacles.forEach((obstacle) => k.destroy(obstacle));
 			obstacles.clear();
+			activeObstacles.clear();
 			obstaclePool.forEach((obstacle) => k.destroy(obstacle));
 			obstaclePool.length = 0;
 		});

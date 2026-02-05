@@ -101,26 +101,46 @@ export function createTutorialRect(x, y, size_x, size_y, color, outlinecolor, ou
 	const rect = k.add([k.pos(x, y), k.rect(size_x, size_y), k.scale(), k.opacity(1), k.outline(20, color, 1, "round"), k.color(color), k.anchor("center"), "backgroundRect"]);
 
 	rect.outlineColors = [outlinecolor, outlinecolor1, outlinecolor2];
+	const outlineOuter = { color: outlinecolor, width: 80, join: "round" };
+	const outlineMid = { color: outlinecolor1, width: 60, join: "round" };
+	const outlineInner = { color: outlinecolor2, width: 40, join: "round" };
+	const drawOuter = { width: size_x, height: size_y, pos: k.vec2(x - size_x / 2, y - size_y / 2), outline: outlineOuter };
+	const drawMid = { width: size_x, height: size_y, pos: k.vec2(x - size_x / 2, y - size_y / 2), outline: outlineMid };
+	const drawInner = { width: size_x, height: size_y, pos: k.vec2(x - size_x / 2, y - size_y / 2), outline: outlineInner };
+	let lastX = rect.pos.x;
+	let lastY = rect.pos.y;
+	let lastW = rect.width;
+	let lastH = rect.height;
+
+	const syncDrawData = () => {
+		if (rect.pos.x === lastX && rect.pos.y === lastY && rect.width === lastW && rect.height === lastH) return;
+		lastX = rect.pos.x;
+		lastY = rect.pos.y;
+		lastW = rect.width;
+		lastH = rect.height;
+		const px = rect.pos.x - rect.width / 2;
+		const py = rect.pos.y - rect.height / 2;
+		drawOuter.width = rect.width;
+		drawOuter.height = rect.height;
+		drawOuter.pos.x = px;
+		drawOuter.pos.y = py;
+		drawMid.width = rect.width;
+		drawMid.height = rect.height;
+		drawMid.pos.x = px;
+		drawMid.pos.y = py;
+		drawInner.width = rect.width;
+		drawInner.height = rect.height;
+		drawInner.pos.x = px;
+		drawInner.pos.y = py;
+	};
+
 	rect.onUpdate(() => {
-		k.drawRect({
-			width: rect.width,
-			height: rect.height,
-			pos: k.vec2(rect.pos.x - rect.width / 2, rect.pos.y - rect.height / 2),
-			outline: { color: outlinecolor, width: 80, join: "round" },
-		});
-		k.drawRect({
-			width: rect.width,
-			height: rect.height,
-			pos: k.vec2(rect.pos.x - rect.width / 2, rect.pos.y - rect.height / 2),
-			outline: { color: outlinecolor1, width: 60, join: "round" },
-		});
-		k.drawRect({
-			width: rect.width,
-			height: rect.height,
-			pos: k.vec2(rect.pos.x - rect.width / 2, rect.pos.y - rect.height / 2),
-			outline: { color: outlinecolor2, width: 40, join: "round" },
-		});
+		syncDrawData();
+		k.drawRect(drawOuter);
+		k.drawRect(drawMid);
+		k.drawRect(drawInner);
 	});
+
 	return rect;
 }
 

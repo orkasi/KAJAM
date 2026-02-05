@@ -482,14 +482,18 @@ export function createButterflyScene() {
 			ghosty: [],
 			goldfly: [],
 		};
+		const activeObstacles = new Set();
 		const releaseObstacle = (obstacle) => {
 			if (!obstacle) return;
 			obstacles.delete(obstacle.obstacleID);
+			activeObstacles.delete(obstacle);
 			obstacle.obstacleID = null;
 			obstacle.active = false;
 			obstacle.hidden = true;
 			obstacle.paused = true;
 			obstacle.opacity = 1;
+			obstacle.unanimate("angle");
+			obstacle.unanimate("scale");
 			if (obstacle.__areaActive) {
 				obstacle.unuse("area");
 				obstacle.__areaActive = false;
@@ -511,13 +515,6 @@ export function createButterflyScene() {
 			]);
 			obstacle.hidden = true;
 			obstacle.paused = true;
-			obstacle.onUpdate(() => {
-				if (!obstacle.active) return;
-				obstacle.pos.x -= obstacle.speed * k.dt();
-				if (obstacle.pos.x < camPos().x - k.width()) {
-					releaseObstacle(obstacle);
-				}
-			});
 			return obstacle;
 		};
 		const acquireObstacle = (spriteName, options) => {
@@ -531,8 +528,22 @@ export function createButterflyScene() {
 				obstacle.use(k.area());
 				obstacle.__areaActive = true;
 			}
+			obstacle.anchor = "bot";
+			obstacle.flipX = Boolean(options?.flipX);
+			activeObstacles.add(obstacle);
 			return obstacle;
 		};
+		sceneLoops.push(
+			k.onUpdate(() => {
+				const offscreenX = camPos().x - k.width();
+				activeObstacles.forEach((obstacle) => {
+					obstacle.pos.x -= obstacle.speed * k.dt();
+					if (obstacle.pos.x < offscreenX) {
+						releaseObstacle(obstacle);
+					}
+				});
+			}),
+		);
 		killRoom.push(
 			room.onMessage("spawnObstacle", (message) => {
 				k.randSeed(message.data);
@@ -560,8 +571,10 @@ export function createButterflyScene() {
 						obstacle.flipX = true;
 					}
 				}
+				obstacle.unanimate("angle");
 				obstacle.animate("angle", [obstacle.angle - 5, obstacle.angle + 5], { duration: 1, direction: "ping-pong" });
 
+				obstacle.unanimate("scale");
 				obstacle.animate("scale", [k.vec2(obstacle.scale.x - 0.1, obstacle.scale.y - 0.1), obstacle.scale], { duration: 2, direction: "ping-pong" });
 
 				lastPos = obstacle.pos.x;
@@ -729,6 +742,7 @@ export function createButterflyScene() {
 			killRoom.forEach((kill) => kill());
 			obstacles.forEach((obstacle) => k.destroy(obstacle));
 			obstacles.clear();
+			activeObstacles.clear();
 			Object.values(obstaclePools).forEach((pool) => {
 				pool.forEach((obstacle) => k.destroy(obstacle));
 				pool.length = 0;

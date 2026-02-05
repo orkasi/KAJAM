@@ -427,14 +427,17 @@ export function createRatScene() {
 			gigagantrum: [],
 			money_bag: [],
 		};
+		const activeObstacles = new Set();
 		const releaseObstacle = (obstacle) => {
 			if (!obstacle) return;
 			obstacles.delete(obstacle.obstacleID);
+			activeObstacles.delete(obstacle);
 			obstacle.obstacleID = null;
 			obstacle.active = false;
 			obstacle.hidden = true;
 			obstacle.paused = true;
 			obstacle.opacity = 1;
+			obstacle.unanimate("angle");
 			if (obstacle.__areaActive) {
 				obstacle.unuse("area");
 				obstacle.__areaActive = false;
@@ -456,13 +459,6 @@ export function createRatScene() {
 			]);
 			obstacle.hidden = true;
 			obstacle.paused = true;
-			obstacle.onUpdate(() => {
-				if (!obstacle.active) return;
-				obstacle.pos.x -= obstacle.speed * k.dt();
-				if (obstacle.pos.x < camPos().x - k.width()) {
-					releaseObstacle(obstacle);
-				}
-			});
 			return obstacle;
 		};
 		const acquireObstacle = (spriteName, options) => {
@@ -476,8 +472,20 @@ export function createRatScene() {
 				obstacle.use(k.area());
 				obstacle.__areaActive = true;
 			}
+			activeObstacles.add(obstacle);
 			return obstacle;
 		};
+		sceneLoops.push(
+			k.onUpdate(() => {
+				const offscreenX = camPos().x - k.width();
+				activeObstacles.forEach((obstacle) => {
+					obstacle.pos.x -= obstacle.speed * k.dt();
+					if (obstacle.pos.x < offscreenX) {
+						releaseObstacle(obstacle);
+					}
+				});
+			}),
+		);
 		killRoom.push(
 			room.onMessage("spawnObstacle", (message) => {
 				k.randSeed(message.data);
@@ -491,6 +499,7 @@ export function createRatScene() {
 				obstacle.obstacleID = message.obstacleID;
 				obstacles.set(message.obstacleID, obstacle);
 				lastPos = obstacle.pos.x;
+				obstacle.unanimate("angle");
 				obstacle.animate("angle", [-5, 5], {
 					duration: 0.4,
 					direction: "ping-pong",
@@ -665,6 +674,7 @@ export function createRatScene() {
 			killRoom.forEach((kill) => kill());
 			obstacles.forEach((obstacle) => k.destroy(obstacle));
 			obstacles.clear();
+			activeObstacles.clear();
 			Object.values(obstaclePools).forEach((pool) => {
 				pool.forEach((obstacle) => k.destroy(obstacle));
 				pool.length = 0;
