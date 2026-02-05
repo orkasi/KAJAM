@@ -179,7 +179,8 @@ export function playSound(name, options = {}) {
 }
 
 export function createMuteButton() {
-	const button = k.add([k.sprite("mute"), k.pos(k.width(), 0), k.scale(0.5), k.area(), k.opacity(0.5), k.fixed(), k.anchor("topright"), "mute"]);
+	const margin = 20;
+	const button = k.add([k.sprite("mute"), k.pos(k.width() - margin, margin), k.scale(0.75), k.area(), k.opacity(0.5), k.fixed(), k.anchor("topright"), "mute"]);
 	const updateColor = () => {
 		if (muted) {
 			button.use(k.color(k.RED));
